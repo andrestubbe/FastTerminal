@@ -3,11 +3,11 @@
 :: Auto-detects Visual Studio and JAVA_HOME
 
 echo ========================================
-echo FastXXX Native Library Builder
+echo FastTerminal Native Library Builder
 echo ========================================
 
 :: Configuration
-set LIB_NAME=fastXXX
+set LIB_NAME=fastterminal
 
 :: Try to find VS using vswhere.exe (most reliable)
 set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
@@ -77,8 +77,6 @@ cl.exe /O2 /W3 /MD /EHsc /LD ^
 if %ERRORLEVEL% == 0 (
     echo.
     echo [SUCCESS] DLL built at: build\%LIB_NAME%.dll
-    :: Optional: copy to resources if needed
-    :: copy build\%LIB_NAME%.dll src\main\resources\native\
 ) else (
     echo.
     echo [FAILED] Compilation failed.

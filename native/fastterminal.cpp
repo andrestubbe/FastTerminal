@@ -1,10 +1,10 @@
-#include "fastXXX.h"
+#include "fastterminal.h"
 #include <windows.h>
 #include <stdio.h>
 
 /**
- * @file fastXXX.cpp
- * @brief Native JNI implementation for FastXXX
+ * @file fastterminal.cpp
+ * @brief Native JNI C++ implementation for FastTerminal console hooks
  */
 
 // ============================================================================
@@ -13,7 +13,6 @@
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
     switch (ul_reason_for_call) {
         case DLL_PROCESS_ATTACH:
-            // Disable thread library calls for optimization if not needed
             DisableThreadLibraryCalls(hModule);
             break;
         case DLL_PROCESS_DETACH:
@@ -27,13 +26,49 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 // ============================================================================
 
 /**
- * @brief Native method implementation example
- * 
- * @param env JNI environment pointer
- * @param obj Java instance object (or clazz for static methods)
+ * @brief Queries current console window columns and rows via GetConsoleScreenBufferInfo.
  */
-JNIEXPORT void JNICALL Java_fastXXX_FastXXX_doSomethingNative(JNIEnv* env, jobject obj) {
-    // TODO: Implement native logic here
-    printf("[DEBUG C++] doSomethingNative called!\n");
-    fflush(stdout); // Ensure printf output is flushed to Java console
+JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getTerminalSize(JNIEnv* env, jclass clazz) {
+    jintArray result = env->NewIntArray(2);
+    if (result == NULL) return NULL;
+    
+    jint dims[2] = { 80, 24 }; // Fallback defaults if not running in standard console
+    
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole != INVALID_HANDLE_VALUE && hConsole != NULL) {
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+            dims[0] = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+            dims[1] = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+        }
+    }
+    
+    env->SetIntArrayRegion(result, 0, 2, dims);
+    return result;
+}
+
+/**
+ * @brief Configures standard raw console modes (echo off, direct inputs, etc.) via SetConsoleMode.
+ */
+JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode(JNIEnv* env, jclass clazz, jboolean enableRaw) {
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+    if (hInput == INVALID_HANDLE_VALUE || hInput == NULL) return;
+    
+    static DWORD originalMode = 0;
+    static bool hasOriginalMode = false;
+    
+    if (enableRaw) {
+        if (!hasOriginalMode) {
+            GetConsoleMode(hInput, &originalMode);
+            hasOriginalMode = true;
+        }
+        // Disable line buffer, echo input, and backspaces processing
+        // Enable mouse input and window resizing events
+        DWORD rawMode = ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
+        SetConsoleMode(hInput, rawMode);
+    } else {
+        if (hasOriginalMode) {
+            SetConsoleMode(hInput, originalMode);
+        }
+    }
 }

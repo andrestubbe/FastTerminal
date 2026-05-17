@@ -1,6 +1,5 @@
-LIBRARY fastXXX
+LIBRARY fastterminal
 EXPORTS
     ; JNI Method Exports
-    ; Format: Java_packagename_Classname_methodName
-    
-    Java_fastXXX_FastXXX_doSomethingNative
+    Java_fastterminal_FastTerminal_getTerminalSize
+    Java_fastterminal_FastTerminal_setRawMode

@@ -1,13 +1,17 @@
-# FastTerminal — High-Performance JLine-Free True-Color Terminal Engine for Java
+# FastTerminal — High-Performance True-Color Terminal Engine for Java
 
-**A zero-dependency, JLine-free terminal graphics and TUI engine for Java, engineered for high-refresh rates, 24-bit True Color, and native JNI console optimizations.**
+**A high-performance terminal graphics and TUI engine for Java, engineered for high-refresh rates, 24-bit True Color, and native JNI console optimizations with seamless keyboard and mouse integrations.**
 
 [![Java](https://img.shields.io/badge/Java-17+-blue.svg)](https://www.java.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010+%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![JitPack](https://jitpack.io/v/andrestubbe/FastTerminal.svg)](https://jitpack.io/#andrestubbe/FastTerminal)
 
-FastTerminal is the high-performance terminal substrate of the **FastJava** ecosystem. Designed to replace heavy, blocking libraries like JLine, it introduces a lightweight, cell-buffered virtual viewport using primitive integer buffers for full 24-bit True Color (foreground & background) and emoji-safe UTF-32 Codepoint grids.
+FastTerminal is the high-performance terminal substrate of the **FastJava** ecosystem. It introduces a lightweight, cell-buffered virtual viewport using primitive integer buffers for full 24-bit True Color (foreground & background) and emoji-safe UTF-32 Codepoint grids.
+
+To achieve a completely responsive, zero-latency desktop terminal experience, FastTerminal is designed to pair natively with its twin telemetry and input modules:
+*   🚀 **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** — Direct, low-latency, asynchronous raw global and local keyboard event handling.
+*   🖱️ **[FastMouse](https://github.com/andrestubbe/FastMouse)** — Precise hardware-level and virtual console-mode mouse tracking.
 
 ```java
 // Quick Start — Example
@@ -22,7 +26,7 @@ public class Demo {
         
         // Write standard text & high-unicode emojis in True Color
         scene.writeString(5, 2, "⚡ FastTerminal Engine ⚡", 0xFFCC00, 0x111111);
-        scene.writeString(5, 3, "🚀 True Color & Emojis aligned safely!", 0xFFFFFF, -1);
+        scene.writeString(5, 3, "🚀 True Color, Mouse & Keyboard support!", 0xFFFFFF, -1);
         
         renderer.addScene(scene);
         renderer.render(); // Blits directly to stdout
@@ -31,6 +35,7 @@ public class Demo {
 ```
 
 ## Table of Contents
+- [Our Mission](#our-mission)
 - [Key Features](#key-features)
 - [Architecture & Grid Layout](#architecture--grid-layout)
 - [API Quick Reference](#api-quick-reference)
@@ -42,13 +47,18 @@ public class Demo {
 
 ---
 
+## 🎯 Our Mission
+Our mission is to build the fastest, most robust native execution kernel on the JVM for console rendering and TUI interactivity. By combining cell-buffered graphics, double-buffered layouts, and immediate OS hardware input telemetry via **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** and **[FastMouse](https://github.com/andrestubbe/FastMouse)**, we empower developers to create premium, interactive command-line terminals that rival native C++ applications in visual fidelity and input response.
+
+---
+
 ## Key Features
 *   **🎨 24-bit True Color** — Complete support for direct RGB escape codes (`\033[38;2;R;G;Bm` for foreground and `\033[48;2;R;G;Bm` for background).
 *   **🌐 Emoji & Unicode-Safe** — Eliminates UTF-16 surrogate split bugs by using `int` (UTF-32) codepoint cell buffers rather than `char[]` arrays, guaranteeing that Emojis (e.g. `🚀`, `🌈`) fit exactly in 1 cell without warping rows.
 *   **⚡ State-Minimized Renderer** — Optimizes stdout rendering by only emitting ANSI escape codes when color states change, reducing console stream bandwidth by up to **80%**.
 *   **📺 Alternate Screen Buffer** — Seamlessly enters full-screen TUI buffer mode (`\033[?1049h`) and hides the cursor (`\033[?25l`) for clean dashboard applications.
+*   **🎹 Native Input Substrates** — Built-in telemetry anchors designed for instant integration with `FastKeyboard` and `FastMouse` to process mouse tracking, window resizing, and raw key captures natively.
 *   **📥 apt/npm Style Indicators** — Built-in dynamic bottom-anchored multi-line progress overlays using cursor save/restore positions.
-*   **📦 Zero Dependencies** — Completely JLine-free, bypassing standard latency pipelines. Works natively with `FastKeyboard` for asynchronous raw-mode key inputs.
 
 ---
 

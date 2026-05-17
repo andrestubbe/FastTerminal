@@ -1,5 +1,5 @@
-#ifndef FASTXXX_H
-#define FASTXXX_H
+#ifndef FASTTERMINAL_H
+#define FASTTERMINAL_H
 
 #include <jni.h>
 
@@ -7,11 +7,12 @@
 extern "C" {
 #endif
 
-// Export declarations (Matches fastXXX.def)
-JNIEXPORT void JNICALL Java_fastXXX_FastXXX_doSomethingNative(JNIEnv* env, jobject obj);
+// Exported native method declarations for fastterminal.FastTerminal
+JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getTerminalSize(JNIEnv* env, jclass clazz);
+JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode(JNIEnv* env, jclass clazz, jboolean enableRaw);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // FASTXXX_H
+#endif // FASTTERMINAL_H
