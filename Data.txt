@@ -1,0 +1,216 @@
+================================================================================
+File: CLIScene.java
+================================================================================
+package com.twentyeightbots.view.cli;
+
+import com.twentyeightbots.controller.cli.log.Log;
+import com.twentyeightbots.controller.cli.log.LogListener;
+import org.jline.terminal.Terminal;
+
+public class CLIScene {
+
+    private final Terminal terminal;
+    private TerminalRenderer renderer;
+    private TerminalScene sceneTitle;
+    private TerminalScene sceneLogger;
+    private LogListener logListener;
+
+    public CLIScene(final Terminal terminal) {
+        this.terminal = terminal;
+        this.addScene();
+        this.setupResizeListener();
+    }
+
+    private void addScene() {
+        this.renderer = new TerminalRenderer(this.terminal.getWidth(), this.terminal.getHeight());
+        this.sceneTitle = new CLITitle(0, 0, this.renderer.getWidth(), 1);
+        this.sceneLogger = new CLILogger(0, 1, this.renderer.getWidth(), this.renderer.getHeight() - 1);
+        this.renderer.addScene(this.sceneTitle);
+        this.renderer.addScene(this.sceneLogger);
+        this.logListener = line -> {
+            this.sceneTitle.setDirty(true);
+            this.sceneLogger.setDirty(true);
+            this.renderer.render();
+        };
+        Log.addListener(this.logListener);
+    }
+
+    private void removeScene() {
+        Log.removeListener(this.logListener);
+        this.sceneTitle.dispose();
+        this.sceneLogger.dispose();
+        this.renderer.dispose();
+    }
+
+    private void setupResizeListener() {
+        final Terminal.SignalHandler signalHandler = signal -> {
+            this.removeScene();
+            this.addScene();
+            this.renderer.render();
+        };
+        this.terminal.handle(Terminal.Signal.WINCH, signalHandler);
+    }
+
+}
+
+================================================================================
+File: TerminalRenderer.java
+================================================================================
+package com.twentyeightbots.view.cli;// RendererChar.java
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public final class TerminalRenderer {
+
+    private List<TerminalScene> scenes = new ArrayList<>();
+    private final int width;
+    private final int height;
+    private char[] compositeBuffer;
+
+    public TerminalRenderer(final int width, final int height) {
+        this.width = width;
+        this.height = height;
+        this.compositeBuffer = new char[width * height];
+    }
+
+    public void addScene(final TerminalScene scene) {
+        this.scenes.add(scene);
+    }
+
+    public void render() {
+        System.out.print("\033[1;1H");
+        for (final TerminalScene scene : this.scenes) {
+            if (scene.isDirty()) {
+                scene.update();
+                scene.setDirty(false);
+            }
+            this.insertScene(scene);
+        }
+        byte[] bytes = new String(this.compositeBuffer).getBytes(StandardCharsets.UTF_8);
+        System.out.write(bytes, 0, bytes.length);
+        System.out.flush();
+    }
+
+    private void insertScene(final TerminalScene scene) {
+        final char[] src = scene.getCharBuffer();
+        final int srcWidth = scene.getWidth();
+        final int srcHeight = scene.getHeight();
+        final int dstX = scene.getX();
+        final int dstY = scene.getY();
+        for (int row = 0; row < srcHeight; row++) {
+            final int dstRow = dstY + row;
+            if (dstRow < 0 || dstRow >= this.height) continue;
+            int srcPos = row * srcWidth;
+            int dstPos = dstRow * this.width + dstX;
+            int length = srcWidth;
+            if (dstX < 0) {
+                srcPos -= dstX;
+                length += dstX;
+                dstPos = dstRow * this.width;
+            }
+            if (dstX + length > this.width) {
+                length = this.width - dstX;
+            }
+            if (length <= 0) continue;
+            System.arraycopy(src, srcPos, this.compositeBuffer, dstPos, length);
+        }
+    }
+
+    public void clear() {
+        Arrays.fill(this.compositeBuffer, ' ');
+    }
+
+    public void dispose() {
+        this.scenes.clear();
+        this.scenes = null;
+        this.compositeBuffer = null;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+}
+
+================================================================================
+File: TerminalScene.java
+================================================================================
+// SceneChar.java (simplified: no insert, no render buffer handling)
+package com.twentyeightbots.view.cli;
+
+import java.util.Arrays;
+
+public class TerminalScene {
+
+    private char[] charBuffer;
+    private final int x;
+    private final int y;
+    private final int width;
+    private final int height;
+    private Runnable updater;
+    private boolean dirty;
+
+    public TerminalScene(int x, int y, int width, int height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.charBuffer = new char[width * height];
+        this.dirty = true;
+    }
+
+    public void update() {
+        if (this.updater != null) {
+            this.clear();
+            this.updater.run();
+            this.dirty = true;
+        }
+    }
+
+    private void clear() {
+        Arrays.fill(this.charBuffer, ' ');
+    }
+
+    public boolean isDirty() {
+        return this.dirty;
+    }
+
+    public char[] getCharBuffer() {
+        return this.charBuffer;
+    }
+
+    public int getX() {
+        return this.x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+    public void setDirty(final boolean dirty) {
+        this.dirty = dirty;
+    }
+
+    public void setUpdater(final Runnable updater) {
+        this.updater = updater;
+    }
+
+    public void dispose() {
+        this.charBuffer = null;
+        this.updater = null;
+    }
+}

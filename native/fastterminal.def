@@ -1,0 +1,6 @@
+LIBRARY fastXXX
+EXPORTS
+    ; JNI Method Exports
+    ; Format: Java_packagename_Classname_methodName
+    
+    Java_fastXXX_FastXXX_doSomethingNative
