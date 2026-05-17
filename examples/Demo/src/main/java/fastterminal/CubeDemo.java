@@ -189,22 +189,7 @@ public class CubeDemo {
                 }
             }
 
-            // 6. DRAW HEADER WINDOW TITLE WITH PROPER EMOJI SPACING (-99)
-            // Visual width of the title is 39 columns.
-            int titleX = Math.max(0, (cols - 39) / 2);
-            int titleY = 1;
-            if (cols > 42 && rows > 5) {
-                // Clear background for title banner
-                for (int c = titleX; c < titleX + 39; c++) {
-                    canvas.writeCell(c, titleY, ' ', 0xFFFFFF, 0x1E1B4B);
-                }
-                canvas.writeCell(titleX + 1, titleY, 0x1F9CA, 0x38BDF8, 0x1E1B4B); // 🧊
-                canvas.writeCell(titleX + 2, titleY, -99, -1, -1); // continuation cell
-                canvas.writeString(titleX + 3, titleY, " 3D CUBE TELEMETRY RENDERER ", 0xF9FAFB, 0x1E1B4B);
-                canvas.writeCell(titleX + 31, titleY, 0x1F9CA, 0x38BDF8, 0x1E1B4B); // 🧊
-                canvas.writeCell(titleX + 32, titleY, -99, -1, -1); // continuation cell
-                canvas.writeString(titleX + 34, titleY, "120FPS", 0x10B981, 0x1E1B4B);
-            }
+
 
             // Blit standard composite buffers to screen
             canvas.setDirty(true);
