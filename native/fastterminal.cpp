@@ -26,19 +26,19 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 // ============================================================================
 
 /**
- * @brief Queries current console window columns and rows via GetConsoleScreenBufferInfo.
+ * @brief Queries current console buffer width (columns) and visible window height.
  */
 JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getTerminalSize(JNIEnv* env, jclass clazz) {
     jintArray result = env->NewIntArray(2);
     if (result == NULL) return NULL;
     
-    jint dims[2] = { 80, 24 }; // Fallback defaults if not running in standard console
+    jint dims[2] = { 120, 30 }; // Premium default fallback geometry
     
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hConsole != INVALID_HANDLE_VALUE && hConsole != NULL) {
         CONSOLE_SCREEN_BUFFER_INFO csbi;
         if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
-            dims[0] = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+            dims[0] = csbi.dwSize.X; // Retrieve the full 120-column buffer width!
             dims[1] = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
         }
     }
@@ -62,8 +62,6 @@ JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode(JNIEnv* env, jc
             GetConsoleMode(hInput, &originalMode);
             hasOriginalMode = true;
         }
-        // Disable line buffer, echo input, and backspaces processing
-        // Enable mouse input and window resizing events
         DWORD rawMode = ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
         SetConsoleMode(hInput, rawMode);
     } else {

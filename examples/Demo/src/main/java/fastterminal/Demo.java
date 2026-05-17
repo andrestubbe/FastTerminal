@@ -110,7 +110,7 @@ public class Demo {
             canvas.writeString(emojiX3, 0, "⚡", 0xFFFF00, -1);
 
             // 4. RENDER STATIC SOLID TITLE CARDS
-            String titleText = " ⚡ FASTTERMINAL TRUE-COLOR ⚡ ";
+            String titleText = " [ FASTTERMINAL TRUE-COLOR ] ";
             int titleX = Math.max(0, (finalCols - titleText.length()) / 2);
             canvas.writeString(titleX, titleY, titleText, 0x000000, 0xFFCC00);
 
