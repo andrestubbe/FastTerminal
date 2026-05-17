@@ -56,11 +56,11 @@ Below are the analyzed flaws of the initial implementation and how we will resol
 
 ---
 
-## 🚀 Part 2: The Path to independence, Speed, & True Color
-We are completely eliminating **JLine** to achieve zero latency, full UTF-8 capabilities, alternate screen buffers, and high-performance JNI integration.
+## 🚀 Part 2: The Path to Independence, Speed, & True Color
+We are focusing on direct OS native hooks to achieve zero latency, full UTF-8 capabilities, alternate screen buffers, and high-performance JNI integration.
 
-### 📋 1. Complete JLine Removal
-*   **Terminal Dimensions**: Instead of JLine, retrieve screen buffer info natively using `GetConsoleScreenBufferInfo` on Windows (via JNI) and `ioctl(TIOCGWINSZ)` on Linux/macOS.
+### 📋 1. Zero-Dependency Dimension Queries
+*   **Terminal Dimensions**: Retrieve screen buffer info natively using `GetConsoleScreenBufferInfo` on Windows (via JNI) and `ioctl(TIOCGWINSZ)` on Linux/macOS.
 *   **Keyboard Input**: Integrate directly with `FastKeyboard` to handle asynchronous raw mode input.
 *   **Console Raw Mode**: Toggle echo and raw modes directly using native JNI calls:
     *   **Windows**: `SetConsoleMode(hIn, ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT)`
@@ -120,7 +120,7 @@ FastTerminal
 ## 📝 TODO Checklist
 
 ### Phase 1: Cleanup & Restructuring
-*   [ ] Remove legacy JLine-dependent demo files (`CLILogger.java`, `CLITitle.java`).
+*   [ ] Remove legacy demo files (`CLILogger.java`, `CLITitle.java`).
 *   [ ] Move core terminal classes (`TerminalRenderer.java`, `TerminalScene.java`, `CLIScene.java`) into the new Mavenized project package (`fastterminal`).
 *   [ ] Refactor Maven `pom.xml` to include `FastCore` dependency and target Java 17+.
 

@@ -1,13 +1,9 @@
 package fastterminal;
 
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
-
-import java.io.IOException;
-
 /**
  * Stunning 24-bit True-Color & Unicode Emoji Fullscreen Scalable Demo.
  * Demonstrates high-performance state-optimized ANSI rendering on a dynamic viewport.
+ * Uses 100% native platform JNI dimensions without third-party frameworks.
  */
 public class Demo {
 
@@ -17,20 +13,18 @@ public class Demo {
         int cols = 80;
         int rows = 24;
 
-        Terminal jlineTerminal = null;
         try {
-            // Detect terminal dimensions using JLine
-            jlineTerminal = TerminalBuilder.builder().system(true).build();
-            cols = jlineTerminal.getWidth();
-            rows = jlineTerminal.getHeight();
-            // Fallback for empty IDE runs
+            // Retrieve dynamic console dimensions natively via JNI!
+            int[] size = FastTerminal.getTerminalSize();
+            cols = size[0];
+            rows = size[1];
             if (cols <= 0) cols = 80;
             if (rows <= 0) rows = 24;
-        } catch (IOException e) {
-            System.err.println("JLine terminal detection failed, falling back to 80x24: " + e.getMessage());
+        } catch (Throwable t) {
+            System.err.println("Native terminal query failed, falling back to 80x24: " + t.getMessage());
         }
 
-        System.out.printf("Detected Terminal Geometry: %d Columns x %d Rows\n", cols, rows);
+        System.out.printf("Detected Terminal Geometry (Native): %d Columns x %d Rows\n", cols, rows);
         try {
             Thread.sleep(1000);
         } catch (InterruptedException ignored) {}
@@ -123,12 +117,6 @@ public class Demo {
         // Restore alternate screen buffer, restore cursor
         System.out.print("\033[?1049l\033[?25h");
         System.out.flush();
-
-        if (jlineTerminal != null) {
-            try {
-                jlineTerminal.close();
-            } catch (IOException ignored) {}
-        }
 
         System.out.println("=== FastTerminal Demo Finished Safely ===");
     }

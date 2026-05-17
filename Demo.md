@@ -1,6 +1,6 @@
 # FastTerminal — High-Performance Demos & Interactive Mouse Renderer
 
-Here are 5 technically beautiful, minimalistic, and brutal-fast demonstration templates designed for our independent, JLine-free, True-Color, and Emoji-enabled `FastTerminal` system. Following that is a 6th interactive mouse-move rectangle demo.
+Here are 5 technically beautiful, minimalistic, and brutal-fast demonstration templates designed for our independent, zero-dependency, True-Color, and Emoji-enabled `FastTerminal` system. Following that is a 6th interactive mouse-move rectangle demo.
 
 ---
 
@@ -88,7 +88,7 @@ Use arrows to paint. Press 'c' to change color.
 ---
 
 ## 🖱️ Demo 6: Mouse-Move Rectangle
-*   **Zweck**: Ein farbiges Rechteck folgt der Mausbewegung im Fullscreen-Modus ohne JLine.
+*   **Zweck**: Ein farbiges Rechteck folgt der Mausbewegung im Fullscreen-Modus.
 *   **Effekt**: Du siehst den kompletten Terminal-Screen und bewegst mit der Maus flimmerfrei ein farbiges Rechteck.
 *   **Features**:
     *   Alternate Screen Buffer ON (`\033[?1049h`), Cursor hidden (`\033[?25l`)

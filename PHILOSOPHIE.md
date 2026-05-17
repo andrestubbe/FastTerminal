@@ -1,14 +1,14 @@
 # The Philosophy of FastTerminal
 
 > [!IMPORTANT]
-> **"Zero Latency. Zero JLine. Codepoint Safety. State-Minimized ANSI Blits."**
+> **"Zero Latency. Zero Dependency. Codepoint Safety. State-Minimized ANSI Blits."**
 
-FastTerminal is built on the principle that modern Java TUI (Terminal User Interface) design requires a **native-first, high-throughput** substrate that standard console APIs and large blocking libraries (like JLine) fail to deliver.
+FastTerminal is built on the principle that modern Java TUI (Terminal User Interface) design requires a **native-first, high-throughput** substrate that standard console APIs and large blocking layouts fail to deliver.
 
 ## Core Tenets
 
-### 1. JLine-Free Independence
-Bypass bloated terminal libraries. Instead of introducing layers of buffering, complex command parsers, and blocking threads, FastTerminal directly targets the physical console boundaries via state-of-the-art ANSI sequences and JNI hooks.
+### 1. Zero-Dependency Independence
+Bypass bloated terminal layouts. Instead of introducing layers of buffering, complex command parsers, and blocking threads, FastTerminal directly targets the physical console boundaries via state-of-the-art ANSI sequences and JNI hooks.
 
 ### 2. State-Minimized Compositing
 Terminal stream bandwidth is highly latency-sensitive. Standard redraw passes can cause terminal flickering and excessive CPU usage. FastTerminal’s compositing architecture compares cells before printing, emitting 24-bit True Color codes only when colors actually change. This reduces stdout load by up to **80%**.
