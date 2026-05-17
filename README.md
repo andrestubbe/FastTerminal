@@ -1,13 +1,13 @@
-# FastTerminal — High-Performance True-Color Terminal Engine for Java
+# FastTerminal — High-Performance JLine-Free True-Color Terminal Engine for Java
 
-**A high-performance terminal graphics and TUI engine for Java, engineered for high-refresh rates, 24-bit True Color, and native JNI console optimizations with seamless keyboard and mouse integrations.**
+**A zero-dependency, JLine-free terminal graphics and TUI engine for Java, engineered for high-refresh rates, 24-bit True Color, and native JNI console optimizations with seamless keyboard and mouse integrations.**
 
 [![Java](https://img.shields.io/badge/Java-17+-blue.svg)](https://www.java.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010+%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![JitPack](https://jitpack.io/v/andrestubbe/FastTerminal.svg)](https://jitpack.io/#andrestubbe/FastTerminal)
 
-FastTerminal is the high-performance terminal substrate of the **FastJava** ecosystem. It introduces a lightweight, cell-buffered virtual viewport using primitive integer buffers for full 24-bit True Color (foreground & background) and emoji-safe UTF-32 Codepoint grids.
+FastTerminal is the high-performance terminal substrate of the **FastJava** ecosystem. It introduces a lightweight, cell-buffered virtual viewport using primitive integer buffers for full 24-bit True Color (foreground & background) and emoji-safe UTF-32 Codepoint grids, operating completely independently of heavy standard frameworks.
 
 To achieve a completely responsive, zero-latency desktop terminal experience, FastTerminal is designed to pair natively with its twin telemetry and input modules:
 *   🚀 **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** — Direct, low-latency, asynchronous raw global and local keyboard event handling.
@@ -48,11 +48,12 @@ public class Demo {
 ---
 
 ## 🎯 Our Mission
-Our mission is to build the fastest, most robust native execution kernel on the JVM for console rendering and TUI interactivity. By combining cell-buffered graphics, double-buffered layouts, and immediate OS hardware input telemetry via **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** and **[FastMouse](https://github.com/andrestubbe/FastMouse)**, we empower developers to create premium, interactive command-line terminals that rival native C++ applications in visual fidelity and input response.
+Our mission is to build the fastest, most robust native execution kernel on the JVM for console rendering and TUI interactivity. By combining cell-buffered graphics, double-buffered layouts, and immediate OS hardware input telemetry via **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** and **[FastMouse](https://github.com/andrestubbe/FastMouse)**, we empower developers to create premium, interactive command-line terminals that rival native C++ applications in visual fidelity and input response—without a single external dependency.
 
 ---
 
 ## Key Features
+*   **🚫 JLine-Free & Zero Dependencies** — Bypasses all high-latency third-party blocking input loops.
 *   **🎨 24-bit True Color** — Complete support for direct RGB escape codes (`\033[38;2;R;G;Bm` for foreground and `\033[48;2;R;G;Bm` for background).
 *   **🌐 Emoji & Unicode-Safe** — Eliminates UTF-16 surrogate split bugs by using `int` (UTF-32) codepoint cell buffers rather than `char[]` arrays, guaranteeing that Emojis (e.g. `🚀`, `🌈`) fit exactly in 1 cell without warping rows.
 *   **⚡ State-Minimized Renderer** — Optimizes stdout rendering by only emitting ANSI escape codes when color states change, reducing console stream bandwidth by up to **80%**.
