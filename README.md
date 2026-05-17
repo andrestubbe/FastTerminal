@@ -1,6 +1,8 @@
-# FastTerminal — High-Performance True-Color Terminal Engine for Java
+# FastTerminal — High-Performance JLine-Free True-Color Terminal Engine for Java [v0.1.0]
 
 **A zero-dependency terminal graphics and TUI engine for Java, engineered for high-refresh rates, 24-bit True Color, and native JNI console optimizations with seamless keyboard and mouse integrations.**
+
+[![FastTerminal Showcase](docs/screenshot.png)](https://www.youtube.com/watch?v=VIDEO_ID)
 
 [![Java](https://img.shields.io/badge/Java-17+-blue.svg)](https://www.java.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010+%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
@@ -94,9 +96,10 @@ Composites are blitted to standard output using the highly-optimized **[Terminal
 
 ## Installation
 
-FastTerminal works natively with `FastCore` to handle cross-platform JNI loading:
+FastTerminal requires **two** dependencies: the module itself, and `FastCore` (which handles the native library extraction).
 
-### Maven (JitPack)
+### Option 1: Maven (JitPack)
+Add the JitPack repository and dependencies to your `pom.xml`:
 ```xml
 <repositories>
     <repository>
@@ -106,11 +109,14 @@ FastTerminal works natively with `FastCore` to handle cross-platform JNI loading
 </repositories>
 
 <dependencies>
+    <!-- 1. The FastTerminal Module -->
     <dependency>
         <groupId>com.github.andrestubbe</groupId>
         <artifactId>fastterminal</artifactId>
         <version>v0.1.0</version>
     </dependency>
+    
+    <!-- 2. FastCore (Required Native Loader) -->
     <dependency>
         <groupId>com.github.andrestubbe</groupId>
         <artifactId>fastcore</artifactId>
@@ -119,7 +125,8 @@ FastTerminal works natively with `FastCore` to handle cross-platform JNI loading
 </dependencies>
 ```
 
-### Gradle (JitPack)
+### Option 2: Gradle (JitPack)
+Add this to your `build.gradle` file:
 ```gradle
 repositories {
     maven { url 'https://jitpack.io' }
@@ -130,6 +137,15 @@ dependencies {
     implementation 'com.github.andrestubbe:fastcore:v0.1.0'
 }
 ```
+
+### Option 3: Direct Download (No Build Tool)
+Download the latest pre-compiled JARs directly to add them to your project's classpath:
+
+1. 📦 [**fastterminal-v0.1.0.jar**](https://github.com/andrestubbe/FastTerminal/releases/download/v0.1.0/fastterminal-0.1.0.jar) (The Core Library & native JNI resources)
+2. ⚙️ [**fastcore-v0.1.0.jar**](https://github.com/andrestubbe/fastcore/releases/download/v0.1.0/fastcore-0.1.0.jar) (The Mandatory Native Loader)
+
+> [!IMPORTANT]
+> Both JARs must be present in your classpath for FastTerminal's native functions to operate correctly.
 
 ---
 
