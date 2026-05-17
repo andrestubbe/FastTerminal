@@ -1,12 +1,10 @@
 package fastterminal;
 
-import java.util.Random;
-
 /**
- * Premium 3D Solid Shaded Cube Demo.
- * Features real-time scanline triangle rasterization, custom back-face culling,
- * Lambertian diffuse flat shading with a dynamic orbiting 3D light source,
- * and a drifting starfield background running at a locked 120 FPS.
+ * Premium 3D Solid Shaded Studio Demo.
+ * Renders a monochromatic solid 3D cube floating over a perspective-vanishing
+ * white floor plane, casting a real-time dynamic perspective shadow directly below it.
+ * Runs at a locked 120 FPS with JNI resizing.
  */
 public class ShadedDemo {
 
@@ -24,12 +22,12 @@ public class ShadedDemo {
 
     // 6 Cube Faces (each defined by 4 vertex indices in counter-clockwise order)
     private static final int[][] FACES = {
-        {4, 5, 6, 7}, // Front face (normal: 0, 0, 1)
-        {1, 0, 3, 2}, // Back face  (normal: 0, 0, -1)
-        {3, 2, 6, 7}, // Top face   (normal: 0, 1, 0)
-        {0, 1, 5, 4}, // Bottom face(normal: 0, -1, 0)
-        {1, 5, 6, 2}, // Right face (normal: 1, 0, 0)
-        {4, 0, 3, 7}  // Left face  (normal: -1, 0, 0)
+        {4, 5, 6, 7}, // Front face
+        {1, 0, 3, 2}, // Back face
+        {3, 2, 6, 7}, // Top face
+        {0, 1, 5, 4}, // Bottom face
+        {1, 5, 6, 2}, // Right face
+        {4, 0, 3, 7}  // Left face
     };
 
     // Original normals of the 6 faces
@@ -42,38 +40,18 @@ public class ShadedDemo {
         {-1.0,  0.0,  0.0}  // Left
     };
 
-    // Base colors for each face of the cube (warm violet, royal blue, cool teal, electric crimson, magenta, emerald)
+    // Monochromatic slate/silver base colors for each face of the cube
     private static final int[] FACE_COLORS = {
-        0x7C3AED, // Front (Amethyst Purple)
-        0x1D4ED8, // Back (Royal Blue)
-        0x0D9488, // Top (Teal)
-        0xE11D48, // Bottom (Crimson)
-        0xDB2777, // Right (Magenta)
-        0x059669  // Left (Emerald Green)
+        0xF1F5F9, // Front (Bright Slate White)
+        0xE2E8F0, // Back (Silver)
+        0xCBD5E1, // Top (Light Gray)
+        0x94A3B8, // Bottom (Slate Gray)
+        0x64748B, // Right (Muted Gray)
+        0x475569  // Left (Dark Slate)
     };
 
-    // Starfield representation
-    private static final int STAR_COUNT = 50;
-    private static final double[] STAR_X = new double[STAR_COUNT];
-    private static final double[] STAR_Y = new double[STAR_COUNT];
-    private static final double[] STAR_SPEED = new double[STAR_COUNT];
-    private static final int[] STAR_COLOR = new int[STAR_COUNT];
-
-    static {
-        Random rand = new Random();
-        for (int i = 0; i < STAR_COUNT; i++) {
-            STAR_X[i] = rand.nextDouble();
-            STAR_Y[i] = rand.nextDouble();
-            STAR_SPEED[i] = 0.001 + rand.nextDouble() * 0.003;
-            int choice = rand.nextInt(3);
-            if (choice == 0) STAR_COLOR[i] = 0x64748B; // Faint gray
-            else if (choice == 1) STAR_COLOR[i] = 0x94A3B8; // Slate
-            else STAR_COLOR[i] = 0xE2E8F0; // Bright star
-        }
-    }
-
     public static void main(String[] args) {
-        System.out.println("Initializing FastTerminal 3D Shaded Cube Demo...");
+        System.out.println("Initializing FastTerminal 3D Shaded Studio Demo...");
 
         // Register JVM Shutdown Hook to safely restore the console on exit
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -103,7 +81,6 @@ public class ShadedDemo {
         double angleX = 0.0;
         double angleY = 0.0;
         double angleZ = 0.0;
-        double lightPhase = 0.0;
         long frameTimeMs = 1000 / 120; // 120 FPS target
 
         while (true) {
@@ -131,48 +108,47 @@ public class ShadedDemo {
 
             canvas.clear();
 
-            // Slow down angles for majestic rotations (1/3 of original speed)
+            // Rotation angles at 1/3 speed
             angleX += 0.025 / 3.0;
             angleY += 0.035 / 3.0;
             angleZ += 0.015 / 3.0;
-            lightPhase += 0.01; // Orbiting light speed
 
-            // 2. FILL CANVAS BACKGROUND WITH OBSIDIAN SPACE BLACK
+            // 2. RENDER THE VANISHING SHADED STUDIO BACKGROUND (Sky & Floor)
+            int horizon = rows / 2;
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
-                    canvas.writeCell(c, r, ' ', 0x000000, 0x05070A);
+                    if (r < horizon) {
+                        // Sky: Ambient dark charcoal
+                        canvas.writeCell(c, r, ' ', 0x000000, 0x0F172A);
+                    } else {
+                        // Floor: Grayscale depth gradient vanishing into the horizon
+                        double t = (double) (r - horizon) / (rows - horizon);
+                        // Fades from deep slate 0x334155 (at horizon) to clean bright silver 0xDFE2E6 (at bottom)
+                        int gray = 0x22 + (int) (t * (0xD4 - 0x22));
+                        int floorColor = (gray << 16) | (gray << 8) | gray;
+                        canvas.writeCell(c, r, ' ', 0x000000, floorColor);
+                    }
                 }
             }
 
-            // 3. DRAW AND DRIFT STARFIELD BACKDROP
-            for (int i = 0; i < STAR_COUNT; i++) {
-                STAR_X[i] -= STAR_SPEED[i];
-                if (STAR_X[i] < 0) {
-                    STAR_X[i] = 1.0;
-                }
-                int sx = (int) (STAR_X[i] * cols);
-                int sy = (int) (STAR_Y[i] * rows);
-
-                if (sx >= 0 && sx < cols && sy >= 0 && sy < rows) {
-                    int cp = (STAR_SPEED[i] > 0.003) ? '*' : '.';
-                    canvas.writeCell(sx, sy, cp, STAR_COLOR[i], 0x05070A);
-                }
-            }
-
-            // 4. DYNAMIC ORBITING LIGHT SOURCE
-            double lx = Math.cos(lightPhase);
-            double ly = -0.5;
-            double lz = Math.sin(lightPhase);
-            // Normalize light vector
+            // 3. FIXED TOP LIGHT SOURCE (Slightly forward angled)
+            double lx = 0.2;
+            double ly = 1.0;
+            double lz = -0.3;
             double len = Math.sqrt(lx * lx + ly * ly + lz * lz);
             lx /= len;
             ly /= len;
             lz /= len;
 
-            // 5. TRANSFORM AND ROTATE VERTICES
-            int[][] projected = new int[VERTICES.length][2];
-            double[] rotatedZ = new double[VERTICES.length];
+            // Camera specifications
             double cameraDistance = 3.2;
+            double yTranslation = -0.3; // Cube floats slightly above center
+            double floorY = 1.1;       // Fixed 3D plane coordinate for floor
+
+            // 4. ROTATE VERTICES AND PROJECT CUBE AND PROJECTED SHADOW POINTS
+            int[][] projectedCube = new int[VERTICES.length][2];
+            int[][] projectedShadow = new int[VERTICES.length][2];
+            double[] rotatedZ = new double[VERTICES.length];
 
             for (int i = 0; i < VERTICES.length; i++) {
                 double x = VERTICES[i][0];
@@ -191,16 +167,36 @@ public class ShadedDemo {
                 double x3 = x2 * Math.cos(angleZ) - y1 * Math.sin(angleZ);
                 double y3 = x2 * Math.sin(angleZ) + y1 * Math.cos(angleZ);
 
+                // Floated 3D Cube Coordinate
+                double cubeY = y3 + yTranslation;
                 rotatedZ[i] = z2;
 
-                // Perspective projection with terminal cell aspect ratio correction (2.1x width scaling)
-                double scale = (rows * 0.5) / (cameraDistance + z2);
-                projected[i][0] = (int) (cols / 2.0 + x3 * scale * 2.1);
-                projected[i][1] = (int) (rows / 2.0 + y3 * scale);
+                // Perspective projection for Cube Vertices (Aspect-ratio corrected: 2.1x width)
+                double scaleCube = (rows * 0.5) / (cameraDistance + z2);
+                projectedCube[i][0] = (int) (cols / 2.0 + x3 * scaleCube * 2.1);
+                projectedCube[i][1] = (int) (rows / 2.0 + cubeY * scaleCube);
+
+                // Perspective projection for Shadow cast on flat Floor plane (y = floorY)
+                double scaleShadow = (rows * 0.5) / (cameraDistance + z2);
+                projectedShadow[i][0] = (int) (cols / 2.0 + x3 * scaleShadow * 2.1);
+                projectedShadow[i][1] = (int) (rows / 2.0 + floorY * scaleShadow);
             }
 
-            // 6. CALCULATE, CULL, SHADE, AND RENDER FACE POLYGONS
-            // We use simple painter's sorting by z-depth to prevent rendering overlaps (Z-Buffering)
+            // 5. DRAW CUBE SHADOW FACES ON THE FLOOR FIRST
+            // Shadow color is a flat dark charcoal slate overlay
+            int shadowColor = 0x1E293B;
+            for (int f = 0; f < 6; f++) {
+                int[] v = FACES[f];
+                fillTriangle(canvas, projectedShadow[v[0]][0], projectedShadow[v[0]][1],
+                                    projectedShadow[v[1]][0], projectedShadow[v[1]][1],
+                                    projectedShadow[v[2]][0], projectedShadow[v[2]][1], shadowColor, true);
+
+                fillTriangle(canvas, projectedShadow[v[0]][0], projectedShadow[v[0]][1],
+                                    projectedShadow[v[2]][0], projectedShadow[v[2]][1],
+                                    projectedShadow[v[3]][0], projectedShadow[v[3]][1], shadowColor, true);
+            }
+
+            // 6. PAINTER'S DEPTH SORT FOR CUBE FACES
             Integer[] faceOrder = {0, 1, 2, 3, 4, 5};
             double[] faceAverageZ = new double[6];
             for (int f = 0; f < 6; f++) {
@@ -210,56 +206,52 @@ public class ShadedDemo {
                 }
                 faceAverageZ[f] = avgZ / 4.0;
             }
-
-            // Sort faces from furthest to nearest (descending order of Z depth)
             java.util.Arrays.sort(faceOrder, (a, b) -> Double.compare(faceAverageZ[b], faceAverageZ[a]));
 
+            // 7. RENDER SOLID CUBE FACES WITH CORRECTED CULLING & LAMBERTIAN SHADING
             for (int f : faceOrder) {
-                // Calculate rotated normal of this face
                 double nx = NORMALS[f][0];
                 double ny = NORMALS[f][1];
                 double nz = NORMALS[f][2];
 
-                // Pitch (X rotation)
+                // Rotate Normals
                 double ny1 = ny * Math.cos(angleX) - nz * Math.sin(angleX);
                 double nz1 = ny * Math.sin(angleX) + nz * Math.cos(angleX);
 
-                // Yaw (Y rotation)
                 double nx2 = nx * Math.cos(angleY) + nz1 * Math.sin(angleY);
                 double nz2 = -nx * Math.sin(angleY) + nz1 * Math.cos(angleY);
 
-                // Roll (Z rotation)
                 double nx3 = nx2 * Math.cos(angleZ) - ny1 * Math.sin(angleZ);
                 double ny3 = nx2 * Math.sin(angleZ) + ny1 * Math.cos(angleZ);
 
-                // Back-face Culling: If normal points away from observer (camera faces Z-), do not draw!
-                if (nz2 < 0) continue;
+                // FIXED BACK-FACE CULLING DIRECTION: Cull normals pointing away from the camera (nz2 > 0)
+                if (nz2 > 0) continue;
 
-                // Lambertian Diffuse shading: Dot product of normal and light source direction
+                // Shading calculations based on top light
                 double dot = nx3 * lx + ny3 * ly + nz2 * lz;
-                double ambient = 0.18; // Base shadow brightness
-                double shade = Math.max(0.0, dot); // Clamped lighting
+                double ambient = 0.25; // Nice shadow contrast
+                double shade = Math.max(0.0, dot);
                 double intensity = ambient + (1.0 - ambient) * shade;
 
-                // Compute shaded face color (24-bit True Color)
+                // Shaded color calculation
                 int baseColor = FACE_COLORS[f];
                 int r = (int) (((baseColor >> 16) & 0xFF) * intensity);
                 int g = (int) (((baseColor >> 8) & 0xFF) * intensity);
                 int b = (int) ((baseColor & 0xFF) * intensity);
                 int shadedColor = (r << 16) | (g << 8) | b;
 
-                // Draw the Quad Face by splitting it into two triangles
+                // Render solid cube faces (drawn as two triangles each)
                 int[] v = FACES[f];
-                fillTriangle(canvas, projected[v[0]][0], projected[v[0]][1],
-                                    projected[v[1]][0], projected[v[1]][1],
-                                    projected[v[2]][0], projected[v[2]][1], shadedColor);
+                fillTriangle(canvas, projectedCube[v[0]][0], projectedCube[v[0]][1],
+                                    projectedCube[v[1]][0], projectedCube[v[1]][1],
+                                    projectedCube[v[2]][0], projectedCube[v[2]][1], shadedColor, false);
 
-                fillTriangle(canvas, projected[v[0]][0], projected[v[0]][1],
-                                    projected[v[2]][0], projected[v[2]][1],
-                                    projected[v[3]][0], projected[v[3]][1], shadedColor);
+                fillTriangle(canvas, projectedCube[v[0]][0], projectedCube[v[0]][1],
+                                    projectedCube[v[2]][0], projectedCube[v[2]][1],
+                                    projectedCube[v[3]][0], projectedCube[v[3]][1], shadedColor, false);
             }
 
-            // Blit standard composite buffers to screen
+            // Blit composite buffer to screen
             canvas.setDirty(true);
             renderer.render();
 
@@ -274,9 +266,9 @@ public class ShadedDemo {
         }
     }
 
-    // High-Performance Scanline Triangle Rasterizer filling cells with '█' blocks
-    private static void fillTriangle(TerminalScene canvas, int x0, int y0, int x1, int y1, int x2, int y2, int color) {
-        // Sort vertices by Y coordinate (y0 <= y1 <= y2)
+    // High-Performance Scanline Triangle Rasterizer blitting solid '█' cells
+    private static void fillTriangle(TerminalScene canvas, int x0, int y0, int x1, int y1, int x2, int y2, int color, boolean isShadow) {
+        // Sort vertices by Y (y0 <= y1 <= y2)
         if (y0 > y1) { int t = y0; y0 = y1; y1 = t; t = x0; x0 = x1; x1 = t; }
         if (y0 > y2) { int t = y0; y0 = y2; y2 = t; t = x0; x0 = x2; x2 = t; }
         if (y1 > y2) { int t = y1; y1 = y2; y2 = t; t = x1; x1 = x2; x2 = t; }
@@ -284,8 +276,13 @@ public class ShadedDemo {
         int totalHeight = y2 - y0;
         if (totalHeight == 0) return;
 
+        int horizon = canvas.getHeight() / 2;
+
         for (int y = y0; y <= y2; y++) {
             if (y < 0 || y >= canvas.getHeight()) continue;
+
+            // Shadows are restricted to only paint on the floor (below horizon)
+            if (isShadow && y <= horizon) continue;
 
             boolean secondHalf = y > y1 || y1 == y0;
             int segmentHeight = secondHalf ? y2 - y1 : y1 - y0;
@@ -301,7 +298,20 @@ public class ShadedDemo {
 
             for (int x = ax; x <= bx; x++) {
                 if (x >= 0 && x < canvas.getWidth()) {
-                    canvas.writeCell(x, y, '█', color, 0x05070A);
+                    // Fetch current cell background to keep depth gradient when drawing transparent-feeling shadows
+                    int bgVal = 0x05070A;
+                    if (isShadow) {
+                        // Dynamically blend shadow with underlying depth floor background!
+                        double t = (double) (y - horizon) / (canvas.getHeight() - horizon);
+                        int gray = 0x22 + (int) (t * (0xD4 - 0x22));
+                        // Darken the floor cells by a factor to cast a beautiful soft shadow!
+                        int shadowGray = (int) (gray * 0.45);
+                        bgVal = (shadowGray << 16) | (shadowGray << 8) | shadowGray;
+                        canvas.writeCell(x, y, ' ', 0x000000, bgVal);
+                    } else {
+                        // Renders solid shaded block
+                        canvas.writeCell(x, y, '█', color, bgVal);
+                    }
                 }
             }
         }
