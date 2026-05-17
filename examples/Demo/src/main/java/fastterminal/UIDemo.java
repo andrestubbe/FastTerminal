@@ -133,10 +133,16 @@ public class UIDemo {
                 canvas.writeString(startX + 4, startY + 1, "●", 0xF59E0B, 0x1E1B4B); // Minimize (Yellow)
                 canvas.writeString(startX + 6, startY + 1, "●", 0x10B981, 0x1E1B4B); // Maximize (Green)
 
-                // Title string centered
-                String title = " ⚡ NEURAL LINK TELEMETRY ⚡ ";
-                int titleX = startX + (winW - title.length()) / 2;
-                canvas.writeString(titleX, startY + 1, title, 0xF9FAFB, 0x1E1B4B);
+                // Title string centered safely with -99 wide-character continuation cells!
+                // Total visual width is 29 columns.
+                int titleX = startX + (winW - 29) / 2;
+                canvas.writeCell(titleX, startY + 1, ' ', 0xF9FAFB, 0x1E1B4B);
+                canvas.writeCell(titleX + 1, startY + 1, 0x26A1, 0xFBBF24, 0x1E1B4B); // ⚡ (Lightning bolt codepoint)
+                canvas.writeCell(titleX + 2, startY + 1, -99, -1, -1); // Emoji continuation cell!
+                canvas.writeString(titleX + 3, startY + 1, " NEURAL LINK TELEMETRY ", 0xF9FAFB, 0x1E1B4B);
+                canvas.writeCell(titleX + 26, startY + 1, 0x26A1, 0xFBBF24, 0x1E1B4B); // ⚡ (Lightning bolt codepoint)
+                canvas.writeCell(titleX + 27, startY + 1, -99, -1, -1); // Emoji continuation cell!
+                canvas.writeCell(titleX + 28, startY + 1, ' ', 0xF9FAFB, 0x1E1B4B);
 
                 // 7. LEFT SIDEBAR PANEL (System Diagnostics)
                 int sideStartX = startX + 2;
