@@ -114,17 +114,17 @@ public class ShadedDemo {
             angleZ += 0.015 / 3.0;
 
             // 2. RENDER THE VANISHING SHADED STUDIO BACKGROUND (Sky & Floor)
-            int horizon = rows / 2;
+            int horizon = (int) (rows * 0.70);
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
                     if (r < horizon) {
-                        // Sky: Ambient dark charcoal
-                        canvas.writeCell(c, r, ' ', 0x000000, 0x0F172A);
+                        // Sky: Ambient pure black space void
+                        canvas.writeCell(c, r, ' ', 0x000000, 0x000000);
                     } else {
-                        // Floor: Grayscale depth gradient vanishing into the horizon
+                        // Floor: Grayscale depth gradient vanishing completely into pure black at horizon
                         double t = (double) (r - horizon) / (rows - horizon);
-                        // Fades from deep slate 0x334155 (at horizon) to clean bright silver 0xDFE2E6 (at bottom)
-                        int gray = 0x22 + (int) (t * (0xD4 - 0x22));
+                        // Fades from pure black 0x000000 (at horizon) to clean bright silver 0xD4D4D4 (at bottom)
+                        int gray = (int) (t * 0xD4);
                         int floorColor = (gray << 16) | (gray << 8) | gray;
                         canvas.writeCell(c, r, ' ', 0x000000, floorColor);
                     }
@@ -142,8 +142,8 @@ public class ShadedDemo {
 
             // Camera specifications
             double cameraDistance = 3.2;
-            double yTranslation = -0.3; // Cube floats slightly above center
-            double floorY = 1.1;       // Fixed 3D plane coordinate for floor
+            double yTranslation = -0.2; // Cube floats slightly above center
+            double floorY = 2.0;       // Fixed 3D plane coordinate for lowered floor
 
             // 4. ROTATE VERTICES AND PROJECT CUBE AND PROJECTED SHADOW POINTS
             int[][] projectedCube = new int[VERTICES.length][2];
@@ -276,7 +276,7 @@ public class ShadedDemo {
         int totalHeight = y2 - y0;
         if (totalHeight == 0) return;
 
-        int horizon = canvas.getHeight() / 2;
+        int horizon = (int) (canvas.getHeight() * 0.70);
 
         for (int y = y0; y <= y2; y++) {
             if (y < 0 || y >= canvas.getHeight()) continue;
@@ -303,7 +303,7 @@ public class ShadedDemo {
                     if (isShadow) {
                         // Dynamically blend shadow with underlying depth floor background!
                         double t = (double) (y - horizon) / (canvas.getHeight() - horizon);
-                        int gray = 0x22 + (int) (t * (0xD4 - 0x22));
+                        int gray = (int) (t * 0xD4);
                         // Darken the floor cells by a factor to cast a beautiful soft shadow!
                         int shadowGray = (int) (gray * 0.45);
                         bgVal = (shadowGray << 16) | (shadowGray << 8) | shadowGray;
