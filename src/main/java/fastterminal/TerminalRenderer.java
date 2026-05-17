@@ -90,6 +90,13 @@ public final class TerminalRenderer {
             } else {
                 sb.append(' ');
             }
+
+            // Explicitly force newline at the end of each row
+            if ((i + 1) % this.width == 0 && (i + 1) < compositeCodepoints.length) {
+                sb.append("\033[0m\n"); // Reset colors before newline to avoid bleeding
+                currentFg = -2;
+                currentBg = -2;
+            }
         }
 
         // Reset all console attributes at the end of the frame
