@@ -1,0 +1,30 @@
+================================================================================
+YOUTUBE RELEASE TEMPLATE: [PROJECT NAME]
+================================================================================
+
+TITLE:
+[Insert Catchy Title here] 🚀
+
+DESCRIPTION:
+[Insert Project Description: FastXXX is a high-performance native Windows XXX API for the FastJava ecosystem. It provides the hand-tuned native primitives required for...]
+
+KEY HIGHLIGHTS:
+- [Feature 1]: Description of performance gain.
+- [Feature 2]: Description of native capability.
+- [Feature 3]: Zero-overhead JNI bridge.
+
+RESULTS:
+- Standard Java: [Insert Time] ms
+- FastXXX Native: [Insert Time] ms
+- Speedup: [Insert X]x faster
+
+LINKS:
+GitHub: https://github.com/andrestubbe/[ProjectName]
+FastJava Ecosystem: https://github.com/andrestubbe/FastJava
+
+Part of the FastJava Ecosystem — Making the JVM faster.
+
+Made with ⚡ by Andre Stubbe
+
+TAGS:
+Java, Performance, Native, Programming, FastJava, JNI, Windows, Optimization, [ProjectSpecificTags]
