@@ -142,7 +142,7 @@ dependencies {
 Download the latest pre-compiled JARs directly to add them to your project's classpath:
 
 1. 📦 [**fastterminal-v0.1.0.jar**](https://github.com/andrestubbe/FastTerminal/releases/download/v0.1.0/fastterminal-0.1.0.jar) (The Core Library & native JNI resources)
-2. ⚙️ [**fastcore-v0.1.0.jar**](https://github.com/andrestubbe/fastcore/releases/download/v0.1.0/fastcore-0.1.0.jar) (The Mandatory Native Loader)
+2. ⚙️ [**fastcore-v0.1.0.jar**](https://github.com/andrestubbe/FastCore/releases/download/v0.1.0/fastcore-0.1.0.jar) (The Mandatory Native Loader)
 
 > [!IMPORTANT]
 > Both JARs must be present in your classpath for FastTerminal's native functions to operate correctly.
