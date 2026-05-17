@@ -35,7 +35,7 @@ public class Demo {
         TerminalScene canvas = null;
 
         final double[] phase = { 0.0 };
-        long frameTimeMs = 1000 / 60; // Target locked 60 FPS
+        long frameTimeMs = 1000 / 120; // Target locked 120 FPS
 
         // Loop runs indefinitely until user interrupts (e.g. via Ctrl+C)
         while (true) {
@@ -91,7 +91,7 @@ public class Demo {
                 }
             }
 
-            // 3. PREVENT LAYOUT JITTER
+            // 3. PREVENT LAYOUT JITTER & CLEAR EMOJI OVERLAYS
             // Title is centered at row titleY. We restrict moving emojis to float ONLY 
             // in the upper/lower boundary sections so they never enter the title's line.
             int titleY = finalRows / 2;
@@ -100,25 +100,30 @@ public class Demo {
             int upperLimit = Math.max(1, titleY - 2);
             int emojiX1 = (int) ((Math.sin(phase[0] * 0.5) * 0.4 + 0.5) * finalCols);
             int emojiY1 = (int) ((Math.cos(phase[0] * 0.5) * 0.4 + 0.5) * upperLimit);
-            canvas.writeString(emojiX1, Math.min(emojiY1, upperLimit), "🚀", 0xFFFFFF, -1);
+            int rY = Math.min(emojiY1, upperLimit);
+            canvas.writeString(emojiX1, rY, "🚀", 0xFFFFFF, -1);
+            canvas.writeCell(emojiX1 + 1, rY, -99, -1, -1); // Clear emoji overlap cell!
 
             // Lower limit row bounds [titleY + 2, finalRows - 1]
             int lowerLimitStart = Math.min(finalRows - 1, titleY + 2);
             int lowerLimitRange = Math.max(1, finalRows - 1 - lowerLimitStart);
             int emojiX2 = (int) ((Math.cos(phase[0] * 0.7 + 1.0) * 0.4 + 0.5) * finalCols);
             int emojiY2 = lowerLimitStart + (int) ((Math.sin(phase[0] * 0.7 + 1.0) * 0.4 + 0.5) * lowerLimitRange);
-            canvas.writeString(emojiX2, Math.min(emojiY2, finalRows - 1), "🌈", 0xFFFFFF, -1);
+            int lY = Math.min(emojiY2, finalRows - 1);
+            canvas.writeString(emojiX2, lY, "🌈", 0xFFFFFF, -1);
+            canvas.writeCell(emojiX2 + 1, lY, -99, -1, -1); // Clear emoji overlap cell!
 
             // Lightning bolt floats near the top edge
             int emojiX3 = (int) ((Math.sin(phase[0] * 0.3 + 2.0) * 0.4 + 0.5) * finalCols);
             canvas.writeString(emojiX3, 0, "⚡", 0xFFFF00, -1);
+            canvas.writeCell(emojiX3 + 1, 0, -99, -1, -1); // Clear emoji overlap cell!
 
             // 4. RENDER STATIC SOLID TITLE CARDS
             String titleText = " [ FASTTERMINAL TRUE-COLOR ] ";
             int titleX = Math.max(0, (finalCols - titleText.length()) / 2);
             canvas.writeString(titleX, titleY, titleText, 0x000000, 0xFFCC00);
 
-            String subtitle = " Zero-Dependency | Locked 60 FPS | Dynamic Resize ";
+            String subtitle = " Zero-Dependency | Locked 120 FPS | Dynamic Resize ";
             int subX = Math.max(0, (finalCols - subtitle.length()) / 2);
             canvas.writeString(subX, Math.min(titleY + 1, finalRows - 1), subtitle, 0xFFFFFF, 0x222222);
 

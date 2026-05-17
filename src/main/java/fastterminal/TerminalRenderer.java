@@ -58,6 +58,17 @@ public final class TerminalRenderer {
             int fg = compositeFg[i];
             int bg = compositeBg[i];
 
+            if (cp == -99) {
+                // Wide character continuation cell - skip printing the character
+                // but we MUST still perform the row split check!
+                if ((i + 1) % this.width == 0 && (i + 1) < compositeCodepoints.length) {
+                    sb.append("\033[0m\n");
+                    currentFg = -2;
+                    currentBg = -2;
+                }
+                continue;
+            }
+
             // Optimize foreground escape codes
             if (fg != currentFg) {
                 if (fg == -1) {
