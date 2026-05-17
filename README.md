@@ -2,7 +2,7 @@
 
 **A zero-dependency terminal graphics and TUI engine for Java, engineered for high-refresh rates, 24-bit True Color, and native JNI console optimizations with seamless keyboard and mouse integrations.**
 
-[![FastTerminal Showcase](docs/screenshot.png)](https://www.youtube.com/watch?v=VIDEO_ID)
+[![FastTerminal Showcase](docs/screenshot.png)](https://www.youtube.com/watch?v=e0vSTnUgKEc)
 
 [![Java](https://img.shields.io/badge/Java-17+-blue.svg)](https://www.java.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010+%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
