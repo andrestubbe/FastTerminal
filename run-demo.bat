@@ -3,12 +3,12 @@
 chcp 65001 > nul
 
 echo [INFO] Building Main FastTerminal Library...
-call mvn clean package -DskipTests
+call mvn -q clean package -DskipTests
 if %ERRORLEVEL% NEQ 0 ( pause & exit /b )
 
 echo [INFO] Compiling Demo Classes...
 cd examples\Demo
-call mvn compile -DskipTests
+call mvn -q compile -DskipTests
 if %ERRORLEVEL% NEQ 0 ( cd ..\.. & pause & exit /b )
 
 echo [INFO] Running Fullscreen True-Color Demo...
