@@ -11,7 +11,7 @@
     <packaging>jar</packaging>
 
     <name>FastTerminal</name>
-    <description>High-performance, True-Color and Emoji-enabled JLine-free Terminal Engine for Java</description>
+    <description>High-performance, True-Color and Emoji-enabled Terminal Engine for Java</description>
     <url>https://github.com/andrestubbe/FastTerminal</url>
 
     <properties>

@@ -1,4 +1,4 @@
-# FastTerminal v0.1.0 — High-Performance JLine-Free True-Color Terminal Engine for Java 🚀
+# FastTerminal v0.1.0 — High-Performance True-Color Terminal Engine for Java 🚀
 
 We are thrilled to announce the official release of **FastTerminal v0.1.0** — the high-performance terminal substrate of the **FastJava** ecosystem. FastTerminal provides a lightweight, cell-buffered virtual viewport using primitive integer buffers for full 24-bit True Color (foreground & background) and emoji-safe UTF-32 Codepoint grids, completely independent of heavy third-party CLI wrappers.
 

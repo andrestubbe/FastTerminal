@@ -1,4 +1,4 @@
-# FastTerminal — High-Performance JLine-Free True-Color Terminal Engine for Java [v0.1.0]
+# FastTerminal — High-Performance True-Color Terminal Engine for Java [v0.1.0]
 
 **A zero-dependency terminal graphics and TUI engine for Java, engineered for high-refresh rates, 24-bit True Color, and native JNI console optimizations with seamless keyboard and mouse integrations.**
 
