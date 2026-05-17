@@ -108,11 +108,11 @@ public class CubeDemo {
 
             canvas.clear();
 
-            // Increment rotation angles & color phase
-            angleX += 0.025;
-            angleY += 0.035;
-            angleZ += 0.015;
-            colorPhase += 0.04;
+            // Increment rotation angles & color phase at 1/3 of the original speed
+            angleX += 0.025 / 3.0;
+            angleY += 0.035 / 3.0;
+            angleZ += 0.015 / 3.0;
+            colorPhase += 0.04 / 3.0;
 
             // 2. FILL CANVAS BACKGROUND WITH OBSIDIAN BLUE
             for (int r = 0; r < rows; r++) {
