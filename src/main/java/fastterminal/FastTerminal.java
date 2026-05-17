@@ -1,6 +1,7 @@
 package fastterminal;
 
 import fastcore.FastCore;
+import java.io.File;
 
 /**
  * FastTerminal Main API Class.
@@ -9,8 +10,25 @@ import fastcore.FastCore;
 public class FastTerminal {
 
     static {
-        // Automatically extracts and loads the native library
-        FastCore.loadLibrary("fastterminal");
+        try {
+            // First, try loading natively from local build folder for deterministic dev cycles
+            File localDll = new File("build/fastterminal.dll");
+            if (!localDll.exists()) {
+                localDll = new File("../../build/fastterminal.dll");
+            }
+            
+            if (localDll.exists()) {
+                System.load(localDll.getAbsolutePath());
+            } else {
+                // Fallback to standard classpath packaging extraction
+                FastCore.loadLibrary("fastterminal");
+            }
+        } catch (Throwable e) {
+            // Ultimate fallback in case load fails
+            try {
+                FastCore.loadLibrary("fastterminal");
+            } catch (Throwable ignored) {}
+        }
     }
 
     /**

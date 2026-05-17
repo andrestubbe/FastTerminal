@@ -17,11 +17,15 @@ public class Demo {
         // Try to query starting size natively
         try {
             int[] size = FastTerminal.getTerminalSize();
+            System.out.println("[DEBUG] Native Console Sizing: " + (size != null ? size[0] + "x" + size[1] : "NULL"));
             if (size != null && size[0] > 0 && size[1] > 0) {
                 cols = size[0];
                 rows = size[1];
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable e) {
+            System.err.println("[DEBUG] JNI Sizing Failed: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         // Enter Fullscreen Alternate Screen Buffer, Hide Cursor
         System.out.print("\033[?1049h\033[?25l");
