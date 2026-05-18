@@ -203,19 +203,10 @@ public class InteractiveUIDemo {
                 int newSx = (cols - showW) / 2;
                 int newSy = 9;
 
-                int dx = newSx - slidePanel.getX();
-                int dy = newSy - slidePanel.getY();
-
                 slidePanel.setX(newSx); slidePanel.setY(newSy);
-
                 slideButton.setX(newSx); slideButton.setY(newSy);
-                actionBtn.setX(actionBtn.getX() + dx); actionBtn.setY(actionBtn.getY() + dy);
-
                 slideProgress.setX(newSx); slideProgress.setY(newSy);
-                bar.setX(bar.getX() + dx); bar.setY(bar.getY() + dy);
-
                 slideDropdown.setX(newSx); slideDropdown.setY(newSy);
-                combo.setX(combo.getX() + dx); combo.setY(combo.getY() + dy);
             }
 
             canvas.clear();

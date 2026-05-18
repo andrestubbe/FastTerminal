@@ -41,6 +41,24 @@ public class Panel extends Component {
     }
 
     @Override
+    public void setX(int newX) {
+        int dx = newX - this.x;
+        super.setX(newX);
+        for (Component child : children) {
+            child.setX(child.getX() + dx);
+        }
+    }
+
+    @Override
+    public void setY(int newY) {
+        int dy = newY - this.y;
+        super.setY(newY);
+        for (Component child : children) {
+            child.setY(child.getY() + dy);
+        }
+    }
+
+    @Override
     public void render(FastTerminalScene canvas) {
         if (!visible) return;
 
