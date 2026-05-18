@@ -23,6 +23,11 @@ public final class Ansi {
     public static final String DEFAULT_FG       = "\033[39m";
     public static final String DEFAULT_BG       = "\033[49m";
 
+    // True Color RGB Prefixes and Suffix
+    public static final String RGB_FG_PREFIX    = "\033[38;2;";
+    public static final String RGB_BG_PREFIX    = "\033[48;2;";
+    public static final String RGB_SUFFIX       = "m";
+
     private Ansi() {
         // Prevent instantiation
     }

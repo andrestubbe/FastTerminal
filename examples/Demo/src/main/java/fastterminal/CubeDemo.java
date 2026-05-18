@@ -72,8 +72,9 @@ public class CubeDemo {
             }
         } catch (Throwable ignored) {}
 
-        FastTerminalRenderer renderer = null;
-        FastTerminalScene canvas = null;
+        FastTerminalRenderer renderer = new FastTerminalRenderer(cols, rows);
+        FastTerminalScene canvas = new FastTerminalScene(0, 0, cols, rows);
+        renderer.addScene(canvas);
 
         double angleX = 0.0;
         double angleY = 0.0;
@@ -84,24 +85,12 @@ public class CubeDemo {
         while (true) {
             long startTime = System.currentTimeMillis();
 
-            // 1. DYNAMIC RESIZE DETECTION via Win32 JNI
-            int currentCols = cols;
-            int currentRows = rows;
-            try {
-                int[] size = FastTerminal.getTerminalSize();
-                if (size != null && size[0] > 0 && size[1] > 0) {
-                    currentCols = size[0];
-                    currentRows = size[1];
-                }
-            } catch (Throwable ignored) {}
-
-            // Recreate viewport scene if resized
-            if (renderer == null || canvas == null || currentCols != cols || currentRows != rows) {
-                cols = currentCols;
-                rows = currentRows;
-                renderer = new FastTerminalRenderer(cols, rows);
-                canvas = new FastTerminalScene(0, 0, cols, rows);
-                renderer.addScene(canvas);
+            // 1. DYNAMIC RESIZE DETECTION via Win32 JNI (fully garbage-free!)
+            int[] size = FastTerminal.getWindowSize(cols, rows);
+            if (renderer.resize(size[0], size[1])) {
+                cols = size[0];
+                rows = size[1];
+                canvas.resize(cols, rows);
             }
 
             canvas.clear();

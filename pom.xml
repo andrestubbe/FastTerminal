@@ -56,6 +56,12 @@
             <artifactId>fastcore</artifactId>
             <version>1.0.0</version>
         </dependency>
+        <!-- FastMouse - Native mouse inputs -->
+        <dependency>
+            <groupId>io.github.andrestubbe</groupId>
+            <artifactId>fastmouse</artifactId>
+            <version>0.1.0</version>
+        </dependency>
         <!-- JLine dependency (kept for backcompat, eventually removed) -->
         <dependency>
             <groupId>org.jline</groupId>

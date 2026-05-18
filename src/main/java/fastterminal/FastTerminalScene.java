@@ -12,10 +12,10 @@ public class FastTerminalScene {
     private int[] fgBuffer;
     private int[] bgBuffer;
 
-    private final int x;
-    private final int y;
-    private final int width;
-    private final int height;
+    private int x;
+    private int y;
+    private int width;
+    private int height;
     private Runnable updater;
     private boolean dirty;
 
@@ -58,6 +58,33 @@ public class FastTerminalScene {
     }
 
     /**
+     * Resizes the scene viewport dimensions dynamically in-place.
+     * @return true if a resize actually occurred, false otherwise.
+     */
+    public boolean resize(final int newWidth, final int newHeight) {
+        if (newWidth <= 0 || newHeight <= 0) return false;
+        if (newWidth == this.width && newHeight == this.height) return false;
+
+        this.width = newWidth;
+        this.height = newHeight;
+        this.codepointBuffer = new int[newWidth * newHeight];
+        this.fgBuffer = new int[newWidth * newHeight];
+        this.bgBuffer = new int[newWidth * newHeight];
+        this.clear();
+        this.dirty = true;
+        return true;
+    }
+
+    /**
+     * Updates the viewport absolute screen offsets dynamically.
+     */
+    public void setPosition(final int newX, final int newY) {
+        this.x = newX;
+        this.y = newY;
+        this.dirty = true;
+    }
+
+    /**
      * Writes a UTF-32 Codepoint to a specific cell in the scene.
      */
     public void writeCell(int col, int row, int codepoint, int fg, int bg) {
@@ -79,8 +106,14 @@ public class FastTerminalScene {
         for (int i = 0; i < len; ) {
             if (col >= this.width) break;
             int cp = text.codePointAt(i);
+            int width = fastterminal.emojis.FastEmojis.getWidth(cp);
+            
             this.writeCell(col, row, cp, fg, bg);
-            col++;
+            if (width == 2 && col + 1 < this.width) {
+                this.writeCell(col + 1, row, -99, fg, bg); // Native continuation cell marker
+            }
+            
+            col += width;
             i += Character.charCount(cp);
         }
     }

@@ -38,7 +38,7 @@ JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getTerminalSize(JNIEn
     if (hConsole != INVALID_HANDLE_VALUE && hConsole != NULL) {
         CONSOLE_SCREEN_BUFFER_INFO csbi;
         if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
-            dims[0] = csbi.dwSize.X; // Retrieve the full 120-column buffer width!
+            dims[0] = csbi.srWindow.Right - csbi.srWindow.Left + 1; // Retrieve actual visible window column width!
             dims[1] = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
         }
     }
@@ -69,4 +69,38 @@ JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode(JNIEnv* env, jc
             SetConsoleMode(hInput, originalMode);
         }
     }
+}
+
+/**
+ * @brief Retrieves the console window's screen rect, client offset, and font character cell size.
+ */
+JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getConsoleWindowInfo(JNIEnv* env, jclass clazz) {
+    HWND hwnd = GetConsoleWindow();
+    RECT rect = {0, 0, 0, 0};
+    GetWindowRect(hwnd, &rect);
+    
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_FONT_INFO fontInfo;
+    int fontWidth = 8;
+    int fontHeight = 16;
+    if (GetCurrentConsoleFont(hConsole, FALSE, &fontInfo)) {
+        COORD fontSize = GetConsoleFontSize(hConsole, fontInfo.nFont);
+        fontWidth = fontSize.X;
+        fontHeight = fontSize.Y;
+    }
+    
+    POINT clientOffset = {0, 0};
+    ClientToScreen(hwnd, &clientOffset);
+    
+    jintArray result = env->NewIntArray(6);
+    if (result == NULL) return NULL;
+    
+    jint info[6] = {
+        (jint)rect.left, (jint)rect.top,
+        (jint)clientOffset.x, (jint)clientOffset.y,
+        (jint)fontWidth, (jint)fontHeight
+    };
+    
+    env->SetIntArrayRegion(result, 0, 6, info);
+    return result;
 }

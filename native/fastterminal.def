@@ -3,3 +3,4 @@ EXPORTS
     ; JNI Method Exports
     Java_fastterminal_FastTerminal_getTerminalSize
     Java_fastterminal_FastTerminal_setRawMode
+    Java_fastterminal_FastTerminal_getConsoleWindowInfo

@@ -1,4 +1,13 @@
-fastterminal\Demo.class
-fastterminal\UIDemo.class
+fastterminal\GradientDemo.class
 fastterminal\CubeDemo.class
+fastterminal\PaletteImageGenerator.class
+fastterminal\TestLoad.class
 fastterminal\ShadedDemo.class
+fastterminal\InteractiveUIDemo.class
+fastterminal\UIDemo.class
+fastterminal\MouseTelemetryDemo$1.class
+fastterminal\MouseDedicatedDemo.class
+fastterminal\MouseTelemetryDemo.class
+fastterminal\Demo.class
+fastterminal\MouseDedicatedDemo$1.class
+fastterminal\InteractiveUIDemo$1.class
