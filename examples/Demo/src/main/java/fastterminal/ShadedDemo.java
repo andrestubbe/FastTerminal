@@ -55,13 +55,11 @@ public class ShadedDemo {
 
         // Register JVM Shutdown Hook to safely restore the console on exit
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.print("\033[?1049l\033[?25h\033[0m");
-            System.out.flush();
+            Ansi.print(Ansi.EXIT_ALT_BUFFER, Ansi.SHOW_CURSOR, Ansi.RESET);
         }));
 
         // Enter Alternate Screen Buffer, Hide Cursor
-        System.out.print("\033[?1049h\033[?25l");
-        System.out.flush();
+        Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
 
         int cols = 80;
         int rows = 30;
@@ -75,8 +73,8 @@ public class ShadedDemo {
             }
         } catch (Throwable ignored) {}
 
-        TerminalRenderer renderer = null;
-        TerminalScene canvas = null;
+        FastTerminalRenderer renderer = null;
+        FastTerminalScene canvas = null;
 
         double angleX = 0.0;
         double angleY = 0.0;
@@ -101,8 +99,8 @@ public class ShadedDemo {
             if (renderer == null || canvas == null || currentCols != cols || currentRows != rows) {
                 cols = currentCols;
                 rows = currentRows;
-                renderer = new TerminalRenderer(cols, rows);
-                canvas = new TerminalScene(0, 0, cols, rows);
+                renderer = new FastTerminalRenderer(cols, rows);
+                canvas = new FastTerminalScene(0, 0, cols, rows);
                 renderer.addScene(canvas);
             }
 
@@ -267,7 +265,7 @@ public class ShadedDemo {
     }
 
     // High-Performance Scanline Triangle Rasterizer blitting solid '█' cells
-    private static void fillTriangle(TerminalScene canvas, int x0, int y0, int x1, int y1, int x2, int y2, int color, boolean isShadow) {
+    private static void fillTriangle(FastTerminalScene canvas, int x0, int y0, int x1, int y1, int x2, int y2, int color, boolean isShadow) {
         // Sort vertices by Y (y0 <= y1 <= y2)
         if (y0 > y1) { int t = y0; y0 = y1; y1 = t; t = x0; x0 = x1; x1 = t; }
         if (y0 > y2) { int t = y0; y0 = y2; y2 = t; t = x0; x0 = x2; x2 = t; }

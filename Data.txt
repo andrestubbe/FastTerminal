@@ -4,6 +4,7 @@ FILE: src/main/java/fastterminal/FastTerminal.java
 package fastterminal;
 
 import fastcore.FastCore;
+import java.io.File;
 
 /**
  * FastTerminal Main API Class.
@@ -28,8 +29,54 @@ public class FastTerminal {
     public static native void setRawMode(boolean enableRaw);
 }
 
+
 ================================================================================
-FILE: src/main/java/fastterminal/TerminalRenderer.java
+FILE: src/main/java/fastterminal/Ansi.java
+================================================================================
+package fastterminal;
+
+/**
+ * High-performance, clean-code ANSI escape codes and VT100 control sequences.
+ * Zero-garbage collection design for maximum rendering throughput.
+ */
+public final class Ansi {
+
+    // Alternate Screen Buffer Controls
+    public static final String ENTER_ALT_BUFFER = "\033[?1049h";
+    public static final String EXIT_ALT_BUFFER  = "\033[?1049l";
+
+    // Cursor Visibility Controls
+    public static final String HIDE_CURSOR      = "\033[?25l";
+    public static final String SHOW_CURSOR      = "\033[?25h";
+
+    // Screen and Cursor Position Controls
+    public static final String CLEAR_SCREEN     = "\033[2J";
+    public static final String CURSOR_HOME      = "\033[1;1H";
+
+    // Color and Style Reset Controls
+    public static final String RESET            = "\033[0m";
+    public static final String DEFAULT_FG       = "\033[39m";
+    public static final String DEFAULT_BG       = "\033[49m";
+
+    private Ansi() {
+        // Prevent instantiation
+    }
+
+    /**
+     * Utility method to print multiple escape codes sequentially and flush standard output.
+     * Useful for setup and teardown of console state.
+     */
+    public static void print(String... codes) {
+        for (String code : codes) {
+            System.out.print(code);
+        }
+        System.out.flush();
+    }
+}
+
+
+================================================================================
+FILE: src/main/java/fastterminal/FastTerminalRenderer.java
 ================================================================================
 package fastterminal;
 
@@ -42,9 +89,9 @@ import java.util.List;
  * High-performance viewport compositor and ANSI rendering engine.
  * Leverages state-minimizing ANSI code emitters for 24-bit True Colors.
  */
-public final class TerminalRenderer {
+public final class FastTerminalRenderer {
 
-    private List<TerminalScene> scenes = new ArrayList<>();
+    private List<FastTerminalScene> scenes = new ArrayList<>();
     private final int width;
     private final int height;
     
@@ -53,7 +100,7 @@ public final class TerminalRenderer {
     private int[] compositeFg;
     private int[] compositeBg;
 
-    public TerminalRenderer(final int width, final int height) {
+    public FastTerminalRenderer(final int width, final int height) {
         this.width = width;
         this.height = height;
         this.compositeCodepoints = new int[width * height];
@@ -62,7 +109,7 @@ public final class TerminalRenderer {
         this.clear();
     }
 
-    public void addScene(final TerminalScene scene) {
+    public void addScene(final FastTerminalScene scene) {
         this.scenes.add(scene);
     }
 
@@ -70,7 +117,7 @@ public final class TerminalRenderer {
         this.clear();
         
         // Composite all layers
-        for (final TerminalScene scene : this.scenes) {
+        for (final FastTerminalScene scene : this.scenes) {
             if (scene.isDirty()) {
                 scene.update();
                 scene.setDirty(false);
@@ -79,7 +126,7 @@ public final class TerminalRenderer {
         }
         
         // Print home command to avoid full console clear flash
-        System.out.print("\033[1;1H");
+        System.out.print(Ansi.CURSOR_HOME);
 
         // Build the optimized ANSI True Color rendering buffer
         StringBuilder sb = new StringBuilder(width * height * 16);
@@ -95,7 +142,7 @@ public final class TerminalRenderer {
                 // Wide character continuation cell - skip printing the character
                 // but we MUST still perform the row split check!
                 if ((i + 1) % this.width == 0 && (i + 1) < compositeCodepoints.length) {
-                    sb.append("\033[0m\n");
+                    sb.append(Ansi.RESET).append("\n");
                     currentFg = -2;
                     currentBg = -2;
                 }
@@ -105,7 +152,7 @@ public final class TerminalRenderer {
             // Optimize foreground escape codes
             if (fg != currentFg) {
                 if (fg == -1) {
-                    sb.append("\033[39m"); // default fg
+                    sb.append(Ansi.DEFAULT_FG);
                 } else {
                     int r = (fg >> 16) & 0xFF;
                     int g = (fg >> 8) & 0xFF;
@@ -118,7 +165,7 @@ public final class TerminalRenderer {
             // Optimize background escape codes
             if (bg != currentBg) {
                 if (bg == -1) {
-                    sb.append("\033[49m"); // default bg
+                    sb.append(Ansi.DEFAULT_BG);
                 } else {
                     int r = (bg >> 16) & 0xFF;
                     int g = (bg >> 8) & 0xFF;
@@ -137,21 +184,21 @@ public final class TerminalRenderer {
 
             // Explicitly force newline at the end of each row
             if ((i + 1) % this.width == 0 && (i + 1) < compositeCodepoints.length) {
-                sb.append("\033[0m\n"); // Reset colors before newline to avoid bleeding
+                sb.append(Ansi.RESET).append("\n"); // Reset colors before newline to avoid bleeding
                 currentFg = -2;
                 currentBg = -2;
             }
         }
 
         // Reset all console attributes at the end of the frame
-        sb.append("\033[0m");
+        sb.append(Ansi.RESET);
 
         byte[] bytes = sb.toString().getBytes(StandardCharsets.UTF_8);
         System.out.write(bytes, 0, bytes.length);
         System.out.flush();
     }
 
-    private void insertScene(final TerminalScene scene) {
+    private void insertScene(final FastTerminalScene scene) {
         final int[] srcCodepoints = scene.getCodepointBuffer();
         final int[] srcFg = scene.getFgBuffer();
         final int[] srcBg = scene.getBgBuffer();
@@ -209,8 +256,9 @@ public final class TerminalRenderer {
     }
 }
 
+
 ================================================================================
-FILE: src/main/java/fastterminal/TerminalScene.java
+FILE: src/main/java/fastterminal/FastTerminalScene.java
 ================================================================================
 package fastterminal;
 
@@ -220,7 +268,7 @@ import java.util.Arrays;
  * Represents a high-performance grid viewport scene.
  * Utilizes primitive arrays (int[]) for UTF-32 Codepoints, Foreground, and Background True Colors.
  */
-public class TerminalScene {
+public class FastTerminalScene {
 
     private int[] codepointBuffer;
     private int[] fgBuffer;
@@ -240,7 +288,7 @@ public class TerminalScene {
      * @param width viewport width
      * @param height viewport height
      */
-    public TerminalScene(int x, int y, int width, int height) {
+    public FastTerminalScene(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -307,6 +355,10 @@ public class TerminalScene {
         this.dirty = dirty;
     }
 
+    public void setUpdater(final Runnable updater) {
+        this.updater = updater;
+    }
+
     public int[] getCodepointBuffer() {
         return this.codepointBuffer;
     }
@@ -335,10 +387,6 @@ public class TerminalScene {
         return this.height;
     }
 
-    public void setUpdater(final Runnable updater) {
-        this.updater = updater;
-    }
-
     public void dispose() {
         this.codepointBuffer = null;
         this.fgBuffer = null;
@@ -346,6 +394,7 @@ public class TerminalScene {
         this.updater = null;
     }
 }
+
 
 ================================================================================
 FILE: native/fastterminal.h
@@ -368,6 +417,7 @@ JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode(JNIEnv* env, jc
 #endif
 
 #endif // FASTTERMINAL_H
+
 
 ================================================================================
 FILE: native/fastterminal.cpp
@@ -445,6 +495,7 @@ JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode(JNIEnv* env, jc
     }
 }
 
+
 ================================================================================
 FILE: examples/Demo/src/main/java/fastterminal/Demo.java
 ================================================================================
@@ -452,8 +503,10 @@ package fastterminal;
 
 /**
  * Stunning 24-bit True-Color & Unicode Emoji Fullscreen Scalable Demo.
- * Demonstrates high-performance state-optimized ANSI rendering on a dynamic viewport.
- * Runs indefinitely with live native JNI resizing and rock-solid title positioning.
+ * Demonstrates high-performance state-optimized ANSI rendering on a dynamic
+ * viewport.
+ * Runs indefinitely with live native JNI resizing and rock-solid title
+ * positioning.
  */
 public class Demo {
 
@@ -478,11 +531,10 @@ public class Demo {
         }
 
         // Enter Fullscreen Alternate Screen Buffer, Hide Cursor
-        System.out.print("\033[?1049h\033[?25l");
-        System.out.flush();
+        Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
 
-        TerminalRenderer renderer = null;
-        TerminalScene canvas = null;
+        FastTerminalRenderer renderer = null;
+        FastTerminalScene canvas = null;
 
         final double[] phase = { 0.0 };
         long frameTimeMs = 1000 / 120; // Target locked 120 FPS
@@ -501,14 +553,15 @@ public class Demo {
                     currentCols = size[0];
                     currentRows = size[1];
                 }
-            } catch (Throwable ignored) {}
+            } catch (Throwable ignored) {
+            }
 
             // Recreate composite and layer buffers on-the-fly if window is resized!
             if (renderer == null || canvas == null || currentCols != cols || currentRows != rows) {
                 cols = currentCols;
                 rows = currentRows;
-                renderer = new TerminalRenderer(cols, rows);
-                canvas = new TerminalScene(0, 0, cols, rows);
+                renderer = new FastTerminalRenderer(cols, rows);
+                canvas = new FastTerminalScene(0, 0, cols, rows);
                 renderer.addScene(canvas);
             }
 
@@ -542,7 +595,7 @@ public class Demo {
             }
 
             // 3. PREVENT LAYOUT JITTER & CLEAR EMOJI OVERLAYS
-            // Title is centered at row titleY. We restrict moving emojis to float ONLY 
+            // Title is centered at row titleY. We restrict moving emojis to float ONLY
             // in the upper/lower boundary sections so they never enter the title's line.
             int titleY = finalRows / 2;
 
@@ -587,11 +640,13 @@ public class Demo {
             if (sleepTime > 0) {
                 try {
                     Thread.sleep(sleepTime);
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException ignored) {
+                }
             }
         }
     }
 }
+
 
 ================================================================================
 FILE: examples/Demo/src/main/java/fastterminal/CubeDemo.java
@@ -652,13 +707,11 @@ public class CubeDemo {
 
         // Register JVM Shutdown Hook to safely restore the console on exit
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.print("\033[?1049l\033[?25h\033[0m");
-            System.out.flush();
+            Ansi.print(Ansi.EXIT_ALT_BUFFER, Ansi.SHOW_CURSOR, Ansi.RESET);
         }));
 
         // Enter Alternate Screen Buffer, Hide Cursor
-        System.out.print("\033[?1049h\033[?25l");
-        System.out.flush();
+        Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
 
         int cols = 80;
         int rows = 30;
@@ -672,8 +725,8 @@ public class CubeDemo {
             }
         } catch (Throwable ignored) {}
 
-        TerminalRenderer renderer = null;
-        TerminalScene canvas = null;
+        FastTerminalRenderer renderer = null;
+        FastTerminalScene canvas = null;
 
         double angleX = 0.0;
         double angleY = 0.0;
@@ -699,8 +752,8 @@ public class CubeDemo {
             if (renderer == null || canvas == null || currentCols != cols || currentRows != rows) {
                 cols = currentCols;
                 rows = currentRows;
-                renderer = new TerminalRenderer(cols, rows);
-                canvas = new TerminalScene(0, 0, cols, rows);
+                renderer = new FastTerminalRenderer(cols, rows);
+                canvas = new FastTerminalScene(0, 0, cols, rows);
                 renderer.addScene(canvas);
             }
 
@@ -787,6 +840,8 @@ public class CubeDemo {
                 }
             }
 
+
+
             // Blit standard composite buffers to screen
             canvas.setDirty(true);
             renderer.render();
@@ -806,11 +861,11 @@ public class CubeDemo {
         int r = (int) (Math.sin(huePhase) * 110 + 145);
         int g = (int) (Math.sin(huePhase + 2.0 * Math.PI / 3.0) * 110 + 145);
         int b = (int) (Math.sin(huePhase + 4.0 * Math.PI / 3.0) * 110 + 145);
-        return (r << 16) | (g << 8) b;
+        return (r << 16) | (g << 8) | b;
     }
 
     // High-Performance Bresenham Line Drawing Algorithm
-    private static void drawLine(TerminalScene canvas, int x0, int y0, int x1, int y1, int fgColor, int bgColor) {
+    private static void drawLine(FastTerminalScene canvas, int x0, int y0, int x1, int y1, int fgColor, int bgColor) {
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
@@ -835,6 +890,7 @@ public class CubeDemo {
         }
     }
 }
+
 
 ================================================================================
 FILE: examples/Demo/src/main/java/fastterminal/ShadedDemo.java
@@ -896,13 +952,11 @@ public class ShadedDemo {
 
         // Register JVM Shutdown Hook to safely restore the console on exit
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.print("\033[?1049l\033[?25h\033[0m");
-            System.out.flush();
+            Ansi.print(Ansi.EXIT_ALT_BUFFER, Ansi.SHOW_CURSOR, Ansi.RESET);
         }));
 
         // Enter Alternate Screen Buffer, Hide Cursor
-        System.out.print("\033[?1049h\033[?25l");
-        System.out.flush();
+        Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
 
         int cols = 80;
         int rows = 30;
@@ -916,8 +970,8 @@ public class ShadedDemo {
             }
         } catch (Throwable ignored) {}
 
-        TerminalRenderer renderer = null;
-        TerminalScene canvas = null;
+        FastTerminalRenderer renderer = null;
+        FastTerminalScene canvas = null;
 
         double angleX = 0.0;
         double angleY = 0.0;
@@ -942,8 +996,8 @@ public class ShadedDemo {
             if (renderer == null || canvas == null || currentCols != cols || currentRows != rows) {
                 cols = currentCols;
                 rows = currentRows;
-                renderer = new TerminalRenderer(cols, rows);
-                canvas = new TerminalScene(0, 0, cols, rows);
+                renderer = new FastTerminalRenderer(cols, rows);
+                canvas = new FastTerminalScene(0, 0, cols, rows);
                 renderer.addScene(canvas);
             }
 
@@ -1108,7 +1162,7 @@ public class ShadedDemo {
     }
 
     // High-Performance Scanline Triangle Rasterizer blitting solid '█' cells
-    private static void fillTriangle(TerminalScene canvas, int x0, int y0, int x1, int y1, int x2, int y2, int color, boolean isShadow) {
+    private static void fillTriangle(FastTerminalScene canvas, int x0, int y0, int x1, int y1, int x2, int y2, int color, boolean isShadow) {
         // Sort vertices by Y (y0 <= y1 <= y2)
         if (y0 > y1) { int t = y0; y0 = y1; y1 = t; t = x0; x0 = x1; x1 = t; }
         if (y0 > y2) { int t = y0; y0 = y2; y2 = t; t = x0; x0 = x2; x2 = t; }
@@ -1159,6 +1213,7 @@ public class ShadedDemo {
     }
 }
 
+
 ================================================================================
 FILE: examples/Demo/src/main/java/fastterminal/UIDemo.java
 ================================================================================
@@ -1177,13 +1232,11 @@ public class UIDemo {
         // Register JVM Shutdown Hook to safely restore the terminal buffer on exit
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             // Restore normal screen buffer, show cursor, and reset colors
-            System.out.print("\033[?1049l\033[?25h\033[0m");
-            System.out.flush();
+            Ansi.print(Ansi.EXIT_ALT_BUFFER, Ansi.SHOW_CURSOR, Ansi.RESET);
         }));
 
         // Enter Alternate Screen Buffer, Hide Cursor
-        System.out.print("\033[?1049h\033[?25l");
-        System.out.flush();
+        Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
 
         int cols = 80;
         int rows = 30;
@@ -1197,8 +1250,8 @@ public class UIDemo {
             }
         } catch (Throwable ignored) {}
 
-        TerminalRenderer renderer = null;
-        TerminalScene canvas = null;
+        FastTerminalRenderer renderer = null;
+        FastTerminalScene canvas = null;
 
         double phase = 0.0;
         long frameTimeMs = 1000 / 120; // Locked 120 FPS target
@@ -1221,8 +1274,8 @@ public class UIDemo {
             if (renderer == null || canvas == null || currentCols != cols || currentRows != rows) {
                 cols = currentCols;
                 rows = currentRows;
-                renderer = new TerminalRenderer(cols, rows);
-                canvas = new TerminalScene(0, 0, cols, rows);
+                renderer = new FastTerminalRenderer(cols, rows);
+                canvas = new FastTerminalScene(0, 0, cols, rows);
                 renderer.addScene(canvas);
             }
 
@@ -1396,7 +1449,7 @@ public class UIDemo {
         return (r << 16) | (g << 8) | b;
     }
 
-    private static void drawProgressBar(TerminalScene canvas, int x, int y, int percentage, int width, int activeColor, int bgColor) {
+    private static void drawProgressBar(FastTerminalScene canvas, int x, int y, int percentage, int width, int activeColor, int bgColor) {
         int filled = (percentage * width) / 100;
         for (int i = 0; i < width; i++) {
             if (i < filled) {
@@ -1407,3 +1460,5 @@ public class UIDemo {
         }
     }
 }
+
+

@@ -30,11 +30,10 @@ public class Demo {
         }
 
         // Enter Fullscreen Alternate Screen Buffer, Hide Cursor
-        System.out.print("\033[?1049h\033[?25l");
-        System.out.flush();
+        Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
 
-        TerminalRenderer renderer = null;
-        TerminalScene canvas = null;
+        FastTerminalRenderer renderer = null;
+        FastTerminalScene canvas = null;
 
         final double[] phase = { 0.0 };
         long frameTimeMs = 1000 / 120; // Target locked 120 FPS
@@ -60,8 +59,8 @@ public class Demo {
             if (renderer == null || canvas == null || currentCols != cols || currentRows != rows) {
                 cols = currentCols;
                 rows = currentRows;
-                renderer = new TerminalRenderer(cols, rows);
-                canvas = new TerminalScene(0, 0, cols, rows);
+                renderer = new FastTerminalRenderer(cols, rows);
+                canvas = new FastTerminalScene(0, 0, cols, rows);
                 renderer.addScene(canvas);
             }
 

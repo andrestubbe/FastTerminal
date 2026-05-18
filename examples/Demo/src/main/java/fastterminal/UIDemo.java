@@ -13,13 +13,11 @@ public class UIDemo {
         // Register JVM Shutdown Hook to safely restore the terminal buffer on exit
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             // Restore normal screen buffer, show cursor, and reset colors
-            System.out.print("\033[?1049l\033[?25h\033[0m");
-            System.out.flush();
+            Ansi.print(Ansi.EXIT_ALT_BUFFER, Ansi.SHOW_CURSOR, Ansi.RESET);
         }));
 
         // Enter Alternate Screen Buffer, Hide Cursor
-        System.out.print("\033[?1049h\033[?25l");
-        System.out.flush();
+        Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
 
         int cols = 80;
         int rows = 30;
@@ -33,8 +31,8 @@ public class UIDemo {
             }
         } catch (Throwable ignored) {}
 
-        TerminalRenderer renderer = null;
-        TerminalScene canvas = null;
+        FastTerminalRenderer renderer = null;
+        FastTerminalScene canvas = null;
 
         double phase = 0.0;
         long frameTimeMs = 1000 / 120; // Locked 120 FPS target
@@ -57,8 +55,8 @@ public class UIDemo {
             if (renderer == null || canvas == null || currentCols != cols || currentRows != rows) {
                 cols = currentCols;
                 rows = currentRows;
-                renderer = new TerminalRenderer(cols, rows);
-                canvas = new TerminalScene(0, 0, cols, rows);
+                renderer = new FastTerminalRenderer(cols, rows);
+                canvas = new FastTerminalScene(0, 0, cols, rows);
                 renderer.addScene(canvas);
             }
 
@@ -232,7 +230,7 @@ public class UIDemo {
         return (r << 16) | (g << 8) | b;
     }
 
-    private static void drawProgressBar(TerminalScene canvas, int x, int y, int percentage, int width, int activeColor, int bgColor) {
+    private static void drawProgressBar(FastTerminalScene canvas, int x, int y, int percentage, int width, int activeColor, int bgColor) {
         int filled = (percentage * width) / 100;
         for (int i = 0; i < width; i++) {
             if (i < filled) {

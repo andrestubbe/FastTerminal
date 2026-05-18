@@ -6,7 +6,7 @@ import java.util.Arrays;
  * Represents a high-performance grid viewport scene.
  * Utilizes primitive arrays (int[]) for UTF-32 Codepoints, Foreground, and Background True Colors.
  */
-public class TerminalScene {
+public class FastTerminalScene {
 
     private int[] codepointBuffer;
     private int[] fgBuffer;
@@ -26,7 +26,7 @@ public class TerminalScene {
      * @param width viewport width
      * @param height viewport height
      */
-    public TerminalScene(int x, int y, int width, int height) {
+    public FastTerminalScene(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -93,6 +93,10 @@ public class TerminalScene {
         this.dirty = dirty;
     }
 
+    public void setUpdater(final Runnable updater) {
+        this.updater = updater;
+    }
+
     public int[] getCodepointBuffer() {
         return this.codepointBuffer;
     }
@@ -119,10 +123,6 @@ public class TerminalScene {
 
     public int getHeight() {
         return this.height;
-    }
-
-    public void setUpdater(final Runnable updater) {
-        this.updater = updater;
     }
 
     public void dispose() {

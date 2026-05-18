@@ -9,9 +9,9 @@ import java.util.List;
  * High-performance viewport compositor and ANSI rendering engine.
  * Leverages state-minimizing ANSI code emitters for 24-bit True Colors.
  */
-public final class TerminalRenderer {
+public final class FastTerminalRenderer {
 
-    private List<TerminalScene> scenes = new ArrayList<>();
+    private List<FastTerminalScene> scenes = new ArrayList<>();
     private final int width;
     private final int height;
     
@@ -20,7 +20,7 @@ public final class TerminalRenderer {
     private int[] compositeFg;
     private int[] compositeBg;
 
-    public TerminalRenderer(final int width, final int height) {
+    public FastTerminalRenderer(final int width, final int height) {
         this.width = width;
         this.height = height;
         this.compositeCodepoints = new int[width * height];
@@ -29,7 +29,7 @@ public final class TerminalRenderer {
         this.clear();
     }
 
-    public void addScene(final TerminalScene scene) {
+    public void addScene(final FastTerminalScene scene) {
         this.scenes.add(scene);
     }
 
@@ -37,7 +37,7 @@ public final class TerminalRenderer {
         this.clear();
         
         // Composite all layers
-        for (final TerminalScene scene : this.scenes) {
+        for (final FastTerminalScene scene : this.scenes) {
             if (scene.isDirty()) {
                 scene.update();
                 scene.setDirty(false);
@@ -46,7 +46,7 @@ public final class TerminalRenderer {
         }
         
         // Print home command to avoid full console clear flash
-        System.out.print("\033[1;1H");
+        System.out.print(Ansi.CURSOR_HOME);
 
         // Build the optimized ANSI True Color rendering buffer
         StringBuilder sb = new StringBuilder(width * height * 16);
@@ -62,7 +62,7 @@ public final class TerminalRenderer {
                 // Wide character continuation cell - skip printing the character
                 // but we MUST still perform the row split check!
                 if ((i + 1) % this.width == 0 && (i + 1) < compositeCodepoints.length) {
-                    sb.append("\033[0m\n");
+                    sb.append(Ansi.RESET).append("\n");
                     currentFg = -2;
                     currentBg = -2;
                 }
@@ -72,7 +72,7 @@ public final class TerminalRenderer {
             // Optimize foreground escape codes
             if (fg != currentFg) {
                 if (fg == -1) {
-                    sb.append("\033[39m"); // default fg
+                    sb.append(Ansi.DEFAULT_FG);
                 } else {
                     int r = (fg >> 16) & 0xFF;
                     int g = (fg >> 8) & 0xFF;
@@ -85,7 +85,7 @@ public final class TerminalRenderer {
             // Optimize background escape codes
             if (bg != currentBg) {
                 if (bg == -1) {
-                    sb.append("\033[49m"); // default bg
+                    sb.append(Ansi.DEFAULT_BG);
                 } else {
                     int r = (bg >> 16) & 0xFF;
                     int g = (bg >> 8) & 0xFF;
@@ -104,21 +104,21 @@ public final class TerminalRenderer {
 
             // Explicitly force newline at the end of each row
             if ((i + 1) % this.width == 0 && (i + 1) < compositeCodepoints.length) {
-                sb.append("\033[0m\n"); // Reset colors before newline to avoid bleeding
+                sb.append(Ansi.RESET).append("\n"); // Reset colors before newline to avoid bleeding
                 currentFg = -2;
                 currentBg = -2;
             }
         }
 
         // Reset all console attributes at the end of the frame
-        sb.append("\033[0m");
+        sb.append(Ansi.RESET);
 
         byte[] bytes = sb.toString().getBytes(StandardCharsets.UTF_8);
         System.out.write(bytes, 0, bytes.length);
         System.out.flush();
     }
 
-    private void insertScene(final TerminalScene scene) {
+    private void insertScene(final FastTerminalScene scene) {
         final int[] srcCodepoints = scene.getCodepointBuffer();
         final int[] srcFg = scene.getFgBuffer();
         final int[] srcBg = scene.getBgBuffer();

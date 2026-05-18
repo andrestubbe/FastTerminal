@@ -1,0 +1,9 @@
+[DEBUG] JNI Sizing Failed: fastterminal/FastTerminal
+java.lang.NoClassDefFoundError: fastterminal/FastTerminal
+	at fastterminal.Demo.main(Demo.java:19)
+	at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.lang.ClassNotFoundException: fastterminal.FastTerminal
+	at org.codehaus.mojo.exec.URLClassLoaderBuilder$ExecJavaClassLoader.loadClass(URLClassLoaderBuilder.java:198)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:490)
+	... 3 more
