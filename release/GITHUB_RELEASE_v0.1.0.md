@@ -17,16 +17,27 @@ Attach the following built JAR to this release:
 
 #### Maven
 ```xml
-<dependency>
-    <groupId>com.github.andrestubbe</groupId>
-    <artifactId>fastterminal</artifactId>
-    <version>v0.1.0</version>
-</dependency>
+<dependencies>
+    <!-- 1. FastTerminal Engine -->
+    <dependency>
+        <groupId>com.github.andrestubbe</groupId>
+        <artifactId>fastterminal</artifactId>
+        <version>v0.1.0</version>
+    </dependency>
+    
+    <!-- 2. FastCore (Mandatory Native Loader) -->
+    <dependency>
+        <groupId>com.github.andrestubbe</groupId>
+        <artifactId>fastcore</artifactId>
+        <version>v1.0.0</version>
+    </dependency>
+</dependencies>
 ```
 
 #### Gradle
 ```gradle
 implementation 'com.github.andrestubbe:fastterminal:v0.1.0'
+implementation 'com.github.andrestubbe:fastcore:v1.0.0' // Mandatory JNI Loader
 ```
 
 ---

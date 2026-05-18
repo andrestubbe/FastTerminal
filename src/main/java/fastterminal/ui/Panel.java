@@ -1,7 +1,7 @@
 package fastterminal.ui;
 
 import fastterminal.FastTerminalScene;
-import fastterminal.emojis.FastEmojis;
+import fastemojis.FastEmojis;
 import java.util.ArrayList;
 import java.util.List;
 

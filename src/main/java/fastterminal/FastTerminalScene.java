@@ -106,7 +106,7 @@ public class FastTerminalScene {
         for (int i = 0; i < len; ) {
             if (col >= this.width) break;
             int cp = text.codePointAt(i);
-            int width = fastterminal.emojis.FastEmojis.getWidth(cp);
+            int width = fastemojis.FastEmojis.getWidth(cp);
             
             this.writeCell(col, row, cp, fg, bg);
             if (width == 2 && col + 1 < this.width) {
@@ -116,6 +116,145 @@ public class FastTerminalScene {
             col += width;
             i += Character.charCount(cp);
         }
+    }
+
+    private static final int[] ANSI_COLORS_24BIT = {
+        0x000000, // 0: Black
+        0xCD3131, // 1: Red
+        0x0DBC79, // 2: Green
+        0xE5E510, // 3: Yellow
+        0x2472C8, // 4: Blue
+        0xBC3FBC, // 5: Magenta
+        0x11A8CD, // 6: Cyan
+        0xE5E5E5, // 7: White
+        0x666666, // 8: Bright Black (Gray)
+        0xF14C4C, // 9: Bright Red
+        0x23D18B, // 10: Bright Green
+        0xF5F543, // 11: Bright Yellow
+        0x3B8EEA, // 12: Bright Blue
+        0xD670D6, // 13: Bright Magenta
+        0x29B8DB, // 14: Bright Cyan
+        0xFFFFFF  // 15: Bright White
+    };
+
+    private static int toTrueColor(int colorType, int r, int g, int b, int defaultColor) {
+        if (colorType == 0) { // 4-bit
+            if (r == -1) return defaultColor;
+            if (r >= 0 && r < 16) return ANSI_COLORS_24BIT[r];
+            return defaultColor;
+        } else if (colorType == 1) { // 8-bit
+            if (r >= 0 && r < 16) return ANSI_COLORS_24BIT[r];
+            if (r >= 16 && r <= 231) {
+                int idx = r - 16;
+                int red = (idx / 36) * 51;
+                int green = ((idx % 36) / 6) * 51;
+                int blue = (idx % 6) * 51;
+                return (red << 16) | (green << 8) | blue;
+            }
+            if (r >= 232 && r <= 255) {
+                int gray = 8 + (r - 232) * 10;
+                return (gray << 16) | (gray << 8) | gray;
+            }
+            return defaultColor;
+        } else if (colorType == 2) { // 24-bit True Color RGB
+            return (r << 16) | (g << 8) | b;
+        }
+        return defaultColor;
+    }
+
+    /**
+     * Writes an ANSI escape-sequenced string dynamically to the viewport, 
+     * parsing inline styles and True Colors on-the-fly with exactly zero allocations.
+     */
+    public void writeAnsiString(int startCol, int row, String text, int defaultFg, int defaultBg) {
+        if (row < 0 || row >= this.height) return;
+        
+        final int[] col = { startCol };
+        final int[] activeFg = { defaultFg };
+        final int[] activeBg = { defaultBg };
+
+        fastansi.FastANSI.parse(text, new fastansi.FastANSI.ANSIListener() {
+            @Override
+            public void onText(CharSequence text, int start, int end) {
+                for (int i = start; i < end; ) {
+                    if (col[0] >= width) break;
+                    int cp = Character.codePointAt(text, i);
+                    int charWidth = fastemojis.FastEmojis.getWidth(cp);
+                    
+                    writeCell(col[0], row, cp, activeFg[0], activeBg[0]);
+                    if (charWidth == 2 && col[0] + 1 < width) {
+                        writeCell(col[0] + 1, row, -99, activeFg[0], activeBg[0]);
+                    }
+                    
+                    col[0] += charWidth;
+                    i += Character.charCount(cp);
+                }
+            }
+
+            @Override
+            public void onReset() {
+                activeFg[0] = defaultFg;
+                activeBg[0] = defaultBg;
+            }
+
+            @Override
+            public void onBold(boolean enable) {}
+            @Override
+            public void onItalic(boolean enable) {}
+            @Override
+            public void onUnderline(boolean enable) {}
+            @Override
+            public void onBlink(boolean enable) {}
+            @Override
+            public void onInvert(boolean enable) {}
+            @Override
+            public void onHide(boolean enable) {}
+            @Override
+            public void onStrikethrough(boolean enable) {}
+
+            @Override
+            public void onForegroundColor(int colorType, int r, int g, int b) {
+                activeFg[0] = toTrueColor(colorType, r, g, b, defaultFg);
+            }
+
+            @Override
+            public void onBackgroundColor(int colorType, int r, int g, int b) {
+                activeBg[0] = toTrueColor(colorType, r, g, b, defaultBg);
+            }
+
+            @Override
+            public void onCursorPosition(int row, int col) {}
+            @Override
+            public void onCursorUp(int count) {}
+            @Override
+            public void onCursorDown(int count) {}
+            @Override
+            public void onCursorForward(int count) {}
+            @Override
+            public void onCursorBackward(int count) {}
+            @Override
+            public void onCursorNextLine(int count) {}
+            @Override
+            public void onCursorPrevLine(int count) {}
+            @Override
+            public void onCursorHorizontalAbsolute(int col) {}
+            @Override
+            public void onEraseInDisplay(int mode) {}
+            @Override
+            public void onEraseInLine(int mode) {}
+            @Override
+            public void onScrollUp(int count) {}
+            @Override
+            public void onScrollDown(int count) {}
+            @Override
+            public void onPrivateMode(int mode, boolean enable) {}
+            @Override
+            public void onDeviceStatusReport() {}
+            @Override
+            public void onWindowTitle(CharSequence title, int start, int end) {}
+            @Override
+            public void onUnsupportedSequence(CharSequence raw, int start, int end) {}
+        });
     }
 
     public boolean isDirty() {
