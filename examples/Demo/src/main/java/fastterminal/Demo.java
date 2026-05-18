@@ -2,8 +2,10 @@ package fastterminal;
 
 /**
  * Stunning 24-bit True-Color & Unicode Emoji Fullscreen Scalable Demo.
- * Demonstrates high-performance state-optimized ANSI rendering on a dynamic viewport.
- * Runs indefinitely with live native JNI resizing and rock-solid title positioning.
+ * Demonstrates high-performance state-optimized ANSI rendering on a dynamic
+ * viewport.
+ * Runs indefinitely with live native JNI resizing and rock-solid title
+ * positioning.
  */
 public class Demo {
 
@@ -11,7 +13,7 @@ public class Demo {
         System.out.println("Initializing FastTerminal Live Fullscreen Demo...");
 
         // Initial default sizes
-        int cols = 80;
+        int cols = 120;
         int rows = 30;
 
         // Try to query starting size natively
@@ -51,7 +53,8 @@ public class Demo {
                     currentCols = size[0];
                     currentRows = size[1];
                 }
-            } catch (Throwable ignored) {}
+            } catch (Throwable ignored) {
+            }
 
             // Recreate composite and layer buffers on-the-fly if window is resized!
             if (renderer == null || canvas == null || currentCols != cols || currentRows != rows) {
@@ -92,7 +95,7 @@ public class Demo {
             }
 
             // 3. PREVENT LAYOUT JITTER & CLEAR EMOJI OVERLAYS
-            // Title is centered at row titleY. We restrict moving emojis to float ONLY 
+            // Title is centered at row titleY. We restrict moving emojis to float ONLY
             // in the upper/lower boundary sections so they never enter the title's line.
             int titleY = finalRows / 2;
 
@@ -137,7 +140,8 @@ public class Demo {
             if (sleepTime > 0) {
                 try {
                     Thread.sleep(sleepTime);
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException ignored) {
+                }
             }
         }
     }

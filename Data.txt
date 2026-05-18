@@ -461,7 +461,7 @@ public class Demo {
         System.out.println("Initializing FastTerminal Live Fullscreen Demo...");
 
         // Initial default sizes
-        int cols = 80;
+        int cols = 120;
         int rows = 30;
 
         // Try to query starting size natively
