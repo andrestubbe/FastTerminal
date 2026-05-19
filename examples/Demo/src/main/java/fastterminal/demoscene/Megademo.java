@@ -195,7 +195,7 @@ public class Megademo {
             if (timeRemaining < 0) timeRemaining = 0;
 
             String line1 = " [ FASTTERMINAL TRUE-COLOR ] ";
-            String line2 = String.format("  %s  ", stripEmojis(activeEffect.getName()).toUpperCase());
+            String line2 = String.format("  %s  ", stripEmojis(activeEffect.getName()));
             String line3 = String.format(" %.1f FPS - %.1fs ", realFps, timeRemaining);
 
             int centerY = rows / 2 - 1;
