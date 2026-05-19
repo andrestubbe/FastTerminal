@@ -50,6 +50,9 @@ public class CheckerboardEffect implements DemosceneEffect {
         double cosA = Math.cos(angle);
         double sinA = Math.sin(angle);
         double centerX = width / 2.0;
+        
+        // Edge transition width is proportional to the zoom factor (exactly 1 subpixel step width)
+        double edgeWidth = zoom * 0.85;
 
         for (int row = 0; row < height; row++) {
             int yTop = 2 * row;
@@ -62,57 +65,95 @@ public class CheckerboardEffect implements DemosceneEffect {
             for (int x = 0; x < width; x++) {
                 double dx = x - centerX;
 
-                // 1. Calculate top pixel color
+                // 1. Calculate top pixel color with anti-aliasing
                 double rxTop = dx * cosA - dyTop * sinA;
                 double ryTop = dx * sinA + dyTop * cosA;
                 rxTop *= zoom;
                 ryTop *= zoom;
+                
                 int gridXTop = (int) Math.floor(rxTop);
                 int gridYTop = (int) Math.floor(ryTop);
                 boolean isCheckerTop = ((gridXTop + gridYTop) & 1) == 0;
 
-                int colorTop;
-                if (isCheckerTop) {
-                    int r = (int) (128 + 64 * Math.sin(gridXTop * 0.2 + angle));
-                    int g = (int) (50 + 50 * Math.cos(gridYTop * 0.2 + angle * 0.5));
-                    int b = (int) (220 + 35 * Math.sin(angle));
-                    colorTop = (Math.max(0, Math.min(255, r)) << 16)
-                             | (Math.max(0, Math.min(255, g)) << 8)
-                             | Math.max(0, Math.min(255, b));
-                } else {
-                    int r = (int) (20 + 10 * Math.sin(gridYTop * 0.3));
-                    int g = 10;
-                    int b = (int) (40 + 20 * Math.cos(gridXTop * 0.3));
-                    colorTop = (Math.max(0, Math.min(255, r)) << 16)
-                             | (Math.max(0, Math.min(255, g)) << 8)
-                             | Math.max(0, Math.min(255, b));
-                }
+                int rCTop = (int) (128 + 64 * Math.sin(gridXTop * 0.2 + angle));
+                int gCTop = (int) (50 + 50 * Math.cos(gridYTop * 0.2 + angle * 0.5));
+                int bCTop = (int) (220 + 35 * Math.sin(angle));
+                int colorCheckerTop = (Math.max(0, Math.min(255, rCTop)) << 16)
+                                    | (Math.max(0, Math.min(255, gCTop)) << 8)
+                                    | Math.max(0, Math.min(255, bCTop));
 
-                // 2. Calculate bottom pixel color
+                int rBTop = (int) (20 + 10 * Math.sin(gridYTop * 0.3));
+                int gBTop = 10;
+                int bBTop = (int) (40 + 20 * Math.cos(gridXTop * 0.3));
+                int colorBgTop = (Math.max(0, Math.min(255, rBTop)) << 16)
+                               | (Math.max(0, Math.min(255, gBTop)) << 8)
+                               | Math.max(0, Math.min(255, bBTop));
+
+                // Calculate distance to grid boundaries
+                double fxTop = rxTop - gridXTop;
+                double fyTop = ryTop - gridYTop;
+                double distXTop = Math.min(fxTop, 1.0 - fxTop);
+                double distYTop = Math.min(fyTop, 1.0 - fyTop);
+
+                double blendXTop = Math.min(1.0, distXTop / edgeWidth);
+                double blendYTop = Math.min(1.0, distYTop / edgeWidth);
+                double alphaTop = blendXTop * blendYTop;
+                
+                // Soften edges with classic smoothstep
+                alphaTop = alphaTop * alphaTop * (3.0 - 2.0 * alphaTop);
+
+                int colorActiveTop = isCheckerTop ? colorCheckerTop : colorBgTop;
+                int colorOppositeTop = isCheckerTop ? colorBgTop : colorCheckerTop;
+
+                int rT = (int) (((colorActiveTop >> 16) & 0xFF) * alphaTop + ((colorOppositeTop >> 16) & 0xFF) * (1.0 - alphaTop));
+                int gT = (int) (((colorActiveTop >> 8) & 0xFF) * alphaTop + ((colorOppositeTop >> 8) & 0xFF) * (1.0 - alphaTop));
+                int bT = (int) ((colorActiveTop & 0xFF) * alphaTop + ((colorOppositeTop & 0xFF) * (1.0 - alphaTop)));
+                int colorTop = (rT << 16) | (gT << 8) | bT;
+
+                // 2. Calculate bottom pixel color with anti-aliasing
                 double rxBot = dx * cosA - dyBot * sinA;
                 double ryBot = dx * sinA + dyBot * cosA;
                 rxBot *= zoom;
                 ryBot *= zoom;
+                
                 int gridXBot = (int) Math.floor(rxBot);
                 int gridYBot = (int) Math.floor(ryBot);
                 boolean isCheckerBot = ((gridXBot + gridYBot) & 1) == 0;
 
-                int colorBot;
-                if (isCheckerBot) {
-                    int r = (int) (128 + 64 * Math.sin(gridXBot * 0.2 + angle));
-                    int g = (int) (50 + 50 * Math.cos(gridYBot * 0.2 + angle * 0.5));
-                    int b = (int) (220 + 35 * Math.sin(angle));
-                    colorBot = (Math.max(0, Math.min(255, r)) << 16)
-                             | (Math.max(0, Math.min(255, g)) << 8)
-                             | Math.max(0, Math.min(255, b));
-                } else {
-                    int r = (int) (20 + 10 * Math.sin(gridYBot * 0.3));
-                    int g = 10;
-                    int b = (int) (40 + 20 * Math.cos(gridXBot * 0.3));
-                    colorBot = (Math.max(0, Math.min(255, r)) << 16)
-                             | (Math.max(0, Math.min(255, g)) << 8)
-                             | Math.max(0, Math.min(255, b));
-                }
+                int rCBot = (int) (128 + 64 * Math.sin(gridXBot * 0.2 + angle));
+                int gCBot = (int) (50 + 50 * Math.cos(gridYBot * 0.2 + angle * 0.5));
+                int bCBot = (int) (220 + 35 * Math.sin(angle));
+                int colorCheckerBot = (Math.max(0, Math.min(255, rCBot)) << 16)
+                                    | (Math.max(0, Math.min(255, gCBot)) << 8)
+                                    | Math.max(0, Math.min(255, bCBot));
+
+                int rBBot = (int) (20 + 10 * Math.sin(gridYBot * 0.3));
+                int gBBot = 10;
+                int bBBot = (int) (40 + 20 * Math.cos(gridXBot * 0.3));
+                int colorBgBot = (Math.max(0, Math.min(255, rBBot)) << 16)
+                               | (Math.max(0, Math.min(255, gBBot)) << 8)
+                               | Math.max(0, Math.min(255, bBBot));
+
+                // Calculate distance to grid boundaries
+                double fxBot = rxBot - gridXBot;
+                double fyBot = ryBot - gridYBot;
+                double distXBot = Math.min(fxBot, 1.0 - fxBot);
+                double distYBot = Math.min(fyBot, 1.0 - fyBot);
+
+                double blendXBot = Math.min(1.0, distXBot / edgeWidth);
+                double blendYBot = Math.min(1.0, distYBot / edgeWidth);
+                double alphaBot = blendXBot * blendYBot;
+                
+                // Soften edges with classic smoothstep
+                alphaBot = alphaBot * alphaBot * (3.0 - 2.0 * alphaBot);
+
+                int colorActiveBot = isCheckerBot ? colorCheckerBot : colorBgBot;
+                int colorOppositeBot = isCheckerBot ? colorBgBot : colorCheckerBot;
+
+                int rB = (int) (((colorActiveBot >> 16) & 0xFF) * alphaBot + ((colorOppositeBot >> 16) & 0xFF) * (1.0 - alphaBot));
+                int gB = (int) (((colorActiveBot >> 8) & 0xFF) * alphaBot + ((colorOppositeBot >> 8) & 0xFF) * (1.0 - alphaBot));
+                int bB = (int) ((colorActiveBot & 0xFF) * alphaBot + ((colorOppositeBot & 0xFF) * (1.0 - alphaBot)));
+                int colorBot = (rB << 16) | (gB << 8) | bB;
 
                 // Write half-block cell: Foreground represents bottom pixel, Background represents top pixel
                 canvas.writeCell(x, row, '▄', colorBot, colorTop);
