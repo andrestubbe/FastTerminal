@@ -33,6 +33,10 @@ import fastterminal.demoscene.effects.GalagaEffect;
 import fastterminal.demoscene.effects.TerrainEffect;
 import fastterminal.demoscene.effects.FluidDynamicsEffect;
 import fastterminal.demoscene.effects.LifeEffect;
+import fastterminal.demoscene.effects.Spaceship3DEffect;
+import fastterminal.demoscene.effects.AudioVisualizerEffect;
+import fastterminal.demoscene.effects.FluidSandboxEffect;
+import fastterminal.demoscene.effects.MatrixTunnelEffect;
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
 
@@ -108,7 +112,11 @@ public class Megademo {
             new GalagaEffect(),
             new TerrainEffect(),
             new FluidDynamicsEffect(),
-            new LifeEffect()
+            new LifeEffect(),
+            new Spaceship3DEffect(),
+            new AudioVisualizerEffect(),
+            new FluidSandboxEffect(),
+            new MatrixTunnelEffect()
         };
 
         // Initialize all effects
