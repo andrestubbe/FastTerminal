@@ -58,6 +58,8 @@ public class FastTerminal {
      * - [3]: clientOffset.y (pixels)
      * - [4]: fontWidth (pixels)
      * - [5]: fontHeight (pixels)
+     * - [6]: clientWidth (pixels)
+     * - [7]: clientHeight (pixels)
      * 
      * @return int array containing hardware console window info metrics.
      */

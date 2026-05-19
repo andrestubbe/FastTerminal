@@ -23,6 +23,16 @@ public class UI {
     private static volatile boolean isRightPressed = false;
     private static volatile int clickCount = 0;
 
+    // Volatile real-time window metrics
+    private static volatile int clientX = 0;
+    private static volatile int clientY = 0;
+    private static volatile int clientWidth = 0;
+    private static volatile int clientHeight = 0;
+    private static volatile int fontW = 8;
+    private static volatile int fontH = 16;
+    private static volatile int currentCols = 100;
+    private static volatile int currentRows = 30;
+
     public static void main(String[] args) {
         System.out.println("Initializing UI Mouse Visualizer...");
 
@@ -30,15 +40,17 @@ public class UI {
         int[] winInfo = null;
         try {
             winInfo = FastTerminal.getConsoleWindowInfo();
+            if (winInfo != null && winInfo.length >= 8) {
+                clientX = winInfo[2];
+                clientY = winInfo[3];
+                fontW = winInfo[4];
+                fontH = winInfo[5];
+                clientWidth = winInfo[6];
+                clientHeight = winInfo[7];
+            }
         } catch (Throwable t) {
             System.err.println("[WARN] Could not retrieve Win32 console metrics: " + t.getMessage());
         }
-
-        // Set safe fallback metrics if not running in standard Windows console
-        final int clientX = (winInfo != null) ? winInfo[2] : 0;
-        final int clientY = (winInfo != null) ? winInfo[3] : 0;
-        final int fontW = (winInfo != null && winInfo[4] > 0) ? winInfo[4] : 8;
-        final int fontH = (winInfo != null && winInfo[5] > 0) ? winInfo[5] : 16;
 
         // 2. Configure screen alternate buffer and hide standard cursor
         Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
@@ -52,6 +64,8 @@ public class UI {
                 rows = size[1];
             }
         } catch (Throwable ignored) {}
+        currentCols = cols;
+        currentRows = rows;
 
         FastTerminalRenderer renderer = new FastTerminalRenderer(cols, rows);
         FastTerminalScene canvas = new FastTerminalScene(0, 0, cols, rows);
@@ -66,8 +80,12 @@ public class UI {
                 absoluteY = absY;
                 int relX = absX - clientX;
                 int relY = absY - clientY;
-                mouseCellX = relX / fontW;
-                mouseCellY = relY / fontH;
+                
+                double w = (clientWidth > 0) ? (double) clientWidth / currentCols : fontW;
+                double h = (clientHeight > 0) ? (double) clientHeight / currentRows : fontH;
+                
+                mouseCellX = (int) (relX / w);
+                mouseCellY = (int) (relY / h);
             }
 
             @Override
@@ -103,8 +121,23 @@ public class UI {
             if (renderer.resize(currentSize[0], currentSize[1])) {
                 cols = currentSize[0];
                 rows = currentSize[1];
+                currentCols = cols;
+                currentRows = rows;
                 canvas.resize(cols, rows);
             }
+
+            // Update real-time console metrics from active window
+            try {
+                int[] currentWinInfo = FastTerminal.getConsoleWindowInfo();
+                if (currentWinInfo != null && currentWinInfo.length >= 8) {
+                    clientX = currentWinInfo[2];
+                    clientY = currentWinInfo[3];
+                    fontW = currentWinInfo[4];
+                    fontH = currentWinInfo[5];
+                    clientWidth = currentWinInfo[6];
+                    clientHeight = currentWinInfo[7];
+                }
+            } catch (Throwable ignored) {}
 
             canvas.clear();
 

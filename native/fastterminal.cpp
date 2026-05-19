@@ -111,6 +111,31 @@ JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode(JNIEnv* env, jc
  */
 JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getConsoleWindowInfo(JNIEnv* env, jclass clazz) {
     HWND hwnd = GetConsoleWindow();
+    
+    // Check if we are hosted under Windows Terminal or another root container
+    HWND hwndForeground = GetForegroundWindow();
+    if (hwndForeground != NULL) {
+        bool isOurWindow = (hwndForeground == hwnd);
+        if (!isOurWindow) {
+            HWND parent = hwnd;
+            while (parent != NULL) {
+                if (parent == hwndForeground) {
+                    isOurWindow = true;
+                    break;
+                }
+                parent = GetParent(parent);
+            }
+            if (!isOurWindow) {
+                if (GetAncestor(hwnd, GA_ROOT) == hwndForeground || GetAncestor(hwnd, GA_ROOTOWNER) == hwndForeground) {
+                    isOurWindow = true;
+                }
+            }
+        }
+        if (isOurWindow) {
+            hwnd = hwndForeground;
+        }
+    }
+
     RECT rect = {0, 0, 0, 0};
     GetWindowRect(hwnd, &rect);
     
@@ -127,16 +152,22 @@ JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getConsoleWindowInfo(
     POINT clientOffset = {0, 0};
     ClientToScreen(hwnd, &clientOffset);
     
-    jintArray result = env->NewIntArray(6);
+    RECT clientRect = {0, 0, 0, 0};
+    GetClientRect(hwnd, &clientRect);
+    int clientWidth = clientRect.right;
+    int clientHeight = clientRect.bottom;
+    
+    jintArray result = env->NewIntArray(8);
     if (result == NULL) return NULL;
     
-    jint info[6] = {
+    jint info[8] = {
         (jint)rect.left, (jint)rect.top,
         (jint)clientOffset.x, (jint)clientOffset.y,
-        (jint)fontWidth, (jint)fontHeight
+        (jint)fontWidth, (jint)fontHeight,
+        (jint)clientWidth, (jint)clientHeight
     };
     
-    env->SetIntArrayRegion(result, 0, 6, info);
+    env->SetIntArrayRegion(result, 0, 8, info);
     return result;
 }
 
