@@ -1,14 +1,17 @@
 fastterminal\demoscene\effects\GradientEffect.class
 fastterminal\demoscene\DemosceneEffect.class
+fastterminal\demoscene\effects\LifeEffect.class
 fastterminal\demoscene\effects\ShadedEffect.class
 fastterminal\demoscene\Megademo.class
 fastterminal\demoscene\effects\FluidGridEffect.class
 fastterminal\demoscene\effects\LissajousEffect$TrailPoint.class
 fastterminal\MouseTelemetryDemo$1.class
 fastterminal\demoscene\effects\LissajousEffect.class
+fastterminal\demoscene\effects\RaycasterEffect.class
 fastterminal\MouseTelemetryDemo.class
 fastterminal\demoscene\effects\AsciiTunnelEffect.class
 fastterminal\BenchmarkDemo.class
+fastterminal\demoscene\effects\TerrainEffect.class
 fastterminal\demoscene\effects\DoomFireEffect.class
 fastterminal\demoscene\effects\PlasmaEffect.class
 fastterminal\RobotTest$1.class
@@ -31,6 +34,8 @@ fastterminal\demoscene\effects\TorusEffect.class
 fastterminal\demoscene\effects\WavefallEffect.class
 fastterminal\Demo.class
 fastterminal\demoscene\effects\ColorCycleEffect.class
+fastterminal\demoscene\effects\GalagaEffect.class
+fastterminal\demoscene\effects\FluidDynamicsEffect.class
 fastterminal\demoscene\effects\MatrixRainEffect.class
 fastterminal\demoscene\effects\VolcanoEffect.class
 fastterminal\demoscene\effects\CubeEffect.class

@@ -28,6 +28,11 @@ import fastterminal.demoscene.effects.AsciiTunnelEffect;
 import fastterminal.demoscene.effects.AttractorEffect;
 import fastterminal.demoscene.effects.TorusEffect;
 import fastterminal.demoscene.effects.VolcanoEffect;
+import fastterminal.demoscene.effects.RaycasterEffect;
+import fastterminal.demoscene.effects.GalagaEffect;
+import fastterminal.demoscene.effects.TerrainEffect;
+import fastterminal.demoscene.effects.FluidDynamicsEffect;
+import fastterminal.demoscene.effects.LifeEffect;
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
 
@@ -98,7 +103,12 @@ public class Megademo {
             new AsciiTunnelEffect(),
             new AttractorEffect(),
             new TorusEffect(),
-            new VolcanoEffect()
+            new VolcanoEffect(),
+            new RaycasterEffect(),
+            new GalagaEffect(),
+            new TerrainEffect(),
+            new FluidDynamicsEffect(),
+            new LifeEffect()
         };
 
         // Initialize all effects
