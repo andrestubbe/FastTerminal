@@ -37,6 +37,8 @@ import fastterminal.demoscene.effects.Spaceship3DEffect;
 import fastterminal.demoscene.effects.AudioVisualizerEffect;
 import fastterminal.demoscene.effects.FluidSandboxEffect;
 import fastterminal.demoscene.effects.MatrixTunnelEffect;
+import fastterminal.demoscene.effects.PlasmaGlobeEffect;
+import fastterminal.demoscene.effects.WarpTunnelEffect;
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
 
@@ -116,7 +118,9 @@ public class Megademo {
             new Spaceship3DEffect(),
             new AudioVisualizerEffect(),
             new FluidSandboxEffect(),
-            new MatrixTunnelEffect()
+            new MatrixTunnelEffect(),
+            new PlasmaGlobeEffect(),
+            new WarpTunnelEffect()
         };
 
         // Initialize all effects

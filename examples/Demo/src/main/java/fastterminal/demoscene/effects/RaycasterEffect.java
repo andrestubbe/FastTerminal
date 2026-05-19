@@ -12,9 +12,11 @@ public class RaycasterEffect implements DemosceneEffect {
 
     private int width;
     private int height;
-    private double playerX = 2.5;
-    private double playerY = 2.5;
+    private double playerX = 8.5;
+    private double playerY = 9.5;
     private double playerA = 0.0; // Angle
+    private double vx = 0.05;
+    private double vy = 0.04;
 
     // 16x16 Map: '#' = Wall, '.' = Space
     private static final String[] MAP = {
@@ -42,28 +44,32 @@ public class RaycasterEffect implements DemosceneEffect {
     public void init(int width, int height) {
         this.width = width;
         this.height = height;
+        playerX = 8.5;
+        playerY = 9.5;
+        vx = 0.05;
+        vy = 0.04;
     }
 
     @Override
     public void update(long frameIndex) {
-        // Procedural pathfinding camera moving through the maze
-        double t = frameIndex * 0.008;
-        playerX = 8.0 + 5.0 * Math.sin(t * 1.3);
-        playerY = 8.0 + 5.0 * Math.cos(t * 0.9);
-        playerA = t * 2.0;
+        // Continuous smooth movement without teleport jumping
+        playerA = Math.atan2(vy, vx);
 
-        // Keep player safely inside boundaries
-        if (playerX < 1.5) playerX = 1.5;
-        if (playerX > 14.5) playerX = 14.5;
-        if (playerY < 1.5) playerY = 1.5;
-        if (playerY > 14.5) playerY = 14.5;
-        
-        int mapX = (int) playerX;
-        int mapY = (int) playerY;
-        if (MAP[mapY].charAt(mapX) == '#') {
-            // Push player out of walls
-            playerX = 8.0;
-            playerY = 8.0;
+        double nextX = playerX + vx;
+        double nextY = playerY + vy;
+
+        // Wall check with comfortable bounding box radius of 0.7 cells
+        int testX = (int) (nextX + Math.signum(vx) * 0.7);
+        int testY = (int) (nextY + Math.signum(vy) * 0.7);
+
+        if (testX >= 0 && testX < MAP_SIZE && testY >= 0 && testY < MAP_SIZE && MAP[testY].charAt(testX) != '#') {
+            playerX = nextX;
+            playerY = nextY;
+        } else {
+            // Pick a smooth new direction
+            double angle = (frameIndex * 0.05) % (2.0 * Math.PI);
+            vx = Math.cos(angle) * 0.05;
+            vy = Math.sin(angle) * 0.05;
         }
     }
 
