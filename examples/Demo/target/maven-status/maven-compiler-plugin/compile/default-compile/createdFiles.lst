@@ -3,6 +3,7 @@ fastterminal\CubeDemo.class
 fastterminal\demoscene\DemosceneEffect.class
 fastterminal\TestLoad.class
 fastterminal\ShadedDemo.class
+fastterminal\demoscene\effects\CheckerboardEffect.class
 fastterminal\demoscene\Megademo.class
 fastterminal\InteractiveUIDemo.class
 fastterminal\RobotTest.class
@@ -18,4 +19,5 @@ fastterminal\demoscene\effects\PlasmaEffect.class
 fastterminal\RobotTest$1.class
 fastterminal\demoscene\effects\MatrixRainEffect.class
 fastterminal\MouseDedicatedDemo$1.class
+fastterminal\demoscene\effects\MetaballsEffect.class
 fastterminal\InteractiveUIDemo$1.class

@@ -8,6 +8,8 @@ import fastterminal.demoscene.effects.DoomFireEffect;
 import fastterminal.demoscene.effects.PlasmaEffect;
 import fastterminal.demoscene.effects.MatrixRainEffect;
 import fastterminal.demoscene.effects.WarpStarfieldEffect;
+import fastterminal.demoscene.effects.CheckerboardEffect;
+import fastterminal.demoscene.effects.MetaballsEffect;
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
 
@@ -58,7 +60,9 @@ public class Megademo {
             new DoomFireEffect(),
             new PlasmaEffect(),
             new MatrixRainEffect(),
-            new WarpStarfieldEffect()
+            new WarpStarfieldEffect(),
+            new CheckerboardEffect(),
+            new MetaballsEffect()
         };
 
         // Initialize all effects
