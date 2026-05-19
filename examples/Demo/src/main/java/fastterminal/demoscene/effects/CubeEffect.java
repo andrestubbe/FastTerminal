@@ -73,6 +73,7 @@ public class CubeEffect implements DemosceneEffect {
 
     @Override
     public void render(FastTerminalScene canvas) {
+        canvas.clear();
         // 1. Draw and drift background starfield
         for (int i = 0; i < STAR_COUNT; i++) {
             starX[i] -= starSpeed[i];
