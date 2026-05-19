@@ -16,6 +16,9 @@ import fastterminal.demoscene.effects.PlanetEffect;
 import fastterminal.demoscene.effects.GearEffect;
 import fastterminal.demoscene.effects.MandelbrotEffect;
 import fastterminal.demoscene.effects.WavefallEffect;
+import fastterminal.demoscene.effects.CubeEffect;
+import fastterminal.demoscene.effects.ShadedEffect;
+import fastterminal.demoscene.effects.GradientEffect;
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
 
@@ -74,7 +77,10 @@ public class Megademo {
             new PlanetEffect(),
             new GearEffect(),
             new MandelbrotEffect(),
-            new WavefallEffect()
+            new WavefallEffect(),
+            new CubeEffect(),
+            new ShadedEffect(),
+            new GradientEffect()
         };
 
         // Initialize all effects
