@@ -26,6 +26,7 @@ public final class FastTerminalRenderer {
     private int[] prevBg;
     private boolean forceFullRedraw = true;
     private boolean diffRenderingEnabled = true;
+    private int lastFlushedBytes = 0;
 
     public FastTerminalRenderer(final int width, final int height) {
         this.width = width;
@@ -152,9 +153,40 @@ public final class FastTerminalRenderer {
 
                 // 1. Position cursor if we skipped cells
                 if (i != expectedPos) {
-                    int row = i / this.width;
-                    int col = i % this.width;
-                    sb.append("\033[").append(row + 1).append(";").append(col + 1).append("H");
+                    int gap = i - expectedPos;
+                    // Span/Gap Thresholding: If gap is small (<= 4 cells) and on the same row,
+                    // it is much faster to just write the unchanged cells instead of an expensive absolute cursor jump!
+                    if (expectedPos != -1 && gap > 0 && gap <= 4 && (i / this.width == (expectedPos - 1) / this.width)) {
+                        for (int g = expectedPos; g < i; g++) {
+                            int gCp = compositeCodepoints[g];
+                            int gFg = compositeFg[g];
+                            int gBg = compositeBg[g];
+
+                            if (gFg != currentFg) {
+                                if (gFg == -1) sb.append(Ansi.DEFAULT_FG);
+                                else {
+                                    int r = (gFg >> 16) & 0xFF, gr = (gFg >> 8) & 0xFF, b = gFg & 0xFF;
+                                    sb.append(Ansi.RGB_FG_PREFIX).append(r).append(";").append(gr).append(";").append(b).append(Ansi.RGB_SUFFIX);
+                                }
+                                currentFg = gFg;
+                            }
+                            if (gBg != currentBg) {
+                                if (gBg == -1) sb.append(Ansi.DEFAULT_BG);
+                                else {
+                                    int r = (gBg >> 16) & 0xFF, gr = (gBg >> 8) & 0xFF, b = gBg & 0xFF;
+                                    sb.append(Ansi.RGB_BG_PREFIX).append(r).append(";").append(gr).append(";").append(b).append(Ansi.RGB_SUFFIX);
+                                }
+                                currentBg = gBg;
+                            }
+                            if (Character.isValidCodePoint(gCp)) sb.appendCodePoint(gCp);
+                            else sb.append(' ');
+                        }
+                    } else {
+                        // Perform standard absolute cursor jump
+                        int row = i / this.width;
+                        int col = i % this.width;
+                        sb.append("\033[").append(row + 1).append(";").append(col + 1).append("H");
+                    }
                 }
 
                 // 2. Output foreground escape code
@@ -212,8 +244,11 @@ public final class FastTerminalRenderer {
         // Blit the built buffer to standard output
         if (sb.length() > 0) {
             byte[] bytes = sb.toString().getBytes(StandardCharsets.UTF_8);
+            this.lastFlushedBytes = bytes.length;
             System.out.write(bytes, 0, bytes.length);
             System.out.flush();
+        } else {
+            this.lastFlushedBytes = 0;
         }
     }
 
@@ -309,6 +344,10 @@ public final class FastTerminalRenderer {
 
     public boolean isDiffRenderingEnabled() {
         return this.diffRenderingEnabled;
+    }
+
+    public int getLastFlushedBytes() {
+        return this.lastFlushedBytes;
     }
 
     public void setDiffRenderingEnabled(boolean enabled) {
