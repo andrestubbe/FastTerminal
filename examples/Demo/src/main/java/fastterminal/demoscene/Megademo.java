@@ -1,6 +1,6 @@
 package fastterminal.demoscene;
 
-import fastterminal.Ansi;
+import fastansi.FastANSI;
 import fastterminal.FastTerminal;
 import fastterminal.FastTerminalRenderer;
 import fastterminal.FastTerminalScene;
@@ -44,13 +44,13 @@ public class Megademo {
 
         // Shutdown hook to cleanly exit alternative buffer
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Ansi.print(Ansi.EXIT_ALT_BUFFER, Ansi.SHOW_CURSOR, Ansi.RESET);
+            FastANSI.print(FastANSI.ALT_BUFFER_OFF, FastANSI.CURSOR_SHOW, FastANSI.RESET);
             try {
                 keyboard.stopListening();
             } catch (Throwable ignored) {}
         }));
 
-        Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
+        FastANSI.print(FastANSI.ALT_BUFFER_ON, FastANSI.CURSOR_HIDE);
 
         int cols = 100;
         int rows = 30;

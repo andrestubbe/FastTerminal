@@ -1,5 +1,6 @@
 package fastterminal;
 
+import fastansi.FastANSI;
 import fastterminal.ui.Panel;
 
 /**
@@ -13,11 +14,11 @@ public class Benchmark {
 
         // Register shutdown hook to clean up console on exit
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Ansi.print(Ansi.EXIT_ALT_BUFFER, Ansi.SHOW_CURSOR, Ansi.RESET);
+            FastANSI.print(FastANSI.ALT_BUFFER_OFF, FastANSI.CURSOR_SHOW, FastANSI.RESET);
         }));
 
         // Enter alternate screen buffer and hide standard cursor
-        Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
+        FastANSI.print(FastANSI.ALT_BUFFER_ON, FastANSI.CURSOR_HIDE);
 
         int cols = 100;
         int rows = 30;

@@ -1,8 +1,8 @@
 package fastterminal;
 
+import fastansi.FastANSI;
 import fastmouse.FastMouse;
 import fastmouse.FastMouseListener;
-import fastterminal.Ansi;
 import fastterminal.FastTerminal;
 import fastterminal.FastTerminalRenderer;
 import fastterminal.FastTerminalScene;
@@ -53,7 +53,7 @@ public class UI {
         }
 
         // 2. Configure screen alternate buffer and hide standard cursor
-        Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
+        FastANSI.print(FastANSI.ALT_BUFFER_ON, FastANSI.CURSOR_HIDE);
 
         int cols = 100;
         int rows = 30;
@@ -105,7 +105,7 @@ public class UI {
 
         // Safe cleanup shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Ansi.print(Ansi.EXIT_ALT_BUFFER, Ansi.SHOW_CURSOR, Ansi.RESET);
+            FastANSI.print(FastANSI.ALT_BUFFER_OFF, FastANSI.CURSOR_SHOW, FastANSI.RESET);
             try {
                 mouse.stopListening();
             } catch (Throwable ignored) {}

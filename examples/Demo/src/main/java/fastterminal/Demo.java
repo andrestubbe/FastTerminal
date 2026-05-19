@@ -30,7 +30,7 @@ public class Demo {
         }
 
         // Enter Fullscreen Alternate Screen Buffer, Hide Cursor
-        Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
+        fastansi.FastANSI.print(fastansi.FastANSI.ALT_BUFFER_ON, fastansi.FastANSI.CURSOR_HIDE);
 
         FastTerminalRenderer renderer = new FastTerminalRenderer(cols, rows);
         FastTerminalScene canvas = new FastTerminalScene(0, 0, cols, rows);

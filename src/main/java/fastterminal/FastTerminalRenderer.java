@@ -1,5 +1,6 @@
 package fastterminal;
 
+import fastansi.FastANSI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,6 +15,10 @@ import java.util.List;
  * Includes strategic cursor span/gap jumps to drastically reduce standard output flush sizes.
  */
 public final class FastTerminalRenderer {
+
+    private static final String RGB_FG_PREFIX = "\033[38;2;";
+    private static final String RGB_BG_PREFIX = "\033[48;2;";
+    private static final String RGB_SUFFIX = "m";
 
     private List<FastTerminalScene> scenes = new ArrayList<>();
     private int width;
@@ -85,7 +90,7 @@ public final class FastTerminalRenderer {
         if (!this.diffRenderingEnabled || this.forceFullRedraw) {
             // Full Redraw mode
             // Print home command to avoid full console clear flash
-            System.out.print(Ansi.CURSOR_HOME);
+            System.out.print(FastANSI.CURSOR_HOME);
 
             for (int i = 0; i < compositeCodepoints.length; i++) {
                 int cp = compositeCodepoints[i];
@@ -96,7 +101,7 @@ public final class FastTerminalRenderer {
                     // Wide character continuation cell - skip printing the character
                     // but we MUST still perform the row split check!
                     if ((i + 1) % this.width == 0 && (i + 1) < compositeCodepoints.length) {
-                        sb.append(Ansi.RESET).append("\n");
+                        sb.append(FastANSI.RESET).append("\n");
                         currentFg = -2;
                         currentBg = -2;
                     }
@@ -106,13 +111,13 @@ public final class FastTerminalRenderer {
                 // Optimize foreground escape codes
                 if (fg != currentFg) {
                     if (fg == -1) {
-                        sb.append(Ansi.DEFAULT_FG);
+                        sb.append(FastANSI.FG_DEFAULT);
                     } else {
                         int r = (fg >> 16) & 0xFF;
                         int g = (fg >> 8) & 0xFF;
                         int b = fg & 0xFF;
-                        sb.append(Ansi.RGB_FG_PREFIX).append(r).append(";").append(g).append(";").append(b)
-                                .append(Ansi.RGB_SUFFIX);
+                        sb.append(RGB_FG_PREFIX).append(r).append(";").append(g).append(";").append(b)
+                                .append(RGB_SUFFIX);
                     }
                     currentFg = fg;
                 }
@@ -120,13 +125,13 @@ public final class FastTerminalRenderer {
                 // Optimize background escape codes
                 if (bg != currentBg) {
                     if (bg == -1) {
-                        sb.append(Ansi.DEFAULT_BG);
+                        sb.append(FastANSI.BG_DEFAULT);
                     } else {
                         int r = (bg >> 16) & 0xFF;
                         int g = (bg >> 8) & 0xFF;
                         int b = bg & 0xFF;
-                        sb.append(Ansi.RGB_BG_PREFIX).append(r).append(";").append(g).append(";").append(b)
-                                .append(Ansi.RGB_SUFFIX);
+                        sb.append(RGB_BG_PREFIX).append(r).append(";").append(g).append(";").append(b)
+                                .append(RGB_SUFFIX);
                     }
                     currentBg = bg;
                 }
@@ -140,13 +145,13 @@ public final class FastTerminalRenderer {
 
                 // Explicitly force newline at the end of each row
                 if ((i + 1) % this.width == 0 && (i + 1) < compositeCodepoints.length) {
-                    sb.append(Ansi.RESET).append("\n"); // Reset colors before newline to avoid bleeding
+                    sb.append(FastANSI.RESET).append("\n"); // Reset colors before newline to avoid bleeding
                     currentFg = -2;
                     currentBg = -2;
                 }
             }
 
-            sb.append(Ansi.RESET);
+            sb.append(FastANSI.RESET);
             this.forceFullRedraw = false;
         } else {
             // Diff-Rendering / Double-Buffering mode
@@ -183,18 +188,18 @@ public final class FastTerminalRenderer {
                             int gBg = compositeBg[g];
 
                             if (gFg != currentFg) {
-                                if (gFg == -1) sb.append(Ansi.DEFAULT_FG);
+                                if (gFg == -1) sb.append(FastANSI.FG_DEFAULT);
                                 else {
                                     int r = (gFg >> 16) & 0xFF, gr = (gFg >> 8) & 0xFF, b = gFg & 0xFF;
-                                    sb.append(Ansi.RGB_FG_PREFIX).append(r).append(";").append(gr).append(";").append(b).append(Ansi.RGB_SUFFIX);
+                                    sb.append(RGB_FG_PREFIX).append(r).append(";").append(gr).append(";").append(b).append(RGB_SUFFIX);
                                 }
                                 currentFg = gFg;
                             }
                             if (gBg != currentBg) {
-                                if (gBg == -1) sb.append(Ansi.DEFAULT_BG);
+                                if (gBg == -1) sb.append(FastANSI.BG_DEFAULT);
                                 else {
                                     int r = (gBg >> 16) & 0xFF, gr = (gBg >> 8) & 0xFF, b = gBg & 0xFF;
-                                    sb.append(Ansi.RGB_BG_PREFIX).append(r).append(";").append(gr).append(";").append(b).append(Ansi.RGB_SUFFIX);
+                                    sb.append(RGB_BG_PREFIX).append(r).append(";").append(gr).append(";").append(b).append(RGB_SUFFIX);
                                 }
                                 currentBg = gBg;
                             }
@@ -212,13 +217,13 @@ public final class FastTerminalRenderer {
                 // 2. Output foreground escape code
                 if (fg != currentFg) {
                     if (fg == -1) {
-                        sb.append(Ansi.DEFAULT_FG);
+                        sb.append(FastANSI.FG_DEFAULT);
                     } else {
                         int r = (fg >> 16) & 0xFF;
                         int g = (fg >> 8) & 0xFF;
                         int b = fg & 0xFF;
-                        sb.append(Ansi.RGB_FG_PREFIX).append(r).append(";").append(g).append(";").append(b)
-                                .append(Ansi.RGB_SUFFIX);
+                        sb.append(RGB_FG_PREFIX).append(r).append(";").append(g).append(";").append(b)
+                                .append(RGB_SUFFIX);
                     }
                     currentFg = fg;
                 }
@@ -226,13 +231,13 @@ public final class FastTerminalRenderer {
                 // 3. Output background escape code
                 if (bg != currentBg) {
                     if (bg == -1) {
-                        sb.append(Ansi.DEFAULT_BG);
+                        sb.append(FastANSI.BG_DEFAULT);
                     } else {
                         int r = (bg >> 16) & 0xFF;
                         int g = (bg >> 8) & 0xFF;
                         int b = bg & 0xFF;
-                        sb.append(Ansi.RGB_BG_PREFIX).append(r).append(";").append(g).append(";").append(b)
-                                .append(Ansi.RGB_SUFFIX);
+                        sb.append(RGB_BG_PREFIX).append(r).append(";").append(g).append(";").append(b)
+                                .append(RGB_SUFFIX);
                     }
                     currentBg = bg;
                 }
@@ -253,7 +258,7 @@ public final class FastTerminalRenderer {
             }
 
             // Always reset styles at the end of the diff updates
-            sb.append(Ansi.RESET);
+            sb.append(FastANSI.RESET);
         }
 
         // Keep prev buffers in sync with current composite frame
