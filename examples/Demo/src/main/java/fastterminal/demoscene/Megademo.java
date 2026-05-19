@@ -146,6 +146,9 @@ public class Megademo {
 
         long frameCounter = 0;
         long frameTimeTargetMs = 1000 / 120; // 120 FPS target
+        long lastFpsUpdateTime = System.currentTimeMillis();
+        int fpsFrameCount = 0;
+        double realFps = 120.0;
 
         while (true) {
             long startTime = System.nanoTime();
@@ -184,8 +187,8 @@ public class Megademo {
             // 4. Overlap high-fidelity translucent status overlays
             double timeRemaining = 60.0 - (now - lastSwitchTime) / 1000.0;
             String header = " ⚡ FASTTERMINAL MEGADEMO SUITE v0.1.0 ⚡ ";
-            String footer = String.format(" Active Effect: %s | Auto-cycling in: %.1f seconds | Framerate: 120 FPS | Controls: ◄ / ► Keys ", 
-                    activeEffect.getName(), timeRemaining);
+            String footer = String.format(" Active Effect: %s | Auto-cycling in: %.1f seconds | Framerate: %.1f FPS | Controls: ◄ / ► Keys ", 
+                    activeEffect.getName(), timeRemaining, realFps);
 
             // Write glowing overlays with dark transparent contrast backings
             canvas.writeString((cols - header.length()) / 2, 1, header, 0xF59E0B, 0x07070F);
@@ -193,6 +196,14 @@ public class Megademo {
 
             // 5. Render buffer to standard output
             renderer.render();
+
+            fpsFrameCount++;
+            long timeNow = System.currentTimeMillis();
+            if (timeNow - lastFpsUpdateTime >= 1000) {
+                realFps = (fpsFrameCount * 1000.0) / (timeNow - lastFpsUpdateTime);
+                fpsFrameCount = 0;
+                lastFpsUpdateTime = timeNow;
+            }
 
             long elapsedNs = System.nanoTime() - startTime;
             long elapsedMs = elapsedNs / 1_000_000;
