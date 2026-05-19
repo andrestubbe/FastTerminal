@@ -111,7 +111,23 @@ JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getConsoleWindowInfo(
 JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isTerminalFocused(JNIEnv* env, jclass clazz) {
     HWND hwndConsole = GetConsoleWindow();
     if (hwndConsole == NULL) return JNI_FALSE;
-    return (GetForegroundWindow() == hwndConsole) ? JNI_TRUE : JNI_FALSE;
+    
+    HWND hwndForeground = GetForegroundWindow();
+    if (hwndForeground == NULL) return JNI_FALSE;
+    
+    if (hwndForeground == hwndConsole) return JNI_TRUE;
+    
+    // Check root ancestors and owner window trees (crucial for wt.exe / Windows Terminal)
+    if (GetAncestor(hwndConsole, GA_ROOT) == hwndForeground) return JNI_TRUE;
+    if (GetAncestor(hwndConsole, GA_ROOTOWNER) == hwndForeground) return JNI_TRUE;
+    
+    // Walk parent hierarchy to handle embedded hosts
+    HWND parent = hwndConsole;
+    while ((parent = GetParent(parent)) != NULL) {
+        if (parent == hwndForeground) return JNI_TRUE;
+    }
+    
+    return JNI_FALSE;
 }
 
 /**
