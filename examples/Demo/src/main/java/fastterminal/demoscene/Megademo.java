@@ -201,7 +201,7 @@ public class Megademo {
             int centerY = rows / 2 - 1;
 
             // Write glowing overlays with dark transparent contrast backings
-            canvas.writeString((cols - line1.length()) / 2, centerY - 1, line1, 0xF59E0B, 0x07070F); // Neon Yellow
+            canvas.writeString((cols - line1.length()) / 2, centerY - 1, line1, 0x000000, 0xF59E0B); // Black on Solid Yellow
             canvas.writeString((cols - line2.length()) / 2, centerY,     line2, 0xF59E0B, 0x07070F); // Neon Yellow
             canvas.writeString((cols - line3.length()) / 2, centerY + 1, line3, 0xF59E0B, 0x07070F); // Neon Yellow
 
