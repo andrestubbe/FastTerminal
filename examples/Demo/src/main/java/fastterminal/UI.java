@@ -78,14 +78,30 @@ public class UI {
             public void onMouseMove(long deviceHandle, int deltaX, int deltaY, int absX, int absY) {
                 absoluteX = absX;
                 absoluteY = absY;
-                int relX = absX - clientX;
-                int relY = absY - clientY;
                 
-                double w = (clientWidth > 0) ? (double) clientWidth / currentCols : fontW;
-                double h = (clientHeight > 0) ? (double) clientHeight / currentRows : fontH;
+                int extraHeight = clientHeight - (currentRows * fontH);
+                int topPadding = Math.max(0, extraHeight - 8);
+
+                int extraWidth = clientWidth - (currentCols * fontW);
+                int leftPadding = 8;
+                if (extraWidth < 16) {
+                    leftPadding = Math.max(0, extraWidth / 2);
+                }
+
+                int relX = absX - (clientX + leftPadding);
+                int relY = absY - (clientY + topPadding);
                 
-                mouseCellX = (int) (relX / w);
-                mouseCellY = (int) (relY / h);
+                int cellX = relX / fontW;
+                int cellY = relY / fontH;
+                
+                // Safe boundary clipping to keep crosshair inside valid grid
+                if (cellX < 0) cellX = 0;
+                if (cellX >= currentCols) cellX = currentCols - 1;
+                if (cellY < 0) cellY = 0;
+                if (cellY >= currentRows) cellY = currentRows - 1;
+                
+                mouseCellX = cellX;
+                mouseCellY = cellY;
             }
 
             @Override

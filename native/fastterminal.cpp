@@ -105,8 +105,10 @@ static BOOL CALLBACK FindTerminalChildEnum(HWND hwnd, LPARAM lParam) {
         if (strstr(className, "TermControl") != NULL || 
             strstr(className, "Console") != NULL ||
             strstr(className, "VirtualConsole") != NULL) {
-            *(HWND*)lParam = hwnd;
-            return FALSE; // Found active terminal panel, stop!
+            if (IsWindowVisible(hwnd)) {
+                *(HWND*)lParam = hwnd;
+                return FALSE; // Found active visible terminal panel, stop!
+            }
         }
     }
     return TRUE; // Continue scanning
