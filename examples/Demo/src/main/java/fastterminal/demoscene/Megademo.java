@@ -39,6 +39,7 @@ import fastterminal.demoscene.effects.FluidSandboxEffect;
 import fastterminal.demoscene.effects.MatrixTunnelEffect;
 import fastterminal.demoscene.effects.PlasmaGlobeEffect;
 import fastterminal.demoscene.effects.WarpTunnelEffect;
+import fastterminal.demoscene.effects.IntroEffect;
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
 
@@ -86,6 +87,7 @@ public class Megademo {
 
         // Register effects in cyclical array
         final DemosceneEffect[] effects = {
+            new IntroEffect(),
             new DoomFireEffect(),
             new PlasmaEffect(),
             new MatrixRainEffect(),
@@ -192,14 +194,16 @@ public class Megademo {
             double timeRemaining = 60.0 - (now - lastSwitchTime) / 1000.0;
             if (timeRemaining < 0) timeRemaining = 0;
 
-            String line1 = String.format(" [ %s ] ", activeEffect.getName().toUpperCase());
-            String line2 = String.format(" %.1f FPS - %.1fs ", realFps, timeRemaining);
+            String line1 = " [ FASTTERMINAL TRUE-COLOR ] ";
+            String line2 = String.format(" [ %s ] ", activeEffect.getName().toUpperCase());
+            String line3 = String.format(" %.1f FPS - %.1fs ", realFps, timeRemaining);
 
             int centerY = rows / 2 - 1;
 
             // Write glowing overlays with dark transparent contrast backings
-            canvas.writeString((cols - line1.length()) / 2, centerY, line1, 0xF59E0B, 0x07070F); // Neon Yellow Title
-            canvas.writeString((cols - line2.length()) / 2, centerY + 1, line2, 0xE2E8F0, 0x07070F); // Cyber White Stats
+            canvas.writeString((cols - line1.length()) / 2, centerY - 1, line1, 0xF59E0B, 0x07070F); // Neon Yellow
+            canvas.writeString((cols - line2.length()) / 2, centerY,     line2, 0xF59E0B, 0x07070F); // Neon Yellow
+            canvas.writeString((cols - line3.length()) / 2, centerY + 1, line3, 0xF59E0B, 0x07070F); // Neon Yellow
 
             // 5. Render buffer to standard output
             renderer.render();

@@ -31,6 +31,7 @@ fastterminal\demoscene\DemosceneEffect.class
 fastterminal\demoscene\effects\LifeEffect.class
 fastterminal\demoscene\effects\ShadedEffect.class
 fastterminal\demoscene\effects\LissajousEffect$TrailPoint.class
+fastterminal\demoscene\effects\IntroEffect.class
 fastterminal\demoscene\effects\AudioVisualizerEffect.class
 fastterminal\demoscene\effects\LissajousEffect.class
 fastterminal\demoscene\effects\RaycasterEffect.class
