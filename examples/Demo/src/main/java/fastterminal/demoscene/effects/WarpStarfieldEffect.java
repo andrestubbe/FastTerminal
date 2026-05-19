@@ -75,20 +75,38 @@ public class WarpStarfieldEffect implements DemosceneEffect {
             int prevScreenX = (int) (centerX + (starX[i] / prevZ) * FOV);
             int prevScreenY = (int) (centerY + (starY[i] / prevZ) * (FOV * 0.5));
 
-            // Compute star brightness based on distance
+            // Compute star brightness and characters based on distance (depth perception)
             double normZ = 1.0 - (z / MAX_Z);
-            int brightness = (int) (normZ * 210.0) + 45;
+            
+            int brightness = (int) (normZ * 200.0) + 55; // 55 (far/dark) to 255 (close/bright)
             int starColor = (brightness << 16) | (brightness << 8) | brightness;
 
-            // Draw streak trail
-            drawLine(canvas, prevScreenX, prevScreenY, screenX, screenY, starColor);
+            char trailChar = '·';
+            char leadChar = '·';
+
+            if (normZ > 0.75) {
+                leadChar = '█'; // Very close: Solid block
+                trailChar = '*';
+            } else if (normZ > 0.45) {
+                leadChar = '*'; // Medium close: Star glyph
+                trailChar = '·';
+            } else if (normZ > 0.2) {
+                leadChar = '·'; // Far away: Simple dot
+                trailChar = '·';
+            } else {
+                leadChar = ' '; // Farthest stars: Faint single dot (no streak)
+                trailChar = '·';
+            }
+
+            // Draw streak trail with depth variables
+            drawLine(canvas, prevScreenX, prevScreenY, screenX, screenY, starColor, trailChar, leadChar);
         }
     }
 
     /**
-     * Standard Bresenham line algorithm to render motion streaks.
+     * Standard Bresenham line algorithm to render motion streaks with dynamic depth glyphs.
      */
-    private void drawLine(FastTerminalScene canvas, int x0, int y0, int x1, int y1, int color) {
+    private void drawLine(FastTerminalScene canvas, int x0, int y0, int x1, int y1, int color, char trailChar, char leadChar) {
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
@@ -100,14 +118,22 @@ public class WarpStarfieldEffect implements DemosceneEffect {
 
         while (true) {
             if (cx >= 0 && cx < width && cy >= 0 && cy < height) {
-                // Draw trailing dots or streaks
-                canvas.writeCell(cx, cy, '·', color, 0x030305);
+                if (trailChar != ' ') {
+                    canvas.writeCell(cx, cy, trailChar, color, 0x030305);
+                }
             }
 
             if (cx == x1 && cy == y1) {
-                // Draw leading star edge in bright white hot cell
+                // Draw leading star edge
                 if (cx >= 0 && cx < width && cy >= 0 && cy < height) {
-                    canvas.writeCell(cx, cy, '*', 0xFFFFFF, 0x030305);
+                    if (leadChar != ' ') {
+                        // Leading character is slightly brighter for extra contrast
+                        int r = Math.min(255, ((color >> 16) & 0xFF) + 30);
+                        int g = Math.min(255, ((color >> 8) & 0xFF) + 30);
+                        int b = Math.min(255, (color & 0xFF) + 30);
+                        int brightColor = (r << 16) | (g << 8) | b;
+                        canvas.writeCell(cx, cy, leadChar, brightColor, 0x030305);
+                    }
                 }
                 break;
             }
