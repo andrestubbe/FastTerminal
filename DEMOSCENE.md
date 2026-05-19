@@ -10,7 +10,7 @@ These effects model physical systems, gas heat dissipation, particle collisions,
 
 | Effect | Aesthetics / Look | Technical Implementation |
 | :--- | :--- | :--- |
-| 🔥 **Doom Fire** | Classic retro flame, organice red/orange/yellow gradients. | 2D integer heat array with bottom-row ignition, upwards wind-shift, and randomized cooling decay. |
+| 🔥 **Doom Fire** | Classic retro flame, organic red/orange/yellow gradients. | 2D integer heat array with bottom-row ignition, upwards wind-shift, and randomized cooling decay. |
 | 🟫 **Sand Simulation** | Fall-and-slide dynamics, physical grains piling up. | 2D cellular automaton simulating gravity and diagonal sliding rules for sand grains. |
 | 🟥 **ASCII Fluid Simulation** | High-velocity fluid ripples, Navier-Stokes visual flow. | Grid-adapted lightweight Navier-Stokes solver using vector field interpolation. |
 | 🟦 **Water Ripple** | Smooth expanding waves, color refraction. | 2D heightmap convolution kernel propagating ripples from cursor clicks. |
@@ -38,14 +38,13 @@ Mathematical interferences, coordinate transformations, and polar mapping that s
 
 | Effect | Aesthetics / Look | Technical Implementation |
 | :--- | :--- | :--- |
-| 🌈 **Sinusoidal Plasma** | Organic morphing waves, HSL rainbox patterns. | Composite formula `sin(x) + sin(y) + sin(dist)` mapped to HSL-to-RGB color conversions. |
+| 🌈 **Sinusoidal Plasma** | Organic morphing waves, HSL rainbow patterns. | Composite formula `sin(x) + sin(y) + sin(dist)` mapped to HSL-to-RGB color conversions. |
 | 🟡 **Sunburst Shader** | Intense radial explosion of dynamic rays. | Polar coordinate angle calculation (`atan2(y, x)`) modulated by time and sine waves. |
 | 🟨 **Solar Eclipse Shader** | Golden eclipse glow breaking through a black disk. | Radial circular step-masking, dynamic noise corona, and color-glow blending. |
 | 🟫 **Wormhole Zoom** | Tunnel vortex pulling the viewport inwards. | Combined polar coordinate scaling (`log(radius) + time`) and rotation offset. |
 | 🌀 **Swirl Distortion** | Spiraling screen distortion. | Coordinate wrapping: `theta = atan2(y,x) + intensity * dist`. |
 | 🌫️ **Volumetric Light Rays** | God-rays passing through virtual apertures. | Raymarched lighting vectors computing occlusion shadows over cell grids. |
 | 🟧 **ASCII Black Hole** | Gravitational bending, event horizon glow. | Inverse coordinate distortion warping the cell space toward the singularity center. |
-| 🟫 **Wormhole Zoom** | Golden-brown infinite spiral zoom. | Polar coordinate transformation mapping coordinates directly to rotating spiral textures. |
 
 ---
 
