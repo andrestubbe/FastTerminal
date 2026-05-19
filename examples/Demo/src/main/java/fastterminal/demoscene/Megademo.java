@@ -188,15 +188,18 @@ public class Megademo {
             activeEffect.update(frameCounter++);
             activeEffect.render(canvas);
 
-            // 4. Overlap high-fidelity translucent status overlays
+            // 4. Overlap high-fidelity translucent status overlays in top-center
             double timeRemaining = 60.0 - (now - lastSwitchTime) / 1000.0;
-            String header = " ⚡ FASTTERMINAL MEGADEMO SUITE v0.1.0 ⚡ ";
-            String footer = String.format(" Active Effect: %s | Auto-cycling in: %.1f seconds | Framerate: %.1f FPS | Controls: ◄ / ► Keys ", 
-                    activeEffect.getName(), timeRemaining, realFps);
+            if (timeRemaining < 0) timeRemaining = 0;
+
+            String line1 = String.format(" [ %s ] ", activeEffect.getName().toUpperCase());
+            String line2 = "Buttery-Smooth 120 FPS | Zero-GC Swapchain";
+            String line3 = String.format("%.1f FPS - %.1fs", realFps, timeRemaining);
 
             // Write glowing overlays with dark transparent contrast backings
-            canvas.writeString((cols - header.length()) / 2, 1, header, 0xF59E0B, 0x07070F);
-            canvas.writeString((cols - footer.length()) / 2, rows - 2, footer, 0x10B981, 0x07070F);
+            canvas.writeString((cols - line1.length()) / 2, 1, line1, 0x22D3EE, 0x07070F); // Neon Cyan
+            canvas.writeString((cols - line2.length()) / 2, 2, line2, 0xE2E8F0, 0x07070F); // Cyber White
+            canvas.writeString((cols - line3.length()) / 2, 3, line3, 0xF59E0B, 0x07070F); // Neon Yellow Stats
 
             // 5. Render buffer to standard output
             renderer.render();
