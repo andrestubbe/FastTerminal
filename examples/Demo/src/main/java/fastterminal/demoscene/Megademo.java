@@ -44,13 +44,13 @@ public class Megademo {
 
         // Shutdown hook to cleanly exit alternative buffer
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            FastANSI.print(FastANSI.ALT_BUFFER_OFF, FastANSI.CURSOR_SHOW, FastANSI.RESET);
+            System.out.print(FastANSI.ALT_BUFFER_OFF + FastANSI.CURSOR_SHOW + FastANSI.RESET);
             try {
                 keyboard.stopListening();
             } catch (Throwable ignored) {}
         }));
 
-        FastANSI.print(FastANSI.ALT_BUFFER_ON, FastANSI.CURSOR_HIDE);
+        System.out.print(FastANSI.ALT_BUFFER_ON + FastANSI.CURSOR_HIDE);
 
         int cols = 100;
         int rows = 30;
