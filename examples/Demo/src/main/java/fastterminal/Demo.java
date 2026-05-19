@@ -103,10 +103,10 @@ public class Demo {
             }
         });
 
-        long frameTimeTargetMs = 1000 / 120; // 120 FPS target
+        long frameTimeTargetMs = 1000 / 60; // 60 FPS target for extreme stability and low CPU usage
         long lastFpsUpdateTime = System.currentTimeMillis();
         int fpsFrameCount = 0;
-        double realFps = 120.0;
+        double realFps = 60.0;
 
         long suiteStartTime = System.currentTimeMillis();
         double prevTime = 0.0;
