@@ -8,19 +8,32 @@ import fastterminal.demoscene.effects.DoomFireEffect;
 import fastterminal.demoscene.effects.PlasmaEffect;
 import fastterminal.demoscene.effects.MatrixRainEffect;
 import fastterminal.demoscene.effects.WarpStarfieldEffect;
+import fastkeyboard.FastKeyboard;
+import fastkeyboard.FastKeyboardImpl;
 
 /**
  * High-performance modular Demoscene Megademo suite.
  * Auto-cycles through active effects every 60 seconds.
+ * Supports Left/Right arrow keys for navigation when focused.
  */
 public class Megademo {
+
+    private static volatile int activeEffectIndex = 0;
+    private static volatile long lastSwitchTime = System.currentTimeMillis();
+    private static volatile boolean effectChanged = false;
 
     public static void main(String[] args) {
         System.out.println("Initializing FastTerminal Megademo Suite...");
 
+        // Initialize FastKeyboard JNI listener
+        final FastKeyboard keyboard = new FastKeyboardImpl();
+
         // Shutdown hook to cleanly exit alternative buffer
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Ansi.print(Ansi.EXIT_ALT_BUFFER, Ansi.SHOW_CURSOR, Ansi.RESET);
+            try {
+                keyboard.stopListening();
+            } catch (Throwable ignored) {}
         }));
 
         Ansi.print(Ansi.ENTER_ALT_BUFFER, Ansi.HIDE_CURSOR);
@@ -41,7 +54,7 @@ public class Megademo {
         renderer.addScene(canvas);
 
         // Register effects in cyclical array
-        DemosceneEffect[] effects = {
+        final DemosceneEffect[] effects = {
             new DoomFireEffect(),
             new PlasmaEffect(),
             new MatrixRainEffect(),
@@ -53,12 +66,28 @@ public class Megademo {
             effect.init(cols, rows);
         }
 
-        int activeEffectIndex = 0;
-        long lastSwitchTime = System.currentTimeMillis();
-        long frameCounter = 0;
+        // Start listening to hardware arrow keys under active terminal focus gate
+        keyboard.startListening((deviceHandle, vKey, makeCode, isPressed, isE0, timestamp, keyChar) -> {
+            if (isPressed) {
+                // Focus gate check: keystrokes only apply if terminal is active window!
+                if (!FastTerminal.isTerminalFocused()) {
+                    return;
+                }
 
+                if (vKey == 0x25) { // VK_LEFT (Left arrow)
+                    activeEffectIndex = (activeEffectIndex - 1 + effects.length) % effects.length;
+                    lastSwitchTime = System.currentTimeMillis();
+                    effectChanged = true;
+                } else if (vKey == 0x27) { // VK_RIGHT (Right arrow)
+                    activeEffectIndex = (activeEffectIndex + 1) % effects.length;
+                    lastSwitchTime = System.currentTimeMillis();
+                    effectChanged = true;
+                }
+            }
+        });
+
+        long frameCounter = 0;
         long frameTimeTargetMs = 1000 / 60; // 60 FPS target
-        long lastTime = System.nanoTime();
 
         while (true) {
             long startTime = System.nanoTime();
@@ -76,11 +105,14 @@ public class Megademo {
                 }
             }
 
-            // 2. Select current effect and check 60s auto-cycle timer
+            // 2. Select current effect and check 60s auto-cycle or keystroke skip
             long now = System.currentTimeMillis();
-            if (now - lastSwitchTime >= 60_000) {
-                activeEffectIndex = (activeEffectIndex + 1) % effects.length;
-                lastSwitchTime = now;
+            if (now - lastSwitchTime >= 60_000 || effectChanged) {
+                if (!effectChanged) {
+                    activeEffectIndex = (activeEffectIndex + 1) % effects.length;
+                    lastSwitchTime = now;
+                }
+                effectChanged = false;
                 canvas.clear();
                 renderer.clearPrev();
             }
@@ -94,7 +126,7 @@ public class Megademo {
             // 4. Overlap high-fidelity translucent status overlays
             double timeRemaining = 60.0 - (now - lastSwitchTime) / 1000.0;
             String header = " ⚡ FASTTERMINAL MEGADEMO SUITE v0.1.0 ⚡ ";
-            String footer = String.format(" Active Effect: %s | Auto-cycling in: %.1f seconds | Framerate: 60 FPS ", 
+            String footer = String.format(" Active Effect: %s | Auto-cycling in: %.1f seconds | Framerate: 60 FPS | Controls: ◄ / ► Keys ", 
                     activeEffect.getName(), timeRemaining);
 
             // Write glowing overlays with dark transparent contrast backings

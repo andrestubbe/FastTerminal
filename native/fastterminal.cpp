@@ -104,3 +104,30 @@ JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getConsoleWindowInfo(
     env->SetIntArrayRegion(result, 0, 6, info);
     return result;
 }
+
+/**
+ * @brief Checks if our console window is the active focused window in Windows.
+ */
+JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isTerminalFocused(JNIEnv* env, jclass clazz) {
+    HWND hwndConsole = GetConsoleWindow();
+    if (hwndConsole == NULL) return JNI_FALSE;
+    return (GetForegroundWindow() == hwndConsole) ? JNI_TRUE : JNI_FALSE;
+}
+
+/**
+ * @brief Checks if the mouse cursor is hovering over our terminal window.
+ */
+JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isMouseOverTerminal(JNIEnv* env, jclass clazz) {
+    HWND hwndConsole = GetConsoleWindow();
+    if (hwndConsole == NULL) return JNI_FALSE;
+
+    POINT pt;
+    if (GetCursorPos(&pt)) {
+        HWND hwndUnderMouse = WindowFromPoint(pt);
+        if (hwndUnderMouse == hwndConsole || IsChild(hwndConsole, hwndUnderMouse)) {
+            return JNI_TRUE;
+        }
+    }
+    return JNI_FALSE;
+}
+

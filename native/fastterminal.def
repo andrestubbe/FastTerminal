@@ -4,3 +4,6 @@ EXPORTS
     Java_fastterminal_FastTerminal_getTerminalSize
     Java_fastterminal_FastTerminal_setRawMode
     Java_fastterminal_FastTerminal_getConsoleWindowInfo
+    Java_fastterminal_FastTerminal_isTerminalFocused
+    Java_fastterminal_FastTerminal_isMouseOverTerminal
+

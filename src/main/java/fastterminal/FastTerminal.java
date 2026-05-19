@@ -47,4 +47,14 @@ public class FastTerminal {
      * [0] = rect.left, [1] = rect.top, [2] = clientOffset.x, [3] = clientOffset.y, [4] = fontWidth, [5] = fontHeight
      */
     public static native int[] getConsoleWindowInfo();
+
+    /**
+     * Checks if our console window is the active focused window in Windows.
+     */
+    public static native boolean isTerminalFocused();
+
+    /**
+     * Checks if the mouse cursor is hovering over our terminal window.
+     */
+    public static native boolean isMouseOverTerminal();
 }

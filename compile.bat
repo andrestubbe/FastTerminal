@@ -84,4 +84,4 @@ if %ERRORLEVEL% == 0 (
 )
 
 echo.
-pause
+echo Done compile!
