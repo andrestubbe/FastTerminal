@@ -195,15 +195,15 @@ public class Megademo {
             if (timeRemaining < 0) timeRemaining = 0;
 
             String line1 = " [ FASTTERMINAL TRUE-COLOR ] ";
-            String line2 = String.format(" [ %s ] ", activeEffect.getName().toUpperCase());
+            String line2 = String.format("  %s  ", stripEmojis(activeEffect.getName()).toUpperCase());
             String line3 = String.format(" %.1f FPS - %.1fs ", realFps, timeRemaining);
 
             int centerY = rows / 2 - 1;
 
             // Write glowing overlays with dark transparent contrast backings
             canvas.writeString((cols - line1.length()) / 2, centerY - 1, line1, 0x000000, 0xF59E0B); // Black on Solid Yellow
-            canvas.writeString((cols - line2.length()) / 2, centerY,     line2, 0xF59E0B, 0x07070F); // Neon Yellow
-            canvas.writeString((cols - line3.length()) / 2, centerY + 1, line3, 0xF59E0B, 0x07070F); // Neon Yellow
+            canvas.writeString((cols - line2.length()) / 2, centerY,     line2, 0xFFFFFF, 0x07070F); // Plain White, no brackets!
+            canvas.writeString((cols - line3.length()) / 2, centerY + 1, line3, 0xF59E0B, 0x07070F); // Neon Yellow Stats
 
             // 5. Render buffer to standard output
             renderer.render();
@@ -225,5 +225,21 @@ public class Megademo {
                 } catch (InterruptedException ignored) {}
             }
         }
+    }
+
+    private static String stripEmojis(String text) {
+        if (text == null) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            int cp = text.codePointAt(i);
+            // Keep only standard printable ASCII range
+            if (cp >= 32 && cp <= 126) {
+                sb.appendCodePoint(cp);
+            }
+            if (Character.isSupplementaryCodePoint(cp)) {
+                i++; // Skip low surrogate
+            }
+        }
+        return sb.toString().trim();
     }
 }
