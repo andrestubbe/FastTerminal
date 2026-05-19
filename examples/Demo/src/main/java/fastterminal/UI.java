@@ -79,10 +79,13 @@ public class UI {
                 absoluteX = absX;
                 absoluteY = absY;
                 
-                int extraHeight = clientHeight - (currentRows * fontH);
+                int fw = fontW <= 0 ? 8 : fontW;
+                int fh = fontH <= 0 ? 16 : fontH;
+                
+                int extraHeight = clientHeight - (currentRows * fh);
                 int topPadding = Math.max(0, extraHeight - 8);
 
-                int extraWidth = clientWidth - (currentCols * fontW);
+                int extraWidth = clientWidth - (currentCols * fw);
                 int leftPadding = 8;
                 if (extraWidth < 16) {
                     leftPadding = Math.max(0, extraWidth / 2);
@@ -91,8 +94,8 @@ public class UI {
                 int relX = absX - (clientX + leftPadding);
                 int relY = absY - (clientY + topPadding);
                 
-                int cellX = relX / fontW;
-                int cellY = relY / fontH;
+                int cellX = relX / fw;
+                int cellY = relY / fh;
                 
                 // Safe boundary clipping to keep crosshair inside valid grid
                 if (cellX < 0) cellX = 0;
@@ -173,7 +176,7 @@ public class UI {
                 int cursorBg = isLeftPressed ? 0xEF4444 : isRightPressed ? 0x3B82F6 : 0x10B981; // Glow matching click state (Red/Blue/Green)
                 
                 // Draw main pointer cell
-                canvas.writeCell(mx, my, '⬉', cursorFg, cursorBg);
+                canvas.writeCell(mx, my, '↖', cursorFg, cursorBg);
                 
                 // Draw glowing drop-shadow trailing cells to mimic a premium cursor shape
                 if (mx + 1 < cols) {
