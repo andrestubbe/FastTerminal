@@ -31,11 +31,12 @@ public class AsciiTunnelEffect implements DemosceneEffect {
 
     /**
      * @brief Advances tunnel scroll velocity.
-     * @param frameIndex Monotonically increasing frame index.
+     * @param time Total elapsed time in seconds.
+     * @param deltaTime Elapsed time in seconds since last frame.
      */
     @Override
-    public void update(long frameIndex) {
-        time = frameIndex * 0.04;
+    public void update(double time, double deltaTime) {
+        this.time = time * 4.8;
     }
 
     /**

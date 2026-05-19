@@ -18,6 +18,7 @@ public class DoomFireEffect implements DemosceneEffect {
     private int width;
     private int height;
     private int[] firePixels;
+    private double timeAccumulator = 0.0;
 
     // Authentic 37-color palette from black through dark reds, oranges, yellows, and white
     private static final int[] PALETTE = {
@@ -42,6 +43,7 @@ public class DoomFireEffect implements DemosceneEffect {
         this.height = height;
         // In half-block double resolution, the fire simulation is run on a 2 * height grid!
         this.firePixels = new int[width * (2 * height)];
+        this.timeAccumulator = 0.0;
         
         // Fill base row with maximum heat (white hot)
         int lastRowStart = (2 * height - 1) * width;
@@ -53,10 +55,20 @@ public class DoomFireEffect implements DemosceneEffect {
     /**
      * @brief Propagates heat index upward and applies random wind shift and decay.
      * 
-     * @param frameIndex Monotonically increasing frame index.
+     * @param time Total elapsed time in seconds.
+     * @param deltaTime Elapsed time in seconds since last frame.
      */
     @Override
-    public void update(long frameIndex) {
+    public void update(double time, double deltaTime) {
+        timeAccumulator += deltaTime;
+        double targetStep = 1.0 / 120.0; // Run fire updates at stable ~120 Hz
+        while (timeAccumulator >= targetStep) {
+            runFireStep();
+            timeAccumulator -= targetStep;
+        }
+    }
+
+    private void runFireStep() {
         // Propagate heat upwards from row 1 down to the bottom on the double-res grid
         for (int x = 0; x < width; x++) {
             for (int y = 1; y < 2 * height; y++) {

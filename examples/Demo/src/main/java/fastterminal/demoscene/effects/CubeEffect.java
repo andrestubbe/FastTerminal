@@ -71,21 +71,25 @@ public class CubeEffect implements DemosceneEffect {
      * 
      * Star Z coordinates are decremented to simulate high-speed forward movement.
      * 
-     * @param frameIndex Monotonically increasing frame index.
+     * @param time Total elapsed time in seconds.
+     * @param deltaTime Elapsed time in seconds since last frame.
      */
     @Override
-    public void update(long frameIndex) {
-        // Tumbling rotations matched to original demo
-        angleX += 0.025 / 3.0;
-        angleY += 0.035 / 3.0;
-        angleZ += 0.015 / 3.0;
-        colorPhase += 0.04 / 3.0;
+    public void update(double time, double deltaTime) {
+        // Compute frame speed factor based on 120 FPS target to preserve original demo velocities
+        double speedFactor = deltaTime * 120.0;
 
-        // Curved warp tunnel background updates (slowed to exactly 1/2 of 0.15 speed = 0.075!)
-        phase = frameIndex * 0.02;
+        // Tumbling rotations matched to original demo scaled by speed factor
+        angleX += (0.025 / 3.0) * speedFactor;
+        angleY += (0.035 / 3.0) * speedFactor;
+        angleZ += (0.015 / 3.0) * speedFactor;
+        colorPhase += (0.04 / 3.0) * speedFactor;
+
+        // Curved warp tunnel background updates
+        phase = time * 2.4;
         Random rand = new Random();
         for (int i = 0; i < CUBE_STAR_COUNT; i++) {
-            starZ[i] -= 0.0375; // Slowed to exactly 1/2 of 0.075 speed!
+            starZ[i] -= 0.0375 * speedFactor;
 
             if (starZ[i] <= 0.1) {
                 starX[i] = (rand.nextDouble() - 0.5) * 40.0;

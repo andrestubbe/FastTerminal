@@ -14,8 +14,11 @@ public interface DemosceneEffect {
     
     /**
      * Updates internal physics, mathematical states, or particle matrices.
+     * 
+     * @param time Total elapsed time in seconds since the effect started.
+     * @param deltaTime Elapsed time in seconds since the last frame.
      */
-    void update(long frameIndex);
+    void update(double time, double deltaTime);
     
     /**
      * Draws the calculated state directly onto the scene viewport.

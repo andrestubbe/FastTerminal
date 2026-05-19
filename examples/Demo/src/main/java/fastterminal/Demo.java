@@ -103,11 +103,13 @@ public class Demo {
             }
         });
 
-        long frameCounter = 0;
         long frameTimeTargetMs = 1000 / 120; // 120 FPS target
         long lastFpsUpdateTime = System.currentTimeMillis();
         int fpsFrameCount = 0;
         double realFps = 120.0;
+
+        long suiteStartTime = System.currentTimeMillis();
+        double prevTime = 0.0;
 
         while (true) {
             long startTime = System.nanoTime();
@@ -137,10 +139,16 @@ public class Demo {
                 renderer.clearPrev();
             }
 
+            double time = (now - suiteStartTime) / 1000.0;
+            double deltaTime = time - prevTime;
+            if (deltaTime < 0.0) deltaTime = 0.0;
+            if (deltaTime > 0.1) deltaTime = 0.1; // Clamp delta to prevent huge jumps on console pause/resize
+            prevTime = time;
+
             DemosceneEffect activeEffect = effects[activeEffectIndex];
 
             // 3. Update physics and render current scene
-            activeEffect.update(frameCounter++);
+            activeEffect.update(time, deltaTime);
             activeEffect.render(canvas);
 
             // 4. Overlap high-fidelity translucent status overlays in the dead vertical center

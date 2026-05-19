@@ -31,14 +31,15 @@ public class CheckerboardEffect implements DemosceneEffect {
 
     /**
      * @brief Updates rotation angle and dynamic zoom oscillations.
-     * @param frameIndex Monotonically increasing frame index.
+     * @param time Total elapsed time in seconds.
+     * @param deltaTime Elapsed time in seconds since last frame.
      */
     @Override
-    public void update(long frameIndex) {
+    public void update(double time, double deltaTime) {
         // Slowed down to exactly 1/4 speed for elegant retro-amiga drifting
-        angle = frameIndex * 0.0075;
+        angle = time * 0.9;
         // Pulse zoom factor dynamically
-        zoom = 0.08 + 0.05 * Math.sin(frameIndex * 0.01);
+        zoom = 0.08 + 0.05 * Math.sin(time * 1.2);
     }
 
     private int sampleColor(double dx, double dy, double cosA, double sinA) {

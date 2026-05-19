@@ -87,23 +87,24 @@ public class ImageZoomEffect implements DemosceneEffect {
     /**
      * @brief Computes camera glides and controls image cross-fade timings.
      * 
-     * @param frameIndex Monotonically increasing frame index.
+     * @param time Total elapsed time in seconds.
+     * @param deltaTime Elapsed time in seconds since last frame.
      */
     @Override
-    public void update(long frameIndex) {
-        this.time = frameIndex * 0.003; // Slowed down for smooth cinematic glide
+    public void update(double time, double deltaTime) {
+        this.time = time * 0.36; // Slowed down for smooth cinematic glide
 
-        // Automatically cycle between the photos every 600 frames (~10 seconds at 60 FPS)
-        int index = (int) ((frameIndex / 600) % 3);
+        // Automatically cycle between the photos every 5.0 seconds
+        int index = (int) ((time / 5.0) % 3);
         if (images[index] != null && index != currentImageIndex) {
             prevImageIndex = currentImageIndex;
             currentImageIndex = index;
             fadeAmount = 0.0; // Trigger a smooth cross-fade transition!
         }
 
-        // Slowly increment the transition fade factor over 40 frames (~1/3 of a second at 120 FPS)
+        // Slowly increment the transition fade factor over 0.333 seconds (40 frames at 120 FPS)
         if (fadeAmount < 1.0) {
-            fadeAmount += 0.025;
+            fadeAmount += deltaTime / 0.333;
             if (fadeAmount > 1.0) {
                 fadeAmount = 1.0;
             }

@@ -40,24 +40,28 @@ public class GradientEffect implements DemosceneEffect {
      * - Frames 550-1049: Sinusoidal plasma waves.
      * - Frames 1050-1199: Inverse morph transition back.
      * 
-     * @param frameIndex Monotonically increasing frame index.
+    /**
+     * @brief Computes camera glides and controls image cross-fade timings.
+     * 
+     * @param time Total elapsed time in seconds.
+     * @param deltaTime Elapsed time in seconds since last frame.
      */
     @Override
-    public void update(long frameIndex) {
-        phase = frameIndex * 0.02;
-        time = frameIndex * 0.03; // Controls plasma morph wave velocity
+    public void update(double time, double deltaTime) {
+        phase = time * 2.4;
+        this.time = time * 3.6; // Controls plasma morph wave velocity
 
-        // 1200-frame cyclic hold-and-fade system
-        long cycle = frameIndex % 1200;
-        if (cycle < 450) {
+        // 10.0-second cyclic hold-and-fade system
+        double cycleTime = time % 10.0;
+        if (cycleTime < 3.75) {
             blendFactor = 0.0; // Hold Fluid Gradients
-        } else if (cycle < 550) {
-            blendFactor = (cycle - 450) / 100.0; // Smooth 100-frame fade from Gradients to Plasma
-        } else if (cycle < 1050) {
+        } else if (cycleTime < 4.5833) {
+            blendFactor = (cycleTime - 3.75) / 0.8333; // Smooth 0.8333-second fade from Gradients to Plasma
+        } else if (cycleTime < 8.75) {
             blendFactor = 1.0; // Hold Sinusoidal Plasma
         } else {
-            // Smooth 100-frame fade from Plasma to Gradients (1050-1150), then hold at 0.0 for remaining 50 frames
-            blendFactor = Math.max(0.0, 1.0 - (cycle - 1050) / 100.0);
+            // Smooth 0.8333-second fade from Plasma to Gradients (8.75s to 9.5833s), then hold at 0.0 for remaining 0.4167 seconds
+            blendFactor = Math.max(0.0, 1.0 - (cycleTime - 8.75) / 0.8333);
         }
         
         // Safety clamp blendFactor to strictly [0.0, 1.0] to prevent any numerical overshoot/undershoot

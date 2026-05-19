@@ -51,19 +51,24 @@ public class AttractorEffect implements DemosceneEffect {
     /**
      * @brief Computes one step of the Lorenz system derivatives using forward Euler integration.
      * 
-     * @param frameIndex Monotonically increasing frame index.
+     * @param time Total elapsed time in seconds.
+     * @param deltaTime Elapsed time in seconds since last frame.
      */
     @Override
-    public void update(long frameIndex) {
+    public void update(double time, double deltaTime) {
+        // Compute speed factor based on 120 FPS target to preserve physics integration speed
+        double speedFactor = deltaTime * 120.0;
+        double currentDT = DT * speedFactor;
+
         for (int i = 0; i < PARTICLE_COUNT; i++) {
             // 1. Evaluate Lorenz differential equations
             double dx = SIGMA * (py[i] - px[i]);
             double dy = px[i] * (RHO - pz[i]) - py[i];
             double dz = px[i] * py[i] - BETA * pz[i];
 
-            px[i] += dx * DT;
-            py[i] += dy * DT;
-            pz[i] += dz * DT;
+            px[i] += dx * currentDT;
+            py[i] += dy * currentDT;
+            pz[i] += dz * currentDT;
         }
     }
 

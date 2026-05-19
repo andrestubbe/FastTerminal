@@ -29,11 +29,12 @@ public class IntroEffect implements DemosceneEffect {
 
     /**
      * @brief Advances gradient wave phase transitions.
-     * @param frameIndex Monotonically increasing frame index count.
+     * @param time Total elapsed time in seconds.
+     * @param deltaTime Elapsed time in seconds since last frame.
      */
     @Override
-    public void update(long frameIndex) {
-        phase = frameIndex * 0.15;
+    public void update(double time, double deltaTime) {
+        phase = time * 18.0;
     }
 
     /**
