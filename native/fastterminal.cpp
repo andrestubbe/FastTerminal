@@ -99,6 +99,19 @@ JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode(JNIEnv* env, jc
     }
 }
 
+static BOOL CALLBACK FindTerminalChildEnum(HWND hwnd, LPARAM lParam) {
+    char className[256];
+    if (GetClassNameA(hwnd, className, sizeof(className))) {
+        if (strstr(className, "TermControl") != NULL || 
+            strstr(className, "Console") != NULL ||
+            strstr(className, "VirtualConsole") != NULL) {
+            *(HWND*)lParam = hwnd;
+            return FALSE; // Found active terminal panel, stop!
+        }
+    }
+    return TRUE; // Continue scanning
+}
+
 /**
  * @brief Retrieves the console window's screen rect, client offset, and font character cell size.
  * 
@@ -132,7 +145,13 @@ JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getConsoleWindowInfo(
             }
         }
         if (isOurWindow) {
-            hwnd = hwndForeground;
+            HWND hwndTerminalChild = NULL;
+            EnumChildWindows(hwndForeground, FindTerminalChildEnum, (LPARAM)&hwndTerminalChild);
+            if (hwndTerminalChild != NULL) {
+                hwnd = hwndTerminalChild;
+            } else {
+                hwnd = hwndForeground;
+            }
         }
     }
 
