@@ -13,12 +13,21 @@ import fastterminal.demoscene.effects.MetaballsEffect;
 import fastterminal.demoscene.effects.TunnelEffect;
 import fastterminal.demoscene.effects.LissajousEffect;
 import fastterminal.demoscene.effects.PlanetEffect;
-import fastterminal.demoscene.effects.GearEffect;
 import fastterminal.demoscene.effects.MandelbrotEffect;
 import fastterminal.demoscene.effects.WavefallEffect;
 import fastterminal.demoscene.effects.CubeEffect;
 import fastterminal.demoscene.effects.ShadedEffect;
 import fastterminal.demoscene.effects.GradientEffect;
+import fastterminal.demoscene.effects.StarNestEffect;
+import fastterminal.demoscene.effects.TwisterEffect;
+import fastterminal.demoscene.effects.JuliaEffect;
+import fastterminal.demoscene.effects.BouncingBallsEffect;
+import fastterminal.demoscene.effects.FluidGridEffect;
+import fastterminal.demoscene.effects.ColorCycleEffect;
+import fastterminal.demoscene.effects.AsciiTunnelEffect;
+import fastterminal.demoscene.effects.AttractorEffect;
+import fastterminal.demoscene.effects.TorusEffect;
+import fastterminal.demoscene.effects.VolcanoEffect;
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
 
@@ -75,12 +84,21 @@ public class Megademo {
             new TunnelEffect(),
             new LissajousEffect(),
             new PlanetEffect(),
-            new GearEffect(),
             new MandelbrotEffect(),
             new WavefallEffect(),
             new CubeEffect(),
             new ShadedEffect(),
-            new GradientEffect()
+            new GradientEffect(),
+            new StarNestEffect(),
+            new TwisterEffect(),
+            new JuliaEffect(),
+            new BouncingBallsEffect(),
+            new FluidGridEffect(),
+            new ColorCycleEffect(),
+            new AsciiTunnelEffect(),
+            new AttractorEffect(),
+            new TorusEffect(),
+            new VolcanoEffect()
         };
 
         // Initialize all effects
@@ -109,7 +127,7 @@ public class Megademo {
         });
 
         long frameCounter = 0;
-        long frameTimeTargetMs = 1000 / 60; // 60 FPS target
+        long frameTimeTargetMs = 1000 / 120; // 120 FPS target
 
         while (true) {
             long startTime = System.nanoTime();
@@ -148,7 +166,7 @@ public class Megademo {
             // 4. Overlap high-fidelity translucent status overlays
             double timeRemaining = 60.0 - (now - lastSwitchTime) / 1000.0;
             String header = " ⚡ FASTTERMINAL MEGADEMO SUITE v0.1.0 ⚡ ";
-            String footer = String.format(" Active Effect: %s | Auto-cycling in: %.1f seconds | Framerate: 60 FPS | Controls: ◄ / ► Keys ", 
+            String footer = String.format(" Active Effect: %s | Auto-cycling in: %.1f seconds | Framerate: 120 FPS | Controls: ◄ / ► Keys ", 
                     activeEffect.getName(), timeRemaining);
 
             // Write glowing overlays with dark transparent contrast backings

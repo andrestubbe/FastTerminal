@@ -25,9 +25,9 @@ public class MandelbrotEffect implements DemosceneEffect {
 
     @Override
     public void update(long frameIndex) {
-        // Zoom in exponentially
-        zoom = 1.0 + Math.pow(1.09, frameIndex % 150);
-        phase = frameIndex * 0.05;
+        // High starting zoom range keeps the fractal structure fully visible
+        zoom = 40.0 + Math.pow(1.11, frameIndex % 120);
+        phase = frameIndex * 0.08;
     }
 
     @Override
@@ -67,16 +67,17 @@ public class MandelbrotEffect implements DemosceneEffect {
                     // Core is solid black
                     canvas.writeCell(x, y, ' ', 0, 0x000000);
                 } else {
-                    // Spectrum HSL cycle color-mapping
-                    double t = (double) iter / maxIter;
-                    int r = (int) (128 + 127 * Math.sin(t * 8.0 + phase));
-                    int g = (int) (64 + 64 * Math.cos(t * 12.0 + phase * 0.5));
-                    int b = (int) (180 + 75 * Math.sin(t * 6.0 + phase * 1.5));
-                    int color = (r << 16) | (g << 8) | b;
+                    // Direct iteration HSL mapping ensures high color density
+                    int r = (int) (128 + 127 * Math.sin(iter * 0.45 + phase));
+                    int g = (int) (64 + 191 * Math.sin(iter * 0.75 + phase * 0.7));
+                    int b = (int) (180 + 75 * Math.cos(iter * 0.25 + phase * 1.5));
+                    int color = (Math.max(0, Math.min(255, r)) << 16) 
+                              | (Math.max(0, Math.min(255, g)) << 8) 
+                              | Math.max(0, Math.min(255, b));
 
                     // Textures and shapes by iteration bands
                     char glyph = (iter % 3 == 0) ? '█' : (iter % 3 == 1) ? '▓' : '▒';
-                    canvas.writeCell(x, y, glyph, color, 0x020005);
+                    canvas.writeCell(x, y, glyph, color, 0x010003);
                 }
             }
         }
