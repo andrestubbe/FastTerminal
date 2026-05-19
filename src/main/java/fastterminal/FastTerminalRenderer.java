@@ -6,8 +6,12 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * High-performance viewport compositor and ANSI rendering engine.
- * Leverages state-minimizing ANSI code emitters for 24-bit True Colors.
+ * @class FastTerminalRenderer
+ * @brief High-performance double-buffered ANSI rendering and screen compositing engine.
+ * 
+ * Composites multiple modular FastTerminalScene layers in-place, and converts
+ * screen diff state transitions to highly optimized 24-bit True Color ANSI escape streams.
+ * Includes strategic cursor span/gap jumps to drastically reduce standard output flush sizes.
  */
 public final class FastTerminalRenderer {
 
@@ -28,6 +32,12 @@ public final class FastTerminalRenderer {
     private boolean diffRenderingEnabled = true;
     private int lastFlushedBytes = 0;
 
+    /**
+     * @brief Allocates all double-buffered structures in memory.
+     * 
+     * @param width Initial terminal layout columns.
+     * @param height Initial terminal layout rows.
+     */
     public FastTerminalRenderer(final int width, final int height) {
         this.width = width;
         this.height = height;
@@ -41,10 +51,20 @@ public final class FastTerminalRenderer {
         this.clearPrev();
     }
 
+    /**
+     * @brief Registers an overlay render layer.
+     * @param scene FastTerminalScene layer to composite.
+     */
     public void addScene(final FastTerminalScene scene) {
         this.scenes.add(scene);
     }
 
+    /**
+     * @brief Composites all registered layers and writes changes dynamically to standard out.
+     * 
+     * Applies double-buffer diff comparisons. Toggles absolute vs relative cursor moves
+     * to eliminate terminal scroll flickering.
+     */
     public void render() {
         this.clear();
 
@@ -252,6 +272,10 @@ public final class FastTerminalRenderer {
         }
     }
 
+    /**
+     * @brief Blits cell segments of a scene layer into the final composite buffer.
+     * @param scene Source overlay scene layer.
+     */
     private void insertScene(final FastTerminalScene scene) {
         final int[] srcCodepoints = scene.getCodepointBuffer();
         final int[] srcFg = scene.getFgBuffer();
@@ -287,6 +311,9 @@ public final class FastTerminalRenderer {
         }
     }
 
+    /**
+     * @brief Clears current active composite buffers.
+     */
     public void clear() {
         Arrays.fill(this.compositeCodepoints, ' ');
         Arrays.fill(this.compositeFg, -1);
@@ -294,9 +321,11 @@ public final class FastTerminalRenderer {
     }
 
     /**
-     * Resizes the compositing and previous buffers dynamically in-place.
+     * @brief Resizes compositing, composite diff, and tracking buffers in-place.
      * 
-     * @return true if a resize actually occurred, false otherwise.
+     * @param newWidth New width dimensions.
+     * @param newHeight New height dimensions.
+     * @return True if a resizing transition actually happened, false otherwise.
      */
     public boolean resize(final int newWidth, final int newHeight) {
         if (newWidth <= 0 || newHeight <= 0)
@@ -320,6 +349,9 @@ public final class FastTerminalRenderer {
         return true;
     }
 
+    /**
+     * @brief Disposes and frees resources associated with standard scene layers.
+     */
     public void dispose() {
         if (this.scenes != null) {
             this.scenes.clear();
@@ -333,6 +365,9 @@ public final class FastTerminalRenderer {
         this.prevBg = null;
     }
 
+    /**
+     * @brief Clears previous tracking double-buffers to force full redraws on the next render pass.
+     */
     public void clearPrev() {
         if (this.prevCodepoints != null) {
             Arrays.fill(this.prevCodepoints, ' ');
@@ -342,14 +377,26 @@ public final class FastTerminalRenderer {
         this.forceFullRedraw = true;
     }
 
+    /**
+     * @brief Determines if delta/diff-rendering optimizations are currently enabled.
+     * @return True if enabled, False otherwise.
+     */
     public boolean isDiffRenderingEnabled() {
         return this.diffRenderingEnabled;
     }
 
+    /**
+     * @brief Gets the total bytes transmitted to standard out in the last frame render.
+     * @return Total output byte count.
+     */
     public int getLastFlushedBytes() {
         return this.lastFlushedBytes;
     }
 
+    /**
+     * @brief Configures if delta double-buffering optimization is active.
+     * @param enabled True to optimize, False to force raw full redraw cycles.
+     */
     public void setDiffRenderingEnabled(boolean enabled) {
         this.diffRenderingEnabled = enabled;
         if (!enabled) {
@@ -357,10 +404,18 @@ public final class FastTerminalRenderer {
         }
     }
 
+    /**
+     * @brief Gets the width boundary.
+     * @return Column width.
+     */
     public int getWidth() {
         return this.width;
     }
 
+    /**
+     * @brief Gets the height boundary.
+     * @return Row height.
+     */
     public int getHeight() {
         return this.height;
     }

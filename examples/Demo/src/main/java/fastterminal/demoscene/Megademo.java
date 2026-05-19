@@ -4,49 +4,23 @@ import fastterminal.Ansi;
 import fastterminal.FastTerminal;
 import fastterminal.FastTerminalRenderer;
 import fastterminal.FastTerminalScene;
-import fastterminal.demoscene.effects.DoomFireEffect;
-import fastterminal.demoscene.effects.PlasmaEffect;
-import fastterminal.demoscene.effects.MatrixRainEffect;
-import fastterminal.demoscene.effects.WarpStarfieldEffect;
-import fastterminal.demoscene.effects.CheckerboardEffect;
-import fastterminal.demoscene.effects.MetaballsEffect;
-import fastterminal.demoscene.effects.TunnelEffect;
-import fastterminal.demoscene.effects.LissajousEffect;
-import fastterminal.demoscene.effects.PlanetEffect;
-import fastterminal.demoscene.effects.MandelbrotEffect;
-import fastterminal.demoscene.effects.WavefallEffect;
-import fastterminal.demoscene.effects.CubeEffect;
-import fastterminal.demoscene.effects.ShadedEffect;
-import fastterminal.demoscene.effects.GradientEffect;
-import fastterminal.demoscene.effects.StarNestEffect;
-import fastterminal.demoscene.effects.TwisterEffect;
-import fastterminal.demoscene.effects.JuliaEffect;
-import fastterminal.demoscene.effects.BouncingBallsEffect;
-import fastterminal.demoscene.effects.FluidGridEffect;
-import fastterminal.demoscene.effects.ColorCycleEffect;
-import fastterminal.demoscene.effects.AsciiTunnelEffect;
-import fastterminal.demoscene.effects.AttractorEffect;
-import fastterminal.demoscene.effects.TorusEffect;
-import fastterminal.demoscene.effects.VolcanoEffect;
-import fastterminal.demoscene.effects.RaycasterEffect;
-import fastterminal.demoscene.effects.GalagaEffect;
-import fastterminal.demoscene.effects.TerrainEffect;
-import fastterminal.demoscene.effects.FluidDynamicsEffect;
-import fastterminal.demoscene.effects.LifeEffect;
-import fastterminal.demoscene.effects.Spaceship3DEffect;
-import fastterminal.demoscene.effects.AudioVisualizerEffect;
-import fastterminal.demoscene.effects.FluidSandboxEffect;
-import fastterminal.demoscene.effects.MatrixTunnelEffect;
-import fastterminal.demoscene.effects.PlasmaGlobeEffect;
-import fastterminal.demoscene.effects.WarpTunnelEffect;
 import fastterminal.demoscene.effects.IntroEffect;
+import fastterminal.demoscene.effects.GradientEffect;
+import fastterminal.demoscene.effects.ImageZoomEffect;
+import fastterminal.demoscene.effects.DoomFireEffect;
+import fastterminal.demoscene.effects.CheckerboardEffect;
+import fastterminal.demoscene.effects.CubeEffect;
+import fastterminal.demoscene.effects.AttractorEffect;
+
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
 
 /**
- * High-performance modular Demoscene Megademo suite.
- * Auto-cycles through active effects every 60 seconds.
- * Supports Left/Right arrow keys for navigation when focused.
+ * @class Megademo
+ * @brief High-performance modular Demoscene Megademo suite.
+ * 
+ * Auto-cycles through active visual effects every 60 seconds.
+ * Integrates direct low-level key listeners for Left/Right arrow key navigation.
  */
 public class Megademo {
 
@@ -54,6 +28,14 @@ public class Megademo {
     private static volatile long lastSwitchTime = System.currentTimeMillis();
     private static volatile boolean effectChanged = false;
 
+    /**
+     * @brief Main program entry point.
+     * 
+     * Configures alternative screen buffer, enables hardware keyboard query hook,
+     * registers and runs active demoscene visual effects in a synchronized 120 FPS render loop.
+     * 
+     * @param args Command line arguments.
+     */
     public static void main(String[] args) {
         System.out.println("Initializing FastTerminal Megademo Suite...");
 
@@ -88,41 +70,12 @@ public class Megademo {
         // Register effects in cyclical array
         final DemosceneEffect[] effects = {
             new IntroEffect(),
-            new DoomFireEffect(),
-            new PlasmaEffect(),
-            new MatrixRainEffect(),
-            new WarpStarfieldEffect(),
-            new CheckerboardEffect(),
-            new MetaballsEffect(),
-            new TunnelEffect(),
-            new LissajousEffect(),
-            new PlanetEffect(),
-            new MandelbrotEffect(),
-            new WavefallEffect(),
-            new CubeEffect(),
-            new ShadedEffect(),
             new GradientEffect(),
-            new StarNestEffect(),
-            new TwisterEffect(),
-            new JuliaEffect(),
-            new BouncingBallsEffect(),
-            new FluidGridEffect(),
-            new ColorCycleEffect(),
-            new AsciiTunnelEffect(),
-            new AttractorEffect(),
-            new TorusEffect(),
-            new VolcanoEffect(),
-            new RaycasterEffect(),
-            new GalagaEffect(),
-            new TerrainEffect(),
-            new FluidDynamicsEffect(),
-            new LifeEffect(),
-            new Spaceship3DEffect(),
-            new AudioVisualizerEffect(),
-            new FluidSandboxEffect(),
-            new MatrixTunnelEffect(),
-            new PlasmaGlobeEffect(),
-            new WarpTunnelEffect()
+            new ImageZoomEffect(),
+            new DoomFireEffect(),
+            new CheckerboardEffect(),
+            new CubeEffect(),
+            new AttractorEffect()
         };
 
         // Initialize all effects
@@ -227,6 +180,12 @@ public class Megademo {
         }
     }
 
+    /**
+     * @brief Normalizes input text to strip supplementary symbols and emoji characters.
+     * 
+     * @param text Original source string.
+     * @return Cleaned string containing printable ASCII only.
+     */
     private static String stripEmojis(String text) {
         if (text == null) return "";
         StringBuilder sb = new StringBuilder();

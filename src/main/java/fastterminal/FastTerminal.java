@@ -4,8 +4,11 @@ import fastcore.FastCore;
 import java.io.File;
 
 /**
- * FastTerminal Main API Class.
- * Native high-performance console/terminal capabilities.
+ * @class FastTerminal
+ * @brief FastTerminal main native JNI boundary and capabilities manager.
+ * 
+ * Interacts with Win32 backend console interfaces to query terminal dimensions, 
+ * configure raw console flags, track window coordinate offsets, focus states, and mouse bounds.
  */
 public class FastTerminal {
 
@@ -14,16 +17,18 @@ public class FastTerminal {
     }
 
     /**
-     * Returns the dynamic dimensions of the active console screen buffer.
-     * [0] = Width (Columns), [1] = Height (Rows)
+     * @brief Queries the dynamic dimensions of the active console screen buffer.
+     * 
+     * @return jintArray containing [columns, rows], or null on JNI query failures.
      */
     public static native int[] getTerminalSize();
 
     /**
-     * Helper to query dynamic console dimensions with a safe fallback.
-     * @param defaultCols standard fallback columns
-     * @param defaultRows standard fallback rows
-     * @return 2-element array: [0] = Width (Columns), [1] = Height (Rows)
+     * @brief Query dynamic console buffer dimensions with a safe premium fallback.
+     * 
+     * @param defaultCols Standard fallback column width.
+     * @param defaultRows Standard fallback row height.
+     * @return 2-element array containing [cols, rows].
      */
     public static int[] getWindowSize(int defaultCols, int defaultRows) {
         try {
@@ -37,24 +42,40 @@ public class FastTerminal {
     }
 
     /**
-     * Configures the console mode (e.g. Raw Mode, input/output flags).
-     * @param enableRaw true to enable raw non-blocking mode, false to restore
+     * @brief Configures standard Win32 console mode flags (toggling raw input modes).
+     * 
+     * @param enableRaw True to enable direct non-blocking raw mode, false to restore default console buffer flags.
      */
     public static native void setRawMode(boolean enableRaw);
 
     /**
-     * Retrieves the console window's screen rect, client offset, and font character cell size.
-     * [0] = rect.left, [1] = rect.top, [2] = clientOffset.x, [3] = clientOffset.y, [4] = fontWidth, [5] = fontHeight
+     * @brief Retrieves detailed hardware rect boundaries, client offsets, and console font character cell sizes.
+     * 
+     * Indexes:
+     * - [0]: rect.left (pixels)
+     * - [1]: rect.top (pixels)
+     * - [2]: clientOffset.x (pixels)
+     * - [3]: clientOffset.y (pixels)
+     * - [4]: fontWidth (pixels)
+     * - [5]: fontHeight (pixels)
+     * 
+     * @return int array containing hardware console window info metrics.
      */
     public static native int[] getConsoleWindowInfo();
 
     /**
-     * Checks if our console window is the active focused window in Windows.
+     * @brief Checks if our console window or parent host currently holds focus in Windows.
+     * 
+     * Walks owner and ancestor chains, making it fully compatible with modern host terminals like wt.exe.
+     * 
+     * @return True if terminal is focused, False otherwise.
      */
     public static native boolean isTerminalFocused();
 
     /**
-     * Checks if the mouse cursor is hovering over our terminal window.
+     * @brief Determines if the OS mouse cursor is currently hovering within terminal boundaries.
+     * 
+     * @return True if hovering, False otherwise.
      */
     public static native boolean isMouseOverTerminal();
 }

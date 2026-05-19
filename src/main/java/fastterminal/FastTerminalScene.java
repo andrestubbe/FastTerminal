@@ -3,8 +3,15 @@ package fastterminal;
 import java.util.Arrays;
 
 /**
- * Represents a high-performance grid viewport scene.
- * Utilizes primitive arrays (int[]) for UTF-32 Codepoints, Foreground, and Background True Colors.
+ * @class FastTerminalScene
+ * @brief Represents a high-performance grid viewport scene layer.
+ * 
+ * Manages primitive flat arrays for fast cell storage:
+ * - `codepointBuffer`: Holds UTF-32 character codes.
+ * - `fgBuffer`: Foreground true colors.
+ * - `bgBuffer`: Background true colors.
+ * 
+ * Supports inline style processing via zero-allocation on-the-fly ANSI escapes.
  */
 public class FastTerminalScene {
 
@@ -20,11 +27,12 @@ public class FastTerminalScene {
     private boolean dirty;
 
     /**
-     * Creates a new terminal scene viewport.
-     * @param x viewport X coordinate (0-indexed)
-     * @param y viewport Y coordinate (0-indexed)
-     * @param width viewport width
-     * @param height viewport height
+     * @brief Allocates all cell buffer layers.
+     * 
+     * @param x Initial absolute offset X coordinate.
+     * @param y Initial absolute offset Y coordinate.
+     * @param width Scene viewport width columns.
+     * @param height Scene viewport height rows.
      */
     public FastTerminalScene(int x, int y, int width, int height) {
         this.x = x;
@@ -38,6 +46,9 @@ public class FastTerminalScene {
         this.clear();
     }
 
+    /**
+     * @brief Triggers the lazy frame update hook if registered.
+     */
     public void update() {
         if (this.updater != null) {
             this.clear();
@@ -46,10 +57,7 @@ public class FastTerminalScene {
     }
 
     /**
-     * Clears the scene buffers, setting defaults:
-     * - Codepoint: Space (' ')
-     * - Foreground: Default (-1)
-     * - Background: Default (-1)
+     * @brief Resets all cells back to blank defaults: Space character, -1 foreground, -1 background.
      */
     public void clear() {
         Arrays.fill(this.codepointBuffer, ' ');
@@ -58,8 +66,11 @@ public class FastTerminalScene {
     }
 
     /**
-     * Resizes the scene viewport dimensions dynamically in-place.
-     * @return true if a resize actually occurred, false otherwise.
+     * @brief Dynamically resizes scene arrays in-place.
+     * 
+     * @param newWidth New column width.
+     * @param newHeight New row height.
+     * @return True if a resizing transition actually happened, false otherwise.
      */
     public boolean resize(final int newWidth, final int newHeight) {
         if (newWidth <= 0 || newHeight <= 0) return false;
@@ -76,7 +87,10 @@ public class FastTerminalScene {
     }
 
     /**
-     * Updates the viewport absolute screen offsets dynamically.
+     * @brief Adjusts scene's rendering offsets in screen space coordinates.
+     * 
+     * @param newX Viewport offset columns.
+     * @param newY Viewport offset rows.
      */
     public void setPosition(final int newX, final int newY) {
         this.x = newX;
@@ -85,7 +99,13 @@ public class FastTerminalScene {
     }
 
     /**
-     * Writes a UTF-32 Codepoint to a specific cell in the scene.
+     * @brief Writes a specific cell's formatting parameters, performing safe boundary clips.
+     * 
+     * @param col Target cell column index.
+     * @param row Target cell row index.
+     * @param codepoint UTF-32 character value.
+     * @param fg 24-bit True Color foreground value.
+     * @param bg 24-bit True Color background value.
      */
     public void writeCell(int col, int row, int codepoint, int fg, int bg) {
         if (col >= 0 && col < this.width && row >= 0 && row < this.height) {
@@ -97,7 +117,13 @@ public class FastTerminalScene {
     }
 
     /**
-     * Writes a string safely to the viewport, supporting emojis and 24-bit True Colors.
+     * @brief Writes a standard string sequentially to cells, tracking double-wide continuation boundaries.
+     * 
+     * @param startCol Starting cell column.
+     * @param row Target row.
+     * @param text Raw source string.
+     * @param fg 24-bit True Color foreground.
+     * @param bg 24-bit True Color background.
      */
     public void writeString(int startCol, int row, String text, int fg, int bg) {
         if (row < 0 || row >= this.height) return;
@@ -137,6 +163,16 @@ public class FastTerminalScene {
         0xFFFFFF  // 15: Bright White
     };
 
+    /**
+     * @brief Interpolates and normalizes 4-bit and 8-bit ANSI codes into standard True Color values.
+     * 
+     * @param colorType Code color format type (0: 4-bit, 1: 8-bit, 2: 24-bit).
+     * @param r Red parameter (or ANSI index if colorType < 2).
+     * @param g Green parameter.
+     * @param b Blue parameter.
+     * @param defaultColor Standard default fallback color.
+     * @return Packed 24-bit True Color int.
+     */
     private static int toTrueColor(int colorType, int r, int g, int b, int defaultColor) {
         if (colorType == 0) { // 4-bit
             if (r == -1) return defaultColor;
@@ -163,8 +199,13 @@ public class FastTerminalScene {
     }
 
     /**
-     * Writes an ANSI escape-sequenced string dynamically to the viewport, 
-     * parsing inline styles and True Colors on-the-fly with exactly zero allocations.
+     * @brief Writes a styled ANSI string, parsing tokens in a zero-allocation parsing sweep.
+     * 
+     * @param startCol Starting column coordinate.
+     * @param row Target row.
+     * @param text Raw source ANSI formatting string.
+     * @param defaultFg Default fallback foreground color.
+     * @param defaultBg Default fallback background color.
      */
     public void writeAnsiString(int startCol, int row, String text, int defaultFg, int defaultBg) {
         if (row < 0 || row >= this.height) return;
@@ -257,46 +298,89 @@ public class FastTerminalScene {
         });
     }
 
+    /**
+     * @brief Gets dirty flag state.
+     * @return True if modified, False otherwise.
+     */
     public boolean isDirty() {
         return this.dirty;
     }
 
+    /**
+     * @brief Manually flags dirty composition states.
+     * @param dirty Target dirty flag state.
+     */
     public void setDirty(final boolean dirty) {
         this.dirty = dirty;
     }
 
+    /**
+     * @brief Sets lazy update hook runnable.
+     * @param updater Target update callback.
+     */
     public void setUpdater(final Runnable updater) {
         this.updater = updater;
     }
 
+    /**
+     * @brief Gets the low-level character buffer array.
+     * @return Codepoints array.
+     */
     public int[] getCodepointBuffer() {
         return this.codepointBuffer;
     }
 
+    /**
+     * @brief Gets the low-level foreground array.
+     * @return Foreground colors array.
+     */
     public int[] getFgBuffer() {
         return this.fgBuffer;
     }
 
+    /**
+     * @brief Gets the low-level background array.
+     * @return Background colors array.
+     */
     public int[] getBgBuffer() {
         return this.bgBuffer;
     }
 
+    /**
+     * @brief Gets column offset X.
+     * @return Columns coordinate.
+     */
     public int getX() {
         return this.x;
     }
 
+    /**
+     * @brief Gets row offset Y.
+     * @return Rows coordinate.
+     */
     public int getY() {
         return this.y;
     }
 
+    /**
+     * @brief Gets scene width.
+     * @return Column count.
+     */
     public int getWidth() {
         return this.width;
     }
 
+    /**
+     * @brief Gets scene height.
+     * @return Row count.
+     */
     public int getHeight() {
         return this.height;
     }
 
+    /**
+     * @brief Disposes and dereferences buffers inside the scene layer.
+     */
     public void dispose() {
         this.codepointBuffer = null;
         this.fgBuffer = null;

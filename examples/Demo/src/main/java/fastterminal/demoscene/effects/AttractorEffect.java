@@ -4,9 +4,14 @@ import fastterminal.FastTerminalScene;
 import fastterminal.demoscene.DemosceneEffect;
 
 /**
- * 🌀 Lorenz Attractor Particle Swarm effect.
- * Simulates chaotic differential equations in 3D, projecting a swarm of glowing
- * physics particles that orbit the Lorenz attractor core in real-time.
+ * @class AttractorEffect
+ * @brief 🌀 Lorenz Attractor Particle Swarm simulator.
+ * 
+ * Computes Lorenz system chaotic differential physics equations in 3D:
+ * - dx/dt = Sigma * (y - x)
+ * - dy/dt = x * (Rho - z) - y
+ * - dz/dt = x * y - Beta * z
+ * Projects coordinates onto the terminal viewport using dynamic trailing particle glyphs.
  */
 public class AttractorEffect implements DemosceneEffect {
 
@@ -24,6 +29,12 @@ public class AttractorEffect implements DemosceneEffect {
     private static final double BETA = 8.0 / 3.0;
     private static final double DT = 0.008;
 
+    /**
+     * @brief Initializes view sizes and spawns particles spread out near the attractor core.
+     * 
+     * @param width Terminal screen width.
+     * @param height Terminal screen height.
+     */
     @Override
     public void init(int width, int height) {
         this.width = width;
@@ -37,6 +48,11 @@ public class AttractorEffect implements DemosceneEffect {
         }
     }
 
+    /**
+     * @brief Computes one step of the Lorenz system derivatives using forward Euler integration.
+     * 
+     * @param frameIndex Monotonically increasing frame index.
+     */
     @Override
     public void update(long frameIndex) {
         for (int i = 0; i < PARTICLE_COUNT; i++) {
@@ -51,6 +67,13 @@ public class AttractorEffect implements DemosceneEffect {
         }
     }
 
+    /**
+     * @brief Renders the Lorenz trail indices using high-precision scaling and projection.
+     * 
+     * Uses neon gradient interpolations down the particle indexes for trailing glows.
+     * 
+     * @param canvas Double-buffer render target.
+     */
     @Override
     public void render(FastTerminalScene canvas) {
         canvas.clear();
@@ -87,8 +110,12 @@ public class AttractorEffect implements DemosceneEffect {
         }
     }
 
+    /**
+     * @brief Returns the visual user-friendly name of the effect.
+     * @return String effect name label.
+     */
     @Override
     public String getName() {
-        return "🌀 Lorenz Attractor Particle Swarm";
+        return "Lorenz Attractor Particle Swarm";
     }
 }

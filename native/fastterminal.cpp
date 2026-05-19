@@ -4,12 +4,26 @@
 
 /**
  * @file fastterminal.cpp
- * @brief Native JNI C++ implementation for FastTerminal console hooks
+ * @brief Native JNI C++ implementation for FastTerminal console hooks.
+ * 
+ * Provides high-performance integration with the Win32 Console APIs to query 
+ * layout, toggle input modes, walk parent focus chains, and track pointer locations.
  */
 
 // ============================================================================
 // DLL Entry Point
 // ============================================================================
+
+/**
+ * @brief Dynamic-Link Library entry point function.
+ * 
+ * Configures optimization flags on thread attachment.
+ * 
+ * @param hModule Handle to the DLL module.
+ * @param ul_reason_for_call Reason flag calling the entry point.
+ * @param lpReserved Reserved parameter.
+ * @return BOOL TRUE on success, FALSE otherwise.
+ */
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
     switch (ul_reason_for_call) {
         case DLL_PROCESS_ATTACH:
@@ -27,6 +41,13 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 
 /**
  * @brief Queries current console buffer width (columns) and visible window height.
+ * 
+ * Implements: JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getTerminalSize
+ * Retrieves the screen buffer info using Win32 `GetConsoleScreenBufferInfo`.
+ * 
+ * @param env Pointer to the JNI environment.
+ * @param clazz The calling Java class reference.
+ * @return jintArray [cols, rows] console dimensions, or NULL on memory allocation failure.
  */
 JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getTerminalSize(JNIEnv* env, jclass clazz) {
     jintArray result = env->NewIntArray(2);
@@ -49,6 +70,13 @@ JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getTerminalSize(JNIEn
 
 /**
  * @brief Configures standard raw console modes (echo off, direct inputs, etc.) via SetConsoleMode.
+ * 
+ * Implements: JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode
+ * Saves the original mode on first activation to allow safe cleanup later.
+ * 
+ * @param env Pointer to the JNI environment.
+ * @param clazz The calling Java class reference.
+ * @param enableRaw True to set direct raw terminal input flags, false to restore original console state.
  */
 JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode(JNIEnv* env, jclass clazz, jboolean enableRaw) {
     HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
@@ -73,6 +101,13 @@ JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode(JNIEnv* env, jc
 
 /**
  * @brief Retrieves the console window's screen rect, client offset, and font character cell size.
+ * 
+ * Implements: JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getConsoleWindowInfo
+ * Useful for high-precision cursor positioning calculations, especially in custom UI elements.
+ * 
+ * @param env Pointer to the JNI environment.
+ * @param clazz The calling Java class reference.
+ * @return jintArray Int array holding size and coordinate offsets, or NULL on error.
  */
 JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getConsoleWindowInfo(JNIEnv* env, jclass clazz) {
     HWND hwnd = GetConsoleWindow();
@@ -107,6 +142,13 @@ JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getConsoleWindowInfo(
 
 /**
  * @brief Checks if our console window is the active focused window in Windows.
+ * 
+ * Implements: JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isTerminalFocused
+ * Correctly walks root ancestor boundaries for Modern Windows Terminal (wt.exe) host environments.
+ * 
+ * @param env Pointer to the JNI environment.
+ * @param clazz The calling Java class reference.
+ * @return jboolean True if focused, False otherwise.
  */
 JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isTerminalFocused(JNIEnv* env, jclass clazz) {
     HWND hwndConsole = GetConsoleWindow();
@@ -132,6 +174,12 @@ JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isTerminalFocused(JNIE
 
 /**
  * @brief Checks if the mouse cursor is hovering over our terminal window.
+ * 
+ * Implements: JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isMouseOverTerminal
+ * 
+ * @param env Pointer to the JNI environment.
+ * @param clazz The calling Java class reference.
+ * @return jboolean True if mouse is hovering over terminal, False otherwise.
  */
 JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isMouseOverTerminal(JNIEnv* env, jclass clazz) {
     HWND hwndConsole = GetConsoleWindow();
@@ -146,4 +194,3 @@ JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isMouseOverTerminal(JN
     }
     return JNI_FALSE;
 }
-

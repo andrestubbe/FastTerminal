@@ -4,8 +4,11 @@ import fastterminal.FastTerminalScene;
 import fastterminal.demoscene.DemosceneEffect;
 
 /**
- * ⚡ The iconic introductory OLED Wave & Floating Emojis demo.
- * Renders high-performance dynamic color waves and animated emojis (🚀, 🌈, ⚡).
+ * @class IntroEffect
+ * @brief High-frequency OLED sine color wave background renderer.
+ * 
+ * Computes individual character cell background and foreground HSL-like gradients
+ * dynamically via math phase transitions.
  */
 public class IntroEffect implements DemosceneEffect {
 
@@ -13,17 +16,30 @@ public class IntroEffect implements DemosceneEffect {
     private int height;
     private double phase = 0.0;
 
+    /**
+     * @brief Initializes dimensions for the effect.
+     * @param width Terminal screen width in columns.
+     * @param height Terminal screen height in rows.
+     */
     @Override
     public void init(int width, int height) {
         this.width = width;
         this.height = height;
     }
 
+    /**
+     * @brief Advances gradient wave phase transitions.
+     * @param frameIndex Monotonically increasing frame index count.
+     */
     @Override
     public void update(long frameIndex) {
         phase = frameIndex * 0.15;
     }
 
+    /**
+     * @brief Renders the color wave cells directly to the rendering canvas.
+     * @param canvas Double-buffer render target screen.
+     */
     @Override
     public void render(FastTerminalScene canvas) {
         canvas.clear();
@@ -49,41 +65,14 @@ public class IntroEffect implements DemosceneEffect {
                 canvas.writeCell(c, r, codepoint, fgColor, bgColor);
             }
         }
-
-        // 2. Render moving emojis
-        int titleY = height / 2;
-
-        // Upper limit row bounds
-        int upperLimit = Math.max(1, titleY - 2);
-        int emojiX1 = (int) ((Math.sin(phase * 0.5) * 0.4 + 0.5) * width);
-        int emojiY1 = (int) ((Math.cos(phase * 0.5) * 0.4 + 0.5) * upperLimit);
-        int rY = Math.min(emojiY1, upperLimit);
-        if (emojiX1 >= 0 && emojiX1 < width - 1 && rY >= 0 && rY < height) {
-            canvas.writeString(emojiX1, rY, "🚀", 0xFFFFFF, -1);
-            canvas.writeCell(emojiX1 + 1, rY, -99, -1, -1); // Clear emoji overlap cell!
-        }
-
-        // Lower limit row bounds
-        int lowerLimitStart = Math.min(height - 1, titleY + 2);
-        int lowerLimitRange = Math.max(1, height - 1 - lowerLimitStart);
-        int emojiX2 = (int) ((Math.cos(phase * 0.7 + 1.0) * 0.4 + 0.5) * width);
-        int emojiY2 = lowerLimitStart + (int) ((Math.sin(phase * 0.7 + 1.0) * 0.4 + 0.5) * lowerLimitRange);
-        int lY = Math.min(emojiY2, height - 1);
-        if (emojiX2 >= 0 && emojiX2 < width - 1 && lY >= 0 && lY < height) {
-            canvas.writeString(emojiX2, lY, "🌈", 0xFFFFFF, -1);
-            canvas.writeCell(emojiX2 + 1, lY, -99, -1, -1); // Clear emoji overlap cell!
-        }
-
-        // Lightning bolt near the top edge
-        int emojiX3 = (int) ((Math.sin(phase * 0.3 + 2.0) * 0.4 + 0.5) * width);
-        if (emojiX3 >= 0 && emojiX3 < width - 1) {
-            canvas.writeString(emojiX3, 0, "⚡", 0xFFFF00, -1);
-            canvas.writeCell(emojiX3 + 1, 0, -99, -1, -1); // Clear emoji overlap cell!
-        }
     }
 
+    /**
+     * @brief Returns the visual user-friendly name of the effect.
+     * @return String effect name label.
+     */
     @Override
     public String getName() {
-        return "🌈 Introductory OLED Wave & Floating Emojis";
+        return "OLED Color Wave";
     }
 }

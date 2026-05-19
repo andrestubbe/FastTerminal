@@ -4,9 +4,11 @@ import fastterminal.FastTerminalScene;
 import fastterminal.demoscene.DemosceneEffect;
 
 /**
- * 🟢 Cybernetic Digital Matrix Tunnel effect.
- * Projects coordinate plane into a 3D tunnel, rendering glowing green binary
- * and matrix runes falling along the cylindrical walls.
+ * @class AsciiTunnelEffect
+ * @brief 🟢 Cybernetic Digital Matrix Tunnel visual effect.
+ * 
+ * Maps flat 2D viewport coordinates directly to 3D polar cylinder coordinates (depth z = 1/r, angle = atan2).
+ * Simulates falling matrix streams down a vanishing tunnel utilizing custom noise hashes and green-ambient depth falloffs.
  */
 public class AsciiTunnelEffect implements DemosceneEffect {
 
@@ -14,19 +16,32 @@ public class AsciiTunnelEffect implements DemosceneEffect {
     private int height;
     private double time = 0.0;
 
-    private static final String RUNES = "0101XYZ#@$&*%";
+    private static final String RUNES = "█▓▒░";
 
+    /**
+     * @brief Initializes view size coordinates.
+     * @param width Terminal screen width.
+     * @param height Terminal screen height.
+     */
     @Override
     public void init(int width, int height) {
         this.width = width;
         this.height = height;
     }
 
+    /**
+     * @brief Advances tunnel scroll velocity.
+     * @param frameIndex Monotonically increasing frame index.
+     */
     @Override
     public void update(long frameIndex) {
         time = frameIndex * 0.04;
     }
 
+    /**
+     * @brief Transforms view coordinates and flushes matrix runes to the viewport canvas.
+     * @param canvas Double-buffer render target.
+     */
     @Override
     public void render(FastTerminalScene canvas) {
         double centerX = width / 2.0;
@@ -77,8 +92,12 @@ public class AsciiTunnelEffect implements DemosceneEffect {
         }
     }
 
+    /**
+     * @brief Returns the visual user-friendly name of the effect.
+     * @return String effect name label.
+     */
     @Override
     public String getName() {
-        return "🟢 Cybernetic Digital Matrix Tunnel";
+        return "Cybernetic Digital Matrix Tunnel";
     }
 }

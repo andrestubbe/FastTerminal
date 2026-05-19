@@ -42,7 +42,7 @@ public class Demo {
 - [Architecture & Grid Layout](#architecture--grid-layout)
 - [API Quick Reference](#api-quick-reference)
 - [Installation](#installation)
-- [Technical Examples & Hero Demos](#technical-examples--hero-demos)
+- [Technical Examples & Demos](#technical-examples--demos)
 - [Performance Optimization](#performance-optimization)
 - [Platform JNI Capabilities](#platform-jni-capabilities)
 - [License](#license)
@@ -149,15 +149,14 @@ Download the latest pre-compiled JARs directly to add them to your project's cla
 
 ---
 
-## Technical Examples & Hero Demos
-See the **[Demo.md](Demo.md)** catalog for technical implementations:
+## Technical Examples & Demos
+See the active Java programs under the `examples/Demo` package:
 
-| Case | Java Example | Performance Race / Demo | Details |
-|------|--------------|-------------------------|---------|
-| Fullscreen OLED Sine Wave | [Demo.java](examples/Demo/src/main/java/fastterminal/Demo.java) | Dynamic Rainbow wave, Emojis, titles | Scales dynamically to terminal size |
-| Dynamic Progress Indicators | See [Demo.md](Demo.md#demo-2-multi-line-download-progress-apt-style) | apt/npm style multi-line indicators | Bottom-anchored overlays |
-| Keyboard Draw / Paint | See [Demo.md](Demo.md#demo-5-fastterminal-paint) | Arrow keys drawing pixels | Direct keyboard interaction |
-| Mouse-Move Rectangle | See [Demo.md](Demo.md#demo-6-mouse-move-rectangle) | Rect tracking pointer coords | Full-screen ANSI mouse input |
+| Case | Java Example | Performance / Demo | Details |
+|------|--------------|--------------------|---------|
+| Demoscene Megademo | [Demo.java](examples/Demo/src/main/java/fastterminal/Demo.java) | High-fidelity visual FX catalog | Auto-cycles through active fluid, fire, grids and 3D wireframes |
+| Render Performance Race | [BenchmarkDemo.java](examples/Demo/src/main/java/fastterminal/BenchmarkDemo.java) | Pure throughput speed benchmark | Renders full-screen alternating patterns at raw throughput limits |
+| Native Mouse Visualizer | [UI.java](examples/Demo/src/main/java/fastterminal/UI.java) | Real-time interactive coordinates & clicks | Renders a glowing neon crosshair and white mouse cursor on a dark blue background |
 
 ---
 

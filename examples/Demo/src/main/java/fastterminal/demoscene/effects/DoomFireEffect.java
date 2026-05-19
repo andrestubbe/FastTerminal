@@ -6,7 +6,12 @@ import fastterminal.demoscene.DemosceneEffect;
 import java.util.Arrays;
 
 /**
- * Authentic 90s Doom Fire effect optimized for FastTerminal True-Color.
+ * @class DoomFireEffect
+ * @brief Authentic 90s classic Doom Fire particle propagation effect.
+ * 
+ * Simulates a vertical cellular heat grid propagating upwards from the bottom row,
+ * combining custom randomized cooling decays and dynamic horizontal wind shifts.
+ * Renders in true-color double resolution vertical coordinates mapped to terminal half-blocks (▄).
  */
 public class DoomFireEffect implements DemosceneEffect {
 
@@ -23,24 +28,38 @@ public class DoomFireEffect implements DemosceneEffect {
         0xB7BF47, 0xB7BF4F, 0xC7C76F, 0xDFDF9F, 0xFFFFC7, 0xFFFFFF
     };
 
+    /**
+     * @brief Initializes the fire pixel buffer.
+     * 
+     * Sets the bottom-most subpixel row to maximum heat (white hot).
+     * 
+     * @param width Terminal screen width.
+     * @param height Terminal screen height.
+     */
     @Override
     public void init(int width, int height) {
         this.width = width;
         this.height = height;
-        this.firePixels = new int[width * height];
+        // In half-block double resolution, the fire simulation is run on a 2 * height grid!
+        this.firePixels = new int[width * (2 * height)];
         
         // Fill base row with maximum heat (white hot)
-        int lastRowStart = (height - 1) * width;
+        int lastRowStart = (2 * height - 1) * width;
         for (int i = 0; i < width; i++) {
             firePixels[lastRowStart + i] = PALETTE.length - 1;
         }
     }
 
+    /**
+     * @brief Propagates heat index upward and applies random wind shift and decay.
+     * 
+     * @param frameIndex Monotonically increasing frame index.
+     */
     @Override
     public void update(long frameIndex) {
-        // Propagate heat upwards from row 1 down to the bottom
+        // Propagate heat upwards from row 1 down to the bottom on the double-res grid
         for (int x = 0; x < width; x++) {
-            for (int y = 1; y < height; y++) {
+            for (int y = 1; y < 2 * height; y++) {
                 int src = x + y * width;
                 int pixel = firePixels[src];
 
@@ -62,20 +81,41 @@ public class DoomFireEffect implements DemosceneEffect {
         }
     }
 
+    /**
+     * @brief Blits fire pixels onto the FastTerminalScene double-buffer screen.
+     * 
+     * Mappings:
+     * - Top pixel -> cell background color.
+     * - Bottom pixel -> cell foreground color.
+     * - Character character -> '▄'.
+     * 
+     * @param canvas Double-buffer render target.
+     */
     @Override
     public void render(FastTerminalScene canvas) {
-        for (int y = 0; y < height; y++) {
+        for (int row = 0; row < height; row++) {
+            int yTop = 2 * row;
+            int yBot = 2 * row + 1;
+
             for (int x = 0; x < width; x++) {
-                int val = firePixels[x + y * width];
-                int color = PALETTE[val];
-                // Draw fire particles using high-density blocks
-                canvas.writeCell(x, y, '█', color, 0x070707);
+                int valTop = firePixels[x + yTop * width];
+                int valBot = firePixels[x + yBot * width];
+
+                int colorTop = PALETTE[valTop];
+                int colorBot = PALETTE[valBot];
+
+                // Write half-block cell: Foreground represents bottom pixel, Background represents top pixel
+                canvas.writeCell(x, row, '▄', colorBot, colorTop);
             }
         }
     }
 
+    /**
+     * @brief Returns the visual user-friendly name of the effect.
+     * @return String effect name label.
+     */
     @Override
     public String getName() {
-        return "🔥 DOOM FIRE EFFECT";
+        return "Doom Fire Effect";
     }
 }

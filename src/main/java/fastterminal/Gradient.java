@@ -1,8 +1,11 @@
 package fastterminal;
 
 /**
- * High-performance, zero-allocation 24-bit True Color Gradient generator.
- * Provides linear interpolation across horizontal, vertical, and diagonal axes.
+ * @class Gradient
+ * @brief High-performance, zero-allocation 24-bit True Color color interpolation engine.
+ * 
+ * Provides static linear color interpolation (lerp) operations across cell buffer layouts,
+ * supporting horizontal, vertical, and diagonal gradient space spans.
  */
 public final class Gradient {
 
@@ -11,7 +14,12 @@ public final class Gradient {
     }
 
     /**
-     * Interpolates between two 24-bit RGB colors by a fraction t [0.0, 1.0].
+     * @brief Linearly interpolates (lerp) between two 24-bit RGB colors by a fraction t [0.0, 1.0].
+     * 
+     * @param colorStart Starting packed RGB color.
+     * @param colorEnd Ending packed RGB color.
+     * @param t Interpolation fraction factor bounded within [0.0, 1.0].
+     * @return Packed 24-bit RGB interpolated value.
      */
     public static int interpolate(int colorStart, int colorEnd, double t) {
         t = Math.max(0.0, Math.min(1.0, t));
@@ -32,7 +40,15 @@ public final class Gradient {
     }
 
     /**
-     * Applies a horizontal linear gradient to the background colors of a scene region.
+     * @brief Applies a horizontal linear gradient to background cells in a scene region.
+     * 
+     * @param scene Target scene layer.
+     * @param startX Starting column coordinate.
+     * @param startY Starting row coordinate.
+     * @param width Span width in columns.
+     * @param height Span height in rows.
+     * @param colorStart Starting packed RGB color.
+     * @param colorEnd Ending packed RGB color.
      */
     public static void applyHorizontalBg(FastTerminalScene scene, int startX, int startY, int width, int height, int colorStart, int colorEnd) {
         int sceneW = scene.getWidth();
@@ -55,7 +71,15 @@ public final class Gradient {
     }
 
     /**
-     * Applies a vertical linear gradient to the background colors of a scene region.
+     * @brief Applies a vertical linear gradient to background cells in a scene region.
+     * 
+     * @param scene Target scene layer.
+     * @param startX Starting column coordinate.
+     * @param startY Starting row coordinate.
+     * @param width Span width in columns.
+     * @param height Span height in rows.
+     * @param colorStart Starting packed RGB color.
+     * @param colorEnd Ending packed RGB color.
      */
     public static void applyVerticalBg(FastTerminalScene scene, int startX, int startY, int width, int height, int colorStart, int colorEnd) {
         int sceneW = scene.getWidth();
@@ -80,7 +104,15 @@ public final class Gradient {
     }
 
     /**
-     * Applies a diagonal linear gradient to the background colors of a scene region.
+     * @brief Applies a diagonal linear gradient to background cells in a scene region.
+     * 
+     * @param scene Target scene layer.
+     * @param startX Starting column coordinate.
+     * @param startY Starting row coordinate.
+     * @param width Span width in columns.
+     * @param height Span height in rows.
+     * @param colorStart Starting packed RGB color.
+     * @param colorEnd Ending packed RGB color.
      */
     public static void applyDiagonalBg(FastTerminalScene scene, int startX, int startY, int width, int height, int colorStart, int colorEnd) {
         int sceneW = scene.getWidth();
@@ -104,7 +136,15 @@ public final class Gradient {
     }
 
     /**
-     * Applies a horizontal linear gradient to the foreground colors of a scene region.
+     * @brief Applies a horizontal linear gradient to foreground cells in a scene region.
+     * 
+     * @param scene Target scene layer.
+     * @param startX Starting column coordinate.
+     * @param startY Starting row coordinate.
+     * @param width Span width in columns.
+     * @param height Span height in rows.
+     * @param colorStart Starting packed RGB color.
+     * @param colorEnd Ending packed RGB color.
      */
     public static void applyHorizontalFg(FastTerminalScene scene, int startX, int startY, int width, int height, int colorStart, int colorEnd) {
         int sceneW = scene.getWidth();
