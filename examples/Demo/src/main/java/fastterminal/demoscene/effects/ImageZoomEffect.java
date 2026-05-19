@@ -110,6 +110,38 @@ public class ImageZoomEffect implements DemosceneEffect {
         }
     }
 
+    private int sampleBilinear(BufferedImage img, double rx, double ry) {
+        int imgW = img.getWidth();
+        int imgH = img.getHeight();
+
+        int x0 = (int) Math.floor(rx);
+        int y0 = (int) Math.floor(ry);
+
+        double fx = rx - Math.floor(rx);
+        double fy = ry - Math.floor(ry);
+
+        int x0_c = Math.max(0, Math.min(imgW - 1, x0));
+        int y0_c = Math.max(0, Math.min(imgH - 1, y0));
+        int x1_c = Math.max(0, Math.min(imgW - 1, x0 + 1));
+        int y1_c = Math.max(0, Math.min(imgH - 1, y0 + 1));
+
+        int c00 = img.getRGB(x0_c, y0_c);
+        int c10 = img.getRGB(x1_c, y0_c);
+        int c01 = img.getRGB(x0_c, y1_c);
+        int c11 = img.getRGB(x1_c, y1_c);
+
+        double w00 = (1.0 - fx) * (1.0 - fy);
+        double w10 = fx * (1.0 - fy);
+        double w01 = (1.0 - fx) * fy;
+        double w11 = fx * fy;
+
+        int r = (int) (((c00 >> 16) & 0xFF) * w00 + ((c10 >> 16) & 0xFF) * w10 + ((c01 >> 16) & 0xFF) * w01 + ((c11 >> 16) & 0xFF) * w11);
+        int g = (int) (((c00 >> 8) & 0xFF) * w00 + ((c10 >> 8) & 0xFF) * w10 + ((c01 >> 8) & 0xFF) * w01 + ((c11 >> 8) & 0xFF) * w11);
+        int b = (int) ((c00 & 0xFF) * w00 + (c10 & 0xFF) * w10 + (c01 & 0xFF) * w01 + (c11 & 0xFF) * w11);
+
+        return (r << 16) | (g << 8) | b;
+    }
+
     /**
      * @brief Projects, bilinear maps, cross-fades, and flushes subpixels to double vertical resolution.
      * 
@@ -148,22 +180,16 @@ public class ImageZoomEffect implements DemosceneEffect {
                 double rxBot = panX + (x - width / 2.0) * (imgW / (double) width) / zoom;
                 double ryBot = panY + (2 * y + 1 - height) * (imgH / (double) (2 * height)) / zoom;
 
-                // Clamp to valid image boundaries
-                int ixTop = Math.max(0, Math.min(imgW - 1, (int) rxTop));
-                int iyTop = Math.max(0, Math.min(imgH - 1, (int) ryTop));
-                int ixBot = Math.max(0, Math.min(imgW - 1, (int) rxBot));
-                int iyBot = Math.max(0, Math.min(imgH - 1, (int) ryBot));
-
                 // Extract packed 24-bit RGB values from current active image
-                int colorTopCurr = imageCurr.getRGB(ixTop, iyTop) & 0xFFFFFF;
-                int colorBotCurr = imageCurr.getRGB(ixBot, iyBot) & 0xFFFFFF;
+                int colorTopCurr = sampleBilinear(imageCurr, rxTop, ryTop);
+                int colorBotCurr = sampleBilinear(imageCurr, rxBot, ryBot);
 
                 int colorTop, colorBot;
 
                 // If currently transitioning, smoothly blend (lerp) RGB channels with previous image
                 if (fadeAmount < 1.0) {
-                    int colorTopPrev = imagePrev.getRGB(ixTop, iyTop) & 0xFFFFFF;
-                    int colorBotPrev = imagePrev.getRGB(ixBot, iyBot) & 0xFFFFFF;
+                    int colorTopPrev = sampleBilinear(imagePrev, rxTop, ryTop);
+                    int colorBotPrev = sampleBilinear(imagePrev, rxBot, ryBot);
 
                     // Blend Top
                     int rCurrT = (colorTopCurr >> 16) & 0xFF;

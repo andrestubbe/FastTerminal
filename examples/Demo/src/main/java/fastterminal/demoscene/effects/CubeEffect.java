@@ -229,8 +229,29 @@ public class CubeEffect implements DemosceneEffect {
         return (r << 16) | (g << 8) | b;
     }
 
+    private void blendPixel(int[] buffer, int w, int h, int x, int y, double alpha, int color) {
+        if (x >= 0 && x < w && y >= 0 && y < h) {
+            int idx = x + y * w;
+            int bg = buffer[idx];
+            
+            int rBg = (bg >> 16) & 0xFF;
+            int gBg = (bg >> 8) & 0xFF;
+            int bBg = bg & 0xFF;
+            
+            int rFg = (color >> 16) & 0xFF;
+            int gFg = (color >> 8) & 0xFF;
+            int bFg = color & 0xFF;
+            
+            int r = (int) (rFg * alpha + rBg * (1.0 - alpha));
+            int g = (int) (gFg * alpha + gBg * (1.0 - alpha));
+            int b = (int) (bFg * alpha + bBg * (1.0 - alpha));
+            
+            buffer[idx] = (r << 16) | (g << 8) | b;
+        }
+    }
+
     /**
-     * @brief Fast 2D integer line drawer implementing the Bresenham algorithm.
+     * @brief Anti-aliased 2D line drawer implementing Xiaolin Wu's algorithm.
      * 
      * @param buffer Subpixel integer array canvas.
      * @param w Horizontal canvas buffer width.
@@ -242,25 +263,65 @@ public class CubeEffect implements DemosceneEffect {
      * @param color 24-bit packed RGB color to write.
      */
     private void drawLineToBuffer(int[] buffer, int w, int h, int x0, int y0, int x1, int y1, int color) {
-        int dx = Math.abs(x1 - x0);
-        int dy = Math.abs(y1 - y0);
-        int sx = x0 < x1 ? 1 : -1;
-        int sy = y0 < y1 ? 1 : -1;
-        int err = dx - dy;
+        boolean steep = Math.abs(y1 - y0) > Math.abs(x1 - x0);
+        if (steep) {
+            int temp = x0; x0 = y0; y0 = temp;
+            temp = x1; x1 = y1; y1 = temp;
+        }
+        if (x0 > x1) {
+            int temp = x0; x0 = x1; x1 = temp;
+            temp = y0; y0 = y1; y1 = temp;
+        }
 
-        while (true) {
-            if (x0 >= 0 && x0 < w && y0 >= 0 && y0 < h) {
-                buffer[x0 + y0 * w] = color;
+        double dx = x1 - x0;
+        double dy = y1 - y0;
+        double gradient = (dx == 0.0) ? 1.0 : dy / dx;
+
+        // Handle first endpoint
+        double xend = Math.round(x0);
+        double yend = y0 + gradient * (xend - x0);
+        double xgap = 1.0 - ((x0 + 0.5) - Math.floor(x0 + 0.5));
+        int xpx1 = (int) xend;
+        int ypx1 = (int) Math.floor(yend);
+        
+        if (steep) {
+            blendPixel(buffer, w, h, ypx1, xpx1, (1.0 - (yend - ypx1)) * xgap, color);
+            blendPixel(buffer, w, h, ypx1 + 1, xpx1, (yend - ypx1) * xgap, color);
+        } else {
+            blendPixel(buffer, w, h, xpx1, ypx1, (1.0 - (yend - ypx1)) * xgap, color);
+            blendPixel(buffer, w, h, xpx1, ypx1 + 1, (yend - ypx1) * xgap, color);
+        }
+        double intery = yend + gradient;
+
+        // Handle second endpoint
+        xend = Math.round(x1);
+        yend = y1 + gradient * (xend - x1);
+        xgap = (x1 + 0.5) - Math.floor(x1 + 0.5);
+        int xpx2 = (int) xend;
+        int ypx2 = (int) Math.floor(yend);
+        
+        if (steep) {
+            blendPixel(buffer, w, h, ypx2, xpx2, (1.0 - (yend - ypx2)) * xgap, color);
+            blendPixel(buffer, w, h, ypx2 + 1, xpx2, (yend - ypx2) * xgap, color);
+        } else {
+            blendPixel(buffer, w, h, xpx2, ypx2, (1.0 - (yend - ypx2)) * xgap, color);
+            blendPixel(buffer, w, h, xpx2, ypx2 + 1, (yend - ypx2) * xgap, color);
+        }
+
+        // Main loop
+        if (steep) {
+            for (int x = xpx1 + 1; x < xpx2; x++) {
+                int y = (int) Math.floor(intery);
+                blendPixel(buffer, w, h, y, x, 1.0 - (intery - y), color);
+                blendPixel(buffer, w, h, y + 1, x, intery - y, color);
+                intery += gradient;
             }
-            if (x0 == x1 && y0 == y1) break;
-            int e2 = 2 * err;
-            if (e2 > -dy) {
-                err -= dy;
-                x0 += sx;
-            }
-            if (e2 < dx) {
-                err += dx;
-                y0 += sy;
+        } else {
+            for (int x = xpx1 + 1; x < xpx2; x++) {
+                int y = (int) Math.floor(intery);
+                blendPixel(buffer, w, h, x, y, 1.0 - (intery - y), color);
+                blendPixel(buffer, w, h, x, y + 1, intery - y, color);
+                intery += gradient;
             }
         }
     }
