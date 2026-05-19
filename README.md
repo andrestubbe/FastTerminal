@@ -11,7 +11,8 @@
 
 FastTerminal is the high-performance terminal substrate of the **FastJava** ecosystem. It introduces a lightweight, cell-buffered virtual viewport using primitive integer buffers for full 24-bit True Color (foreground & background) and emoji-safe UTF-32 Codepoint grids, operating completely independently of standard bloated frameworks.
 
-To achieve a completely responsive, zero-latency desktop terminal experience, FastTerminal is designed to pair natively with its twin telemetry and input modules:
+To achieve a completely responsive, zero-latency desktop terminal experience, FastTerminal is designed to pair natively with the input, styling, and helper modules of the **FastJava** ecosystem:
+*   ⚡ **[FastANSI](https://github.com/andrestubbe/FastANSI)** — Micro-optimized, garbage-free ANSI escape sequence builder and parser for terminal graphics.
 *   🚀 **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** — Direct, low-latency, asynchronous raw global and local keyboard event handling.
 *   🖱️ **[FastMouse](https://github.com/andrestubbe/FastMouse)** — Precise hardware-level and virtual console-mode mouse tracking.
 
@@ -37,7 +38,7 @@ public class Demo {
 ```
 
 ## Table of Contents
-- [Our Mission](#our-mission)
+- [Mission](#mission)
 - [Key Features](#key-features)
 - [Architecture & Grid Layout](#architecture--grid-layout)
 - [API Quick Reference](#api-quick-reference)
@@ -49,17 +50,17 @@ public class Demo {
 
 ---
 
-## 🎯 Our Mission
-Our mission is to build the fastest, most robust native execution kernel on the JVM for console rendering and TUI interactivity. By combining cell-buffered graphics, double-buffered layouts, and immediate OS hardware input telemetry via **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** and **[FastMouse](https://github.com/andrestubbe/FastMouse)**, we empower developers to create premium, interactive command-line terminals that rival native C++ applications in visual fidelity and input response—without external dependencies.
+## 🎯 Mission
+The mission is to build the fastest, most robust native execution kernel on the JVM for console rendering and TUI interactivity. By combining cell-buffered graphics, double-buffered layouts, and immediate OS hardware input telemetry via **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** and **[FastMouse](https://github.com/andrestubbe/FastMouse)**, we empower developers to create premium, interactive command-line terminals that rival native C++ applications in visual fidelity and input response—without external dependencies.
 
 ---
 
 ## Key Features
 *   **🚫 Zero Dependencies** — Bypasses all high-latency third-party blocking input loops.
-*   **🎨 24-bit True Color** — Complete support for direct RGB escape codes (`\033[38;2;R;G;Bm` for foreground and `\033[48;2;R;G;Bm` for background).
+*   **🎨 24-bit True Color** — Complete support for direct RGB escape codes powered by **[FastANSI](https://github.com/andrestubbe/FastANSI)** (`\033[38;2;R;G;Bm` for foreground and `\033[48;2;R;G;Bm` for background).
 *   **🌐 Emoji & Unicode-Safe** — Eliminates UTF-16 surrogate split bugs by using `int` (UTF-32) codepoint cell buffers rather than `char[]` arrays, guaranteeing that Emojis (e.g. `🚀`, `🌈`) fit exactly in 1 cell without warping rows.
-*   **⚡ State-Minimized Renderer** — Optimizes stdout rendering by only emitting ANSI escape codes when color states change, reducing console stream bandwidth by up to **80%**.
-*   **📺 Alternate Screen Buffer** — Seamlessly enters full-screen TUI buffer mode (`\033[?1049h`) and hides the cursor (`\033[?25l`) for clean dashboard applications.
+*   **⚡ State-Minimized Renderer** — Optimizes stdout rendering via **[FastANSI](https://github.com/andrestubbe/FastANSI)** by only emitting escape codes when color states change, reducing console stream bandwidth by up to **80%**.
+*   **📺 Alternate Screen Buffer** — Seamlessly enters full-screen TUI buffer mode (`\033[?1049h`) and hides the cursor (`\033[?25l`) using **[FastANSI](https://github.com/andrestubbe/FastANSI)** utilities for clean dashboard applications.
 *   **🎹 Native Input Substrates** — Built-in telemetry anchors designed for instant integration with `FastKeyboard` and `FastMouse` to process mouse tracking, window resizing, and raw key captures natively.
 *   **📥 apt/npm Style Indicators** — Built-in dynamic bottom-anchored multi-line progress overlays using cursor save/restore positions.
 
@@ -156,7 +157,7 @@ See the active Java programs under the `examples/Demo` package:
 |------|--------------|--------------------|---------|
 | Demoscene Megademo | [Demo.java](examples/Demo/src/main/java/fastterminal/Demo.java) | High-fidelity visual FX catalog | Auto-cycles through active fluid, fire, grids and 3D wireframes |
 | Render Performance Race | [Benchmark.java](examples/Demo/src/main/java/fastterminal/Benchmark.java) | Pure throughput speed benchmark | Renders full-screen alternating patterns at raw throughput limits |
-| Native Mouse Visualizer | [UI.java](examples/Demo/src/main/java/fastterminal/UI.java) | Real-time interactive coordinates & clicks | Renders a glowing neon crosshair and white mouse cursor on a dark blue background |
+| Native Mouse Visualizer | [UI.java](examples/Demo/src/main/java/fastterminal/UI.java) | Real-time interactive coordinates & clicks | Renders a flat borderless telemetry panel and a custom glowing ANSI mouse cursor on a pure black background |
 
 ---
 

@@ -157,86 +157,61 @@ public class UI {
 
             canvas.clear();
 
-            // 1. Draw dynamic background spatial grid
+            // 1. Clear background to absolute pure black
             for (int y = 0; y < rows; y++) {
                 for (int x = 0; x < cols; x++) {
-                    int bg = 0x0A1931; // Beautiful premium dark blue background
-                    if (x % 10 == 0 || y % 5 == 0) {
-                        bg = 0x15305B; // Tech grid lines in lighter blue
-                    }
-                    canvas.writeCell(x, y, ' ', -1, bg);
+                    canvas.writeCell(x, y, ' ', -1, 0x000000);
                 }
             }
 
-            // 2. Draw glowing neon coordinate crosshairs aligned to mouse coordinates
+            // 2. Draw beautiful custom ANSI Mouse Cursor
             int mx = mouseCellX;
             int my = mouseCellY;
 
             if (mx >= 0 && mx < cols && my >= 0 && my < rows) {
-                int crosshairColor = isLeftPressed ? 0xEF4444 : isRightPressed ? 0x3B82F6 : 0x10B981; // Red on Left, Blue on Right, Neon Green on Hover
-
-                // Horizontal line
-                for (int x = 0; x < cols; x++) {
-                    int dist = Math.abs(x - mx);
-                    double intensity = 1.0 - (double) dist / cols;
-                    int finalColor = Gradient.interpolate(crosshairColor, 0x0A1931, 1.0 - intensity);
-                    
-                    if (x != mx) {
-                        canvas.writeCell(x, my, '┄', finalColor, 0x0F2D54);
-                    }
+                int cursorFg = 0xFFFFFF; // Crisp white cursor body
+                int cursorBg = isLeftPressed ? 0xEF4444 : isRightPressed ? 0x3B82F6 : 0x10B981; // Glow matching click state (Red/Blue/Green)
+                
+                // Draw main pointer cell
+                canvas.writeCell(mx, my, '⬉', cursorFg, cursorBg);
+                
+                // Draw glowing drop-shadow trailing cells to mimic a premium cursor shape
+                if (mx + 1 < cols) {
+                    canvas.writeCell(mx + 1, my, ' ', -1, isLeftPressed ? 0x991B1B : isRightPressed ? 0x1E40AF : 0x065F46);
                 }
-
-                // Vertical line
-                for (int y = 0; y < rows; y++) {
-                    int dist = Math.abs(y - my);
-                    double intensity = 1.0 - (double) dist / rows;
-                    int finalColor = Gradient.interpolate(crosshairColor, 0x0A1931, 1.0 - intensity);
-                    
-                    if (y != my) {
-                        canvas.writeCell(mx, y, '┆', finalColor, 0x0F2D54);
-                    }
+                if (my + 1 < rows) {
+                    canvas.writeCell(mx, my + 1, ' ', -1, isLeftPressed ? 0x991B1B : isRightPressed ? 0x1E40AF : 0x065F46);
                 }
-
-                // Draw central hotspot node (white mouse on dark blue background)
-                int hotspotBg = isLeftPressed ? 0xEF4444 : isRightPressed ? 0x3B82F6 : 0x0A1931;
-                canvas.writeCell(mx, my, '✦', 0xFFFFFF, hotspotBg);
+                if (mx + 1 < cols && my + 1 < rows) {
+                    canvas.writeCell(mx + 1, my + 1, ' ', -1, isLeftPressed ? 0x7F1D1D : isRightPressed ? 0x1E3A8A : 0x064E3B);
+                }
             }
 
-            // 3. Render telemetry dashboard overlay panel
+            // 3. Render telemetry dashboard overlay panel (flat card, no borders)
             int panelW = 44;
             int panelH = 10;
             int panelX = 4;
             int panelY = 2;
 
-            // Render panel backing and glowing frame
+            // Render borderless panel backing using a premium dark gray slate bg
             for (int y = 0; y < panelH; y++) {
                 for (int x = 0; x < panelW; x++) {
                     int px = panelX + x;
                     int py = panelY + y;
                     if (px >= 0 && px < cols && py >= 0 && py < rows) {
-                        char ch = ' ';
-                        int borderCol = 0x475569; // Slate gray frame
-                        if (x == 0 && y == 0) ch = '┏';
-                        else if (x == panelW - 1 && y == 0) ch = '┓';
-                        else if (x == 0 && y == panelH - 1) ch = '┗';
-                        else if (x == panelW - 1 && y == panelH - 1) ch = '┛';
-                        else if (x == 0 || x == panelW - 1) ch = '┃';
-                        else if (y == 0 || y == panelH - 1) ch = '━';
-
-                        int bg = (ch == ' ') ? 0x0A0F1D : 0x1E293B;
-                        canvas.writeCell(px, py, ch, borderCol, bg);
+                        canvas.writeCell(px, py, ' ', -1, 0x0D1117); // Sleek flat dark grey background
                     }
                 }
             }
 
             // Draw status text telemetry inside panel
-            canvas.writeString(panelX + 3, panelY + 1, " 🪐 NATIVE MOUSE TELEMETRY ", 0xF59E0B, 0x0B0F19);
-            canvas.writeString(panelX + 3, panelY + 3, String.format("Cell Coordinates: (%d, %d)", mx, my), 0xE2E8F0, 0x0A0F1D);
-            canvas.writeString(panelX + 3, panelY + 4, String.format("Absolute Pixels: (%d, %d)", absoluteX, absoluteY), 0xE2E8F0, 0x0A0F1D);
-            canvas.writeString(panelX + 3, panelY + 5, String.format("Left Button     : %s", isLeftPressed ? "🔴 DOWN" : "⚪ UP"), isLeftPressed ? 0xEF4444 : 0x94A3B8, 0x0A0F1D);
-            canvas.writeString(panelX + 3, panelY + 6, String.format("Right Button    : %s", isRightPressed ? "🔵 DOWN" : "⚪ UP"), isRightPressed ? 0x3B82F6 : 0x94A3B8, 0x0A0F1D);
-            canvas.writeString(panelX + 3, panelY + 7, String.format("Total Clicked   : %d times", clickCount), 0x10B981, 0x0A0F1D);
-            canvas.writeString(panelX + 3, panelY + 8, String.format("Focused State   : %b", FastTerminal.isTerminalFocused()), 0x38BDF8, 0x0A0F1D);
+            canvas.writeString(panelX + 3, panelY + 1, " 🪐 NATIVE MOUSE TELEMETRY ", 0xF59E0B, 0x161B22);
+            canvas.writeString(panelX + 3, panelY + 3, String.format("Cell Coordinates: (%d, %d)", mx, my), 0xE2E8F0, 0x0D1117);
+            canvas.writeString(panelX + 3, panelY + 4, String.format("Absolute Pixels: (%d, %d)", absoluteX, absoluteY), 0xE2E8F0, 0x0D1117);
+            canvas.writeString(panelX + 3, panelY + 5, String.format("Left Button     : %s", isLeftPressed ? "🔴 DOWN" : "⚪ UP"), isLeftPressed ? 0xEF4444 : 0x94A3B8, 0x0D1117);
+            canvas.writeString(panelX + 3, panelY + 6, String.format("Right Button    : %s", isRightPressed ? "🔵 DOWN" : "⚪ UP"), isRightPressed ? 0x3B82F6 : 0x94A3B8, 0x0D1117);
+            canvas.writeString(panelX + 3, panelY + 7, String.format("Total Clicked   : %d times", clickCount), 0x10B981, 0x0D1117);
+            canvas.writeString(panelX + 3, panelY + 8, String.format("Focused State   : %b", FastTerminal.isTerminalFocused()), 0x38BDF8, 0x0D1117);
 
             renderer.render();
 
