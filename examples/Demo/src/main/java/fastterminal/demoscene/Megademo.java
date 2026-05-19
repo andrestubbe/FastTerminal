@@ -12,6 +12,10 @@ import fastterminal.demoscene.effects.CheckerboardEffect;
 import fastterminal.demoscene.effects.MetaballsEffect;
 import fastterminal.demoscene.effects.TunnelEffect;
 import fastterminal.demoscene.effects.LissajousEffect;
+import fastterminal.demoscene.effects.PlanetEffect;
+import fastterminal.demoscene.effects.GearEffect;
+import fastterminal.demoscene.effects.MandelbrotEffect;
+import fastterminal.demoscene.effects.WavefallEffect;
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
 
@@ -66,7 +70,11 @@ public class Megademo {
             new CheckerboardEffect(),
             new MetaballsEffect(),
             new TunnelEffect(),
-            new LissajousEffect()
+            new LissajousEffect(),
+            new PlanetEffect(),
+            new GearEffect(),
+            new MandelbrotEffect(),
+            new WavefallEffect()
         };
 
         // Initialize all effects

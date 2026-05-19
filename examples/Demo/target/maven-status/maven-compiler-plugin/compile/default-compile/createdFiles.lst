@@ -4,6 +4,7 @@ fastterminal\ShadedDemo.class
 fastterminal\demoscene\Megademo.class
 fastterminal\demoscene\effects\LissajousEffect$TrailPoint.class
 fastterminal\MouseTelemetryDemo$1.class
+fastterminal\demoscene\effects\GearEffect.class
 fastterminal\demoscene\effects\LissajousEffect.class
 fastterminal\MouseTelemetryDemo.class
 fastterminal\BenchmarkDemo.class
@@ -16,11 +17,14 @@ fastterminal\demoscene\effects\TunnelEffect.class
 fastterminal\InteractiveUIDemo$1.class
 fastterminal\GradientDemo.class
 fastterminal\TestLoad.class
+fastterminal\demoscene\effects\MandelbrotEffect.class
 fastterminal\demoscene\effects\CheckerboardEffect.class
 fastterminal\InteractiveUIDemo.class
 fastterminal\RobotTest.class
 fastterminal\UIDemo.class
 fastterminal\MouseDedicatedDemo.class
 fastterminal\demoscene\effects\WarpStarfieldEffect.class
+fastterminal\demoscene\effects\WavefallEffect.class
 fastterminal\Demo.class
 fastterminal\demoscene\effects\MatrixRainEffect.class
+fastterminal\demoscene\effects\PlanetEffect.class
