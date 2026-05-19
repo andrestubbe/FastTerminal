@@ -104,10 +104,10 @@ public class Demo {
         });
 
         long frameCounter = 0;
-        long frameTimeTargetMs = 1000 / 60; // 60 FPS target for extreme stability and zero buffer drops
+        long frameTimeTargetMs = 1000 / 120; // 120 FPS target
         long lastFpsUpdateTime = System.currentTimeMillis();
         int fpsFrameCount = 0;
-        double realFps = 60.0;
+        double realFps = 120.0;
 
         while (true) {
             long startTime = System.nanoTime();
@@ -139,9 +139,8 @@ public class Demo {
 
             DemosceneEffect activeEffect = effects[activeEffectIndex];
 
-            // 3. Update physics and render current scene (advancing by 2 to maintain 120 FPS animation speed at 60 FPS render caps!)
-            frameCounter += 2;
-            activeEffect.update(frameCounter);
+            // 3. Update physics and render current scene
+            activeEffect.update(frameCounter++);
             activeEffect.render(canvas);
 
             // 4. Overlap high-fidelity translucent status overlays in the dead vertical center

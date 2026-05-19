@@ -56,8 +56,12 @@ public class GradientEffect implements DemosceneEffect {
         } else if (cycle < 1050) {
             blendFactor = 1.0; // Hold Sinusoidal Plasma
         } else {
-            blendFactor = 1.0 - (cycle - 1050) / 100.0; // Smooth 100-frame fade from Plasma to Gradients
+            // Smooth 100-frame fade from Plasma to Gradients (1050-1150), then hold at 0.0 for remaining 50 frames
+            blendFactor = Math.max(0.0, 1.0 - (cycle - 1050) / 100.0);
         }
+        
+        // Safety clamp blendFactor to strictly [0.0, 1.0] to prevent any numerical overshoot/undershoot
+        blendFactor = Math.max(0.0, Math.min(1.0, blendFactor));
     }
 
     /**
@@ -137,6 +141,11 @@ public class GradientEffect implements DemosceneEffect {
                     int rT = (int) (rG + (rP - rG) * blendFactor);
                     int gT = (int) (gG + (gP - gG) * blendFactor);
                     int bT = (int) (bG + (bP - bG) * blendFactor);
+                    
+                    // Clamp top channels to [0, 255] to prevent 32-bit two's complement sign leakage (white spots)
+                    rT = Math.max(0, Math.min(255, rT));
+                    gT = Math.max(0, Math.min(255, gT));
+                    bT = Math.max(0, Math.min(255, bT));
                     colorTop = (rT << 16) | (gT << 8) | bT;
 
                     // Blend Bottom
@@ -151,6 +160,11 @@ public class GradientEffect implements DemosceneEffect {
                     int rB = (int) (rGB + (rPB - rGB) * blendFactor);
                     int gB = (int) (gGB + (gPB - gGB) * blendFactor);
                     int bB = (int) (bGB + (bPB - bGB) * blendFactor);
+                    
+                    // Clamp bottom channels to [0, 255]
+                    rB = Math.max(0, Math.min(255, rB));
+                    gB = Math.max(0, Math.min(255, gB));
+                    bB = Math.max(0, Math.min(255, bB));
                     colorBot = (rB << 16) | (gB << 8) | bB;
                 }
 
