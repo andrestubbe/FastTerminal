@@ -155,7 +155,7 @@ See the active Java programs under the `examples/Demo` package:
 | Case | Java Example | Performance / Demo | Details |
 |------|--------------|--------------------|---------|
 | Demoscene Megademo | [Demo.java](examples/Demo/src/main/java/fastterminal/Demo.java) | High-fidelity visual FX catalog | Auto-cycles through active fluid, fire, grids and 3D wireframes |
-| Render Performance Race | [BenchmarkDemo.java](examples/Demo/src/main/java/fastterminal/BenchmarkDemo.java) | Pure throughput speed benchmark | Renders full-screen alternating patterns at raw throughput limits |
+| Render Performance Race | [Benchmark.java](examples/Demo/src/main/java/fastterminal/Benchmark.java) | Pure throughput speed benchmark | Renders full-screen alternating patterns at raw throughput limits |
 | Native Mouse Visualizer | [UI.java](examples/Demo/src/main/java/fastterminal/UI.java) | Real-time interactive coordinates & clicks | Renders a glowing neon crosshair and white mouse cursor on a dark blue background |
 
 ---

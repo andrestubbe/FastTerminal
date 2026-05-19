@@ -5,10 +5,10 @@ fastterminal\demoscene\Megademo.class
 fastterminal\demoscene\effects\IntroEffect.class
 fastterminal\UI.class
 fastterminal\demoscene\effects\AsciiTunnelEffect.class
-fastterminal\BenchmarkDemo.class
 fastterminal\demoscene\effects\ImageZoomEffect.class
 fastterminal\Demo.class
 fastterminal\demoscene\effects\DoomFireEffect.class
 fastterminal\UI$1.class
 fastterminal\demoscene\effects\CubeEffect.class
+fastterminal\Benchmark.class
 fastterminal\demoscene\effects\AttractorEffect.class

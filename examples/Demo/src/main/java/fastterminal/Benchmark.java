@@ -3,10 +3,10 @@ package fastterminal;
 import fastterminal.ui.Panel;
 
 /**
- * Dedicated high-performance telemetry and diff-rendering benchmark demo for FastTerminal.
+ * Dedicated high-performance telemetry and diff-rendering benchmark for FastTerminal.
  * Showcases the real-time byte savings and frame rendering times under different rendering modes.
  */
-public class BenchmarkDemo {
+public class Benchmark {
 
     public static void main(String[] args) {
         System.out.println("Initializing FastTerminal Real-Time Composition Benchmark...");
