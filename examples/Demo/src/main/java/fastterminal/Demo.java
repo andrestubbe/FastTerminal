@@ -27,6 +27,7 @@ public class Demo {
     private static volatile int activeEffectIndex = 0;
     private static volatile long lastSwitchTime = System.currentTimeMillis();
     private static volatile boolean effectChanged = false;
+    private static volatile long cycleDurationMs = 60_000;
 
     /**
      * @brief Main program entry point.
@@ -99,6 +100,10 @@ public class Demo {
                     activeEffectIndex = (activeEffectIndex + 1) % effects.length;
                     lastSwitchTime = System.currentTimeMillis();
                     effectChanged = true;
+                } else if (vKey == 0x26) { // VK_UP (Up arrow) - Increase switch cycle by 5 seconds
+                    cycleDurationMs += 5000;
+                } else if (vKey == 0x28) { // VK_DOWN (Down arrow) - Decrease switch cycle by 5 seconds (min 5s)
+                    cycleDurationMs = Math.max(5000, cycleDurationMs - 5000);
                 }
             }
         });
@@ -127,9 +132,9 @@ public class Demo {
                 }
             }
 
-            // 2. Select current effect and check 60s auto-cycle or keystroke skip
+            // 2. Select current effect and check auto-cycle or keystroke skip
             long now = System.currentTimeMillis();
-            if (now - lastSwitchTime >= 60_000 || effectChanged) {
+            if (now - lastSwitchTime >= cycleDurationMs || effectChanged) {
                 if (!effectChanged) {
                     activeEffectIndex = (activeEffectIndex + 1) % effects.length;
                     lastSwitchTime = now;
@@ -152,12 +157,13 @@ public class Demo {
             activeEffect.render(canvas);
 
             // 4. Overlap high-fidelity translucent status overlays in the dead vertical center
-            double timeRemaining = 60.0 - (now - lastSwitchTime) / 1000.0;
+            double cycleSecs = cycleDurationMs / 1000.0;
+            double timeRemaining = cycleSecs - (now - lastSwitchTime) / 1000.0;
             if (timeRemaining < 0) timeRemaining = 0;
 
             String line1 = " [ FASTTERMINAL TRUE-COLOR ] ";
             String line2 = String.format("  %s  ", stripEmojis(activeEffect.getName()));
-            String line3 = String.format(" %.1f FPS - %.1fs ", realFps, timeRemaining);
+            String line3 = String.format(" %.1f FPS - %.1fs / %.0fs cycle (▲▼ adjust) ", realFps, timeRemaining, cycleSecs);
 
             int centerY = rows / 2 - 1;
 
