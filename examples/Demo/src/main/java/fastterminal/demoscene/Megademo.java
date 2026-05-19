@@ -10,6 +10,8 @@ import fastterminal.demoscene.effects.MatrixRainEffect;
 import fastterminal.demoscene.effects.WarpStarfieldEffect;
 import fastterminal.demoscene.effects.CheckerboardEffect;
 import fastterminal.demoscene.effects.MetaballsEffect;
+import fastterminal.demoscene.effects.TunnelEffect;
+import fastterminal.demoscene.effects.LissajousEffect;
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
 
@@ -62,7 +64,9 @@ public class Megademo {
             new MatrixRainEffect(),
             new WarpStarfieldEffect(),
             new CheckerboardEffect(),
-            new MetaballsEffect()
+            new MetaballsEffect(),
+            new TunnelEffect(),
+            new LissajousEffect()
         };
 
         // Initialize all effects
