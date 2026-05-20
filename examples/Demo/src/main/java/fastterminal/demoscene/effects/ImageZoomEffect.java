@@ -143,6 +143,38 @@ public class ImageZoomEffect implements DemosceneEffect {
         return (r << 16) | (g << 8) | b;
     }
 
+    private int sampleArea(BufferedImage img, double rx, double ry, double areaW, double areaH) {
+        if (areaW <= 1.0 && areaH <= 1.0) {
+            return sampleBilinear(img, rx, ry);
+        }
+
+        int imgW = img.getWidth();
+        int imgH = img.getHeight();
+
+        int x0 = Math.max(0, (int) Math.floor(rx - areaW / 2.0));
+        int y0 = Math.max(0, (int) Math.floor(ry - areaH / 2.0));
+        int x1 = Math.min(imgW - 1, (int) Math.ceil(rx + areaW / 2.0));
+        int y1 = Math.min(imgH - 1, (int) Math.ceil(ry + areaH / 2.0));
+
+        if (x1 < x0 || y1 < y0) return sampleBilinear(img, rx, ry);
+
+        long rSum = 0, gSum = 0, bSum = 0;
+        int count = 0;
+
+        for (int y = y0; y <= y1; y++) {
+            for (int x = x0; x <= x1; x++) {
+                int c = img.getRGB(x, y);
+                rSum += (c >> 16) & 0xFF;
+                gSum += (c >> 8) & 0xFF;
+                bSum += c & 0xFF;
+                count++;
+            }
+        }
+
+        if (count == 0) return 0;
+        return ((int)(rSum / count) << 16) | ((int)(gSum / count) << 8) | (int)(bSum / count);
+    }
+
     /**
      * @brief Projects, bilinear maps, cross-fades, and flushes subpixels to double vertical resolution.
      * 
@@ -223,14 +255,18 @@ public class ImageZoomEffect implements DemosceneEffect {
                 rxBot = Math.max(0, Math.min(imgW - 1.001, rxBot));
                 ryBot = Math.max(0, Math.min(imgH - 1.001, ryBot));
 
-                int colorTopCurr = sampleBilinear(imageCurr, rxTop, ryTop);
-                int colorBotCurr = sampleBilinear(imageCurr, rxBot, ryBot);
+                // Size of one cell's footprint in the source image
+                double areaW = baseScaleX / zoom;
+                double areaH = baseScaleY / zoom;
+
+                int colorTopCurr = sampleArea(imageCurr, rxTop, ryTop, areaW, areaH);
+                int colorBotCurr = sampleArea(imageCurr, rxBot, ryBot, areaW, areaH);
 
                 int colorTop, colorBot;
 
                 if (fadeAmount < 1.0) {
-                    int colorTopPrev = sampleBilinear(imagePrev, rxTop, ryTop);
-                    int colorBotPrev = sampleBilinear(imagePrev, rxBot, ryBot);
+                    int colorTopPrev = sampleArea(imagePrev, rxTop, ryTop, areaW, areaH);
+                    int colorBotPrev = sampleArea(imagePrev, rxBot, ryBot, areaW, areaH);
 
                     int rCurrT = (colorTopCurr >> 16) & 0xFF, gCurrT = (colorTopCurr >> 8) & 0xFF, bCurrT = colorTopCurr & 0xFF;
                     int rPrevT = (colorTopPrev >> 16) & 0xFF, gPrevT = (colorTopPrev >> 8) & 0xFF, bPrevT = colorTopPrev & 0xFF;
