@@ -36,11 +36,6 @@ public class Demo {
     /** 0.0 = showing only prevEffect, 1.0 = fully on activeEffect. */
     private static volatile double fadeProgress = 1.0;
 
-    /**
-     * Per-cell random threshold in [0,1]. A cell flips from Scene A to Scene B
-     * when fadeProgress exceeds its threshold. Regenerated on each new fade.
-     */
-    private static float[] dissolveMap = new float[0];
     /** True when both effects use half-block rendering — enables smooth color-lerp. */
     private static boolean useSmoothFade = true;
 
@@ -168,11 +163,7 @@ public class Demo {
                              && effects[activeEffectIndex].usesHalfBlocks();
 
                 if (!useSmoothFade) {
-                    // Noise dissolve: generate a fresh per-cell random threshold map
-                    int cells = cols * rows;
-                    if (dissolveMap.length != cells) dissolveMap = new float[cells];
-                    java.util.Random rng = new java.util.Random();
-                    for (int i = 0; i < cells; i++) dissolveMap[i] = rng.nextFloat();
+                    // We'll use fade-through-black for this transition.
                 }
 
                 canvas.clear();
@@ -226,15 +217,28 @@ public class Demo {
                         if (ease >= 0.5) cpA[i] = cpB[i];
                     }
                 } else {
-                    // One or both effects use glyphs: noise dissolve
-                    float fp = (float) fadeProgress;
-                    int nm = Math.min(n, dissolveMap.length);
-                    for (int i = 0; i < nm; i++) {
-                        if (dissolveMap[i] < fp) {
-                            fgA[i] = fgB[i];
-                            bgA[i] = bgB[i];
-                            cpA[i] = cpB[i];
-                        }
+                    // One or both effects use glyphs: fade through black
+                    double t = fadeProgress;
+                    double brightness;
+                    boolean showPrev = (t < 0.5);
+                    if (showPrev) {
+                        double p = t * 2.0;                          // 0 -> 1
+                        double ease = p * p;                         // ease-in
+                        brightness = 1.0 - ease;
+                    } else {
+                        double p = (t - 0.5) * 2.0;                  // 0 -> 1
+                        double ease = 1.0 - (1.0 - p) * (1.0 - p);   // ease-out
+                        brightness = ease;
+                    }
+
+                    for (int i = 0; i < n; i++) {
+                        int f = showPrev ? fgA[i] : fgB[i];
+                        int b = showPrev ? bgA[i] : bgB[i];
+                        int cp = showPrev ? cpA[i] : cpB[i];
+                        
+                        fgA[i] = scaleColor(f, brightness);
+                        bgA[i] = scaleColor(b, brightness);
+                        cpA[i] = cp;
                     }
                 }
             }
