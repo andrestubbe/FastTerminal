@@ -72,7 +72,8 @@ public class Demo {
         } catch (Throwable ignored) {}
 
         FastTerminalRenderer renderer = new FastTerminalRenderer(cols, rows);
-        FastTerminalScene canvas = new FastTerminalScene(0, 0, cols, rows);
+        FastTerminalScene canvas  = new FastTerminalScene(0, 0, cols, rows);
+        FastTerminalScene canvasB = new FastTerminalScene(0, 0, cols, rows); // incoming scene offscreen buffer
         renderer.addScene(canvas);
 
         // Register effects in cyclical array
@@ -133,6 +134,7 @@ public class Demo {
                 cols = size[0];
                 rows = size[1];
                 canvas.resize(cols, rows);
+                canvasB.resize(cols, rows);
 
                 // Re-initialize all effects to support new aspect bounds!
                 for (DemosceneEffect effect : effects) {
@@ -170,49 +172,42 @@ public class Demo {
                 fadeProgress = Math.min(1.0, fadeProgress + deltaTime / FADE_DURATION_S);
             }
 
-            // 3. Render and apply fade-through-black transition
+            // 3. Render — true crossfade: B fades in over A, then A is dropped
             if (fadeProgress >= 1.0 || prevEffectIndex == activeEffectIndex) {
-                // No fade active — direct single render
+                // No fade active — single render
                 activeEffect.update(time, deltaTime);
                 activeEffect.render(canvas);
             } else {
-                // Fade-through-black:
-                //   Phase 1 (t 0.0 → 0.5): outgoing scene dims to black
-                //   Phase 2 (t 0.5 → 1.0): incoming scene brightens from black
-                // Only ONE effect renders per frame. The black midpoint hides the
-                // character-content switch, so it works for any pair of effects.
-                double t = fadeProgress; // 0 → 1
+                // Smoothstep blend factor (0 = fully A, 1 = fully B)
+                double t = fadeProgress;
+                double ease = t * t * (3.0 - 2.0 * t);
 
-                // Smooth ease-in / ease-out for each phase independently
-                double brightness;
-                DemosceneEffect toRender;
-                if (t < 0.5) {
-                    // Dim outgoing: brightness 1 → 0
-                    double p = t * 2.0;                          // 0 → 1
-                    double ease = p * p;                         // ease-in (accelerate into black)
-                    brightness = 1.0 - ease;
-                    toRender = prevEffect;
-                } else {
-                    // Brighten incoming: brightness 0 → 1
-                    double p = (t - 0.5) * 2.0;                  // 0 → 1
-                    double ease = 1.0 - (1.0 - p) * (1.0 - p);  // ease-out (decelerate from black)
-                    brightness = ease;
-                    toRender = activeEffect;
-                }
+                // Render outgoing scene (A) into main canvas
+                prevEffect.update(time, deltaTime);
+                prevEffect.render(canvas);
 
-                // Always keep the active effect updated so it isn't frozen on entry
+                // Render incoming scene (B) into offscreen buffer
                 activeEffect.update(time, deltaTime);
-                if (toRender == prevEffect) prevEffect.update(time, deltaTime);
+                activeEffect.render(canvasB);
 
-                toRender.render(canvas);
+                // Blend B over A in-place directly on canvas's buffer arrays
+                int[] fgA = canvas.getFgBuffer();
+                int[] bgA = canvas.getBgBuffer();
+                int[] cpA = canvas.getCodepointBuffer();
+                int[] fgB = canvasB.getFgBuffer();
+                int[] bgB = canvasB.getBgBuffer();
+                int[] cpB = canvasB.getCodepointBuffer();
 
-                // Multiply every fg and bg color channel in-place toward black
-                int[] fg = canvas.getFgBuffer();
-                int[] bg = canvas.getBgBuffer();
                 int n = cols * rows;
                 for (int i = 0; i < n; i++) {
-                    fg[i] = scaleColor(fg[i], brightness);
-                    bg[i] = scaleColor(bg[i], brightness);
+                    int fa = fgA[i] < 0 ? 0 : fgA[i];
+                    int fb = fgB[i] < 0 ? 0 : fgB[i];
+                    int ba = bgA[i] < 0 ? 0 : bgA[i];
+                    int bb = bgB[i] < 0 ? 0 : bgB[i];
+                    fgA[i] = lerpColor(fa, fb, ease);
+                    bgA[i] = lerpColor(ba, bb, ease);
+                    // Switch codepoints at midpoint where blend is most hidden
+                    if (ease >= 0.5) cpA[i] = cpB[i];
                 }
             }
 
