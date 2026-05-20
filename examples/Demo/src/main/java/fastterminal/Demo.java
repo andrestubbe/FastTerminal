@@ -223,7 +223,7 @@ public class Demo {
 
             String line1 = " [ FASTTERMINAL TRUE-COLOR ] ";
             String line2 = String.format("  %s  ", stripEmojis(activeEffect.getName()));
-            String line3 = String.format(" %.1f FPS - %.1fs / %.0fs cycle (▲▼ adjust) ", realFps, timeRemaining, cycleSecs);
+            String line3 = String.format(" %.1f FPS - %.1fs / %.0fs ", realFps, timeRemaining, cycleSecs);
 
             int centerY = rows / 2 - 1;
 
