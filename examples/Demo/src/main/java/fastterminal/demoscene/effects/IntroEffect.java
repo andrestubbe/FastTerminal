@@ -34,7 +34,7 @@ public class IntroEffect implements DemosceneEffect {
      */
     @Override
     public void update(double time, double deltaTime) {
-        phase = time * 18.0;
+        phase = time * 9.0;
     }
 
     /**
