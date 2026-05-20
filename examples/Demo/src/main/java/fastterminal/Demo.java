@@ -11,6 +11,7 @@ import fastterminal.demoscene.effects.DoomFireEffect;
 import fastterminal.demoscene.effects.CheckerboardEffect;
 import fastterminal.demoscene.effects.CubeEffect;
 import fastterminal.demoscene.effects.AttractorEffect;
+import fastterminal.demoscene.effects.MatrixZoomEffect;
 
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
@@ -76,7 +77,8 @@ public class Demo {
             new DoomFireEffect(),
             new CheckerboardEffect(),
             new CubeEffect(),
-            new AttractorEffect()
+            new AttractorEffect(),
+            new MatrixZoomEffect()
         };
 
         // Initialize all effects

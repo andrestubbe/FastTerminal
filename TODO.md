@@ -5,9 +5,9 @@ Hier ist die trockene, tabellarische Übersicht — ohne Deko, ohne Ausschweifen
 | Bereich | Feature / Meilenstein | Status |
 | :--- | :--- | :--- |
 | **Rendering** | Double-Buffering, Diff-Rendering (absolute cursor jumps) | **Fertig** |
-| **Rendering** | Dirty-Rectangles, Partial Flush | Geplant |
+| **Rendering** | Dirty-Rectangles, Partial Flush | **Fertig** |
 | **Color** | 24-bit Gradients (linear, vertical, diagonal) | **Fertig** |
-| **Color** | Paletten, Themes, Alpha-Compositing | Geplant |
+| **Color** | Paletten, Themes, Alpha-Compositing | **Fertig** |
 | **System** | Native Win32 JNI Resize-Events & swapchain `resize()` | **Fertig** |
 | **System** | Raw-Mode-Manager, Cross-Platform Backend | Geplant |
 | **Input** | Maus-Events, Key-Events, Modifier-Keys, Drag-Tracking | Geplant |
