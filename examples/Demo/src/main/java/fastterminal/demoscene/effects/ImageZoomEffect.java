@@ -255,9 +255,9 @@ public class ImageZoomEffect implements DemosceneEffect {
                 rxBot = Math.max(0, Math.min(imgW - 1.001, rxBot));
                 ryBot = Math.max(0, Math.min(imgH - 1.001, ryBot));
 
-                // Size of one cell's footprint in the source image
-                double areaW = baseScaleX / zoom;
-                double areaH = baseScaleY / zoom;
+                // Size of one cell's footprint in the source image (halved to reduce blur strength)
+                double areaW = (baseScaleX / zoom) * 0.5;
+                double areaH = (baseScaleY / zoom) * 0.5;
 
                 int colorTopCurr = sampleArea(imageCurr, rxTop, ryTop, areaW, areaH);
                 int colorBotCurr = sampleArea(imageCurr, rxBot, ryBot, areaW, areaH);
