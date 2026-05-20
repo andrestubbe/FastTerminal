@@ -26,6 +26,14 @@ public interface DemosceneEffect {
     void render(FastTerminalScene canvas);
     
     /**
+     * Returns true if this effect renders using '▄' half-block pixel characters.
+     * Effects that return true can use smooth color-lerp crossfades between each other.
+     * Effects that return false (text/glyph-based) should use a noise dissolve instead.
+     * Default is true since most effects are pixel-based.
+     */
+    default boolean usesHalfBlocks() { return true; }
+
+    /**
      * Returns the human-readable premium title of this demoscene effect.
      */
     String getName();

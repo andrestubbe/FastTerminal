@@ -37,6 +37,14 @@ public class Demo {
     private static volatile double fadeProgress = 1.0;
 
     /**
+     * Per-cell random threshold in [0,1]. A cell flips from Scene A to Scene B
+     * when fadeProgress exceeds its threshold. Regenerated on each new fade.
+     */
+    private static float[] dissolveMap = new float[0];
+    /** True when both effects use half-block rendering — enables smooth color-lerp. */
+    private static boolean useSmoothFade = true;
+
+    /**
      * @brief Main program entry point.
      * 
      * Configures alternative screen buffer, enables hardware keyboard query hook,
@@ -153,7 +161,20 @@ public class Demo {
                     prevEffectIndex = activeEffectIndex; // arrow-key jump: fade from current
                 }
                 effectChanged = false;
-                fadeProgress  = 0.0; // kick off a new crossfade
+                fadeProgress  = 0.0;
+
+                // Decide transition style based on both effects' character types
+                useSmoothFade = effects[prevEffectIndex].usesHalfBlocks()
+                             && effects[activeEffectIndex].usesHalfBlocks();
+
+                if (!useSmoothFade) {
+                    // Noise dissolve: generate a fresh per-cell random threshold map
+                    int cells = cols * rows;
+                    if (dissolveMap.length != cells) dissolveMap = new float[cells];
+                    java.util.Random rng = new java.util.Random();
+                    for (int i = 0; i < cells; i++) dissolveMap[i] = rng.nextFloat();
+                }
+
                 canvas.clear();
                 renderer.clearPrev();
             }
@@ -172,42 +193,49 @@ public class Demo {
                 fadeProgress = Math.min(1.0, fadeProgress + deltaTime / FADE_DURATION_S);
             }
 
-            // 3. Render — true crossfade: B fades in over A, then A is dropped
+            // 3. Render — smart transition: lerp for block+block, noise dissolve otherwise
             if (fadeProgress >= 1.0 || prevEffectIndex == activeEffectIndex) {
                 // No fade active — single render
                 activeEffect.update(time, deltaTime);
                 activeEffect.render(canvas);
             } else {
-                // Smoothstep blend factor (0 = fully A, 1 = fully B)
-                double t = fadeProgress;
-                double ease = t * t * (3.0 - 2.0 * t);
-
-                // Render outgoing scene (A) into main canvas
+                // Always render both scenes
                 prevEffect.update(time, deltaTime);
                 prevEffect.render(canvas);
-
-                // Render incoming scene (B) into offscreen buffer
                 activeEffect.update(time, deltaTime);
                 activeEffect.render(canvasB);
 
-                // Blend B over A in-place directly on canvas's buffer arrays
                 int[] fgA = canvas.getFgBuffer();
                 int[] bgA = canvas.getBgBuffer();
                 int[] cpA = canvas.getCodepointBuffer();
                 int[] fgB = canvasB.getFgBuffer();
                 int[] bgB = canvasB.getBgBuffer();
                 int[] cpB = canvasB.getCodepointBuffer();
-
                 int n = cols * rows;
-                for (int i = 0; i < n; i++) {
-                    int fa = fgA[i] < 0 ? 0 : fgA[i];
-                    int fb = fgB[i] < 0 ? 0 : fgB[i];
-                    int ba = bgA[i] < 0 ? 0 : bgA[i];
-                    int bb = bgB[i] < 0 ? 0 : bgB[i];
-                    fgA[i] = lerpColor(fa, fb, ease);
-                    bgA[i] = lerpColor(ba, bb, ease);
-                    // Switch codepoints at midpoint where blend is most hidden
-                    if (ease >= 0.5) cpA[i] = cpB[i];
+
+                if (useSmoothFade) {
+                    // Both effects use ▄: smooth per-pixel color lerp (no interlacing)
+                    double ease = fadeProgress * fadeProgress * (3.0 - 2.0 * fadeProgress);
+                    for (int i = 0; i < n; i++) {
+                        int fa = fgA[i] < 0 ? 0 : fgA[i];
+                        int fb = fgB[i] < 0 ? 0 : fgB[i];
+                        int ba = bgA[i] < 0 ? 0 : bgA[i];
+                        int bb = bgB[i] < 0 ? 0 : bgB[i];
+                        fgA[i] = lerpColor(fa, fb, ease);
+                        bgA[i] = lerpColor(ba, bb, ease);
+                        if (ease >= 0.5) cpA[i] = cpB[i];
+                    }
+                } else {
+                    // One or both effects use glyphs: noise dissolve
+                    float fp = (float) fadeProgress;
+                    int nm = Math.min(n, dissolveMap.length);
+                    for (int i = 0; i < nm; i++) {
+                        if (dissolveMap[i] < fp) {
+                            fgA[i] = fgB[i];
+                            bgA[i] = bgB[i];
+                            cpA[i] = cpB[i];
+                        }
+                    }
                 }
             }
 

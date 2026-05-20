@@ -68,10 +68,14 @@ public class IntroEffect implements DemosceneEffect {
         }
     }
 
+    @Override
+    public boolean usesHalfBlocks() { return false; }
+
     /**
      * @brief Returns the visual user-friendly name of the effect.
      * @return String effect name label.
      */
+
     @Override
     public String getName() {
         return "OLED Color Wave";

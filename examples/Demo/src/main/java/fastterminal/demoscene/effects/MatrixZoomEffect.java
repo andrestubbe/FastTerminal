@@ -259,6 +259,9 @@ public class MatrixZoomEffect implements DemosceneEffect {
     }
 
     @Override
+    public boolean usesHalfBlocks() { return false; }
+
+    @Override
     public String getName() {
         return "Matrix Cinematic Symbol Zoom";
     }

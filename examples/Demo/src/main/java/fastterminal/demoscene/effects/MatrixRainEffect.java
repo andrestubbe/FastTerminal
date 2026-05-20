@@ -111,6 +111,9 @@ public class MatrixRainEffect implements DemosceneEffect {
     }
 
     @Override
+    public boolean usesHalfBlocks() { return false; }
+
+    @Override
     public String getName() {
         return "Matrix Rain";
     }
