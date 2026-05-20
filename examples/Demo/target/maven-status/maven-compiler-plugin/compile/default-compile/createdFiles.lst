@@ -8,6 +8,8 @@ fastterminal\demoscene\effects\ImageZoomEffect.class
 fastterminal\Demo.class
 fastterminal\demoscene\effects\DoomFireEffect.class
 fastterminal\UI$1.class
+fastterminal\demoscene\effects\MatrixZoomEffect.class
+fastterminal\demoscene\effects\MatrixRainEffect.class
 fastterminal\demoscene\effects\CubeEffect.class
 fastterminal\Benchmark.class
 fastterminal\demoscene\effects\AttractorEffect.class

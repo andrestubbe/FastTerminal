@@ -37,6 +37,19 @@ JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getTerminalSize(JNIEn
 JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode(JNIEnv* env, jclass clazz, jboolean enableRaw);
 
 /**
+ * @brief Configures high-precision Virtual Terminal raw modes for standard input/output.
+ * 
+ * Clears ENABLE_LINE_INPUT, ENABLE_ECHO_INPUT, and ENABLE_PROCESSED_INPUT,
+ * and enables ENABLE_VIRTUAL_TERMINAL_INPUT (0x0200) to allow direct transmission
+ * of SGR mouse escape sequences character-by-character.
+ * 
+ * @param env Pointer to the JNI environment.
+ * @param clazz The calling Java class reference.
+ * @param enableRaw jboolean flag to enable (true) or restore (false) raw mode.
+ */
+JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setAnsiRawMode(JNIEnv* env, jclass clazz, jboolean enableRaw);
+
+/**
  * @brief Retrieves hardware console window dimensions, font sizes, and layout.
  * 
  * Returns an array containing the screen rect bounding dimensions, client area offsets,
@@ -70,6 +83,15 @@ JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isTerminalFocused(JNIE
  * @return jboolean JNI_TRUE if mouse is hovering over the terminal, JNI_FALSE otherwise.
  */
 JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isMouseOverTerminal(JNIEnv* env, jclass clazz);
+
+/**
+ * @brief Toggles system mouse pointer cursor visibility globally.
+ * 
+ * @param env Pointer to the JNI environment.
+ * @param clazz The calling Java class reference.
+ * @param visible jboolean true to show, false to hide.
+ */
+JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setSystemCursorVisible(JNIEnv* env, jclass clazz, jboolean visible);
 
 #ifdef __cplusplus
 }

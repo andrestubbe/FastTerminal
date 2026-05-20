@@ -11,6 +11,11 @@ public class Button extends Component {
     private int normalBg = 0x27272A; // Charcoal zinc
     private int hoverBg = 0xEAB308;  // Brilliant Gold
     private int activeBg = 0xCA8A04; // Dark gold
+    
+    private int normalFg = 0xFFFFFF; // White normal text
+    private int hoverFg = 0x000000;  // Black hover text
+    private int activeFg = 0x000000; // Black active text
+    
     private boolean isPressedState = false;
 
     public Button(int x, int y, int width, int height, String text, Runnable action) {
@@ -24,13 +29,15 @@ public class Button extends Component {
         if (!visible) return;
 
         int currentBg = normalBg;
+        int currentFg = normalFg;
+        
         if (isPressedState) {
             currentBg = activeBg;
+            currentFg = activeFg;
         } else if (isHovered) {
             currentBg = hoverBg;
+            currentFg = hoverFg;
         }
-
-        int currentFg = isHovered ? 0x000000 : 0xFFFFFF; // Black text on gold hover, white otherwise
 
         // Render solid background
         for (int r = y; r < y + height; r++) {
@@ -71,10 +78,18 @@ public class Button extends Component {
 
     public String getText() { return text; }
     public void setText(String text) { this.text = text; }
+    
     public int getNormalBg() { return normalBg; }
     public void setNormalBg(int normalBg) { this.normalBg = normalBg; }
     public int getHoverBg() { return hoverBg; }
     public void setHoverBg(int hoverBg) { this.hoverBg = hoverBg; }
     public int getActiveBg() { return activeBg; }
     public void setActiveBg(int activeBg) { this.activeBg = activeBg; }
+
+    public int getNormalFg() { return normalFg; }
+    public void setNormalFg(int normalFg) { this.normalFg = normalFg; }
+    public int getHoverFg() { return hoverFg; }
+    public void setHoverFg(int hoverFg) { this.hoverFg = hoverFg; }
+    public int getActiveFg() { return activeFg; }
+    public void setActiveFg(int activeFg) { this.activeFg = activeFg; }
 }

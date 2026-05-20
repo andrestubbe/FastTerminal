@@ -36,6 +36,7 @@ public final class FastTerminalRenderer {
     private boolean forceFullRedraw = true;
     private boolean diffRenderingEnabled = true;
     private int lastFlushedBytes = 0;
+    private boolean dirtyRectanglesEnabled = false;
 
     /**
      * @brief Allocates all double-buffered structures in memory.
@@ -86,6 +87,86 @@ public final class FastTerminalRenderer {
         StringBuilder sb = new StringBuilder(width * height * 16);
         int currentFg = -2;
         int currentBg = -2;
+
+        if (this.dirtyRectanglesEnabled && !this.forceFullRedraw && this.diffRenderingEnabled) {
+            int minX = this.width;
+            int maxX = -1;
+            int minY = this.height;
+            int maxY = -1;
+            
+            for (int i = 0; i < compositeCodepoints.length; i++) {
+                if (compositeCodepoints[i] != prevCodepoints[i] || compositeFg[i] != prevFg[i] || compositeBg[i] != prevBg[i]) {
+                    int y = i / this.width;
+                    int x = i % this.width;
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+            
+            if (maxX != -1) {
+                for (int row = minY; row <= maxY; row++) {
+                    sb.append("\033[").append(row + 1).append(";").append(minX + 1).append("H");
+                    currentFg = -2;
+                    currentBg = -2;
+                    
+                    for (int col = minX; col <= maxX; col++) {
+                        int i = row * this.width + col;
+                        int cp = compositeCodepoints[i];
+                        int fg = compositeFg[i];
+                        int bg = compositeBg[i];
+                        
+                        if (cp == -99) continue;
+                        
+                        if (fg != currentFg) {
+                            if (fg == -1) sb.append(FastANSI.FG_DEFAULT);
+                            else {
+                                int r = (fg >> 16) & 0xFF, g = (fg >> 8) & 0xFF, b = fg & 0xFF;
+                                sb.append(RGB_FG_PREFIX).append(r).append(";").append(g).append(";").append(b).append(RGB_SUFFIX);
+                            }
+                            currentFg = fg;
+                        }
+                        
+                        if (bg != currentBg) {
+                            if (bg == -1) sb.append(FastANSI.BG_DEFAULT);
+                            else {
+                                int r = (bg >> 16) & 0xFF, g = (bg >> 8) & 0xFF, b = bg & 0xFF;
+                                sb.append(RGB_BG_PREFIX).append(r).append(";").append(g).append(";").append(b).append(RGB_SUFFIX);
+                            }
+                            currentBg = bg;
+                        }
+                        
+                        if (Character.isValidCodePoint(cp)) sb.appendCodePoint(cp);
+                        else sb.append(' ');
+                    }
+                }
+                
+                sb.append(FastANSI.RESET);
+                
+                // Sync prev buffers for the region
+                for (int row = minY; row <= maxY; row++) {
+                    int offset = row * this.width + minX;
+                    int length = maxX - minX + 1;
+                    System.arraycopy(this.compositeCodepoints, offset, this.prevCodepoints, offset, length);
+                    System.arraycopy(this.compositeFg, offset, this.prevFg, offset, length);
+                    System.arraycopy(this.compositeBg, offset, this.prevBg, offset, length);
+                }
+                
+                if (sb.length() > 0) {
+                    byte[] bytes = sb.toString().getBytes(StandardCharsets.UTF_8);
+                    this.lastFlushedBytes = bytes.length;
+                    System.out.write(bytes, 0, bytes.length);
+                    System.out.flush();
+                } else {
+                    this.lastFlushedBytes = 0;
+                }
+                return;
+            } else {
+                this.lastFlushedBytes = 0;
+                return;
+            }
+        }
 
         if (!this.diffRenderingEnabled || this.forceFullRedraw) {
             // Full Redraw mode
@@ -173,6 +254,10 @@ public final class FastTerminalRenderer {
 
                 // Wide character continuation cell check
                 if (cp == -99) {
+                    expectedPos = i + 1;
+                    if (expectedPos % this.width == 0) {
+                        expectedPos = -1;
+                    }
                     continue;
                 }
 
@@ -186,6 +271,10 @@ public final class FastTerminalRenderer {
                             int gCp = compositeCodepoints[g];
                             int gFg = compositeFg[g];
                             int gBg = compositeBg[g];
+
+                            if (gCp == -99) {
+                                continue;
+                            }
 
                             if (gFg != currentFg) {
                                 if (gFg == -1) sb.append(FastANSI.FG_DEFAULT);
@@ -406,6 +495,25 @@ public final class FastTerminalRenderer {
         this.diffRenderingEnabled = enabled;
         if (!enabled) {
             this.forceFullRedraw = true;
+        }
+    }
+
+    /**
+     * @brief Determines if optional Dirty-Rectangles rendering is enabled.
+     * @return True if enabled, False otherwise.
+     */
+    public boolean isDirtyRectanglesEnabled() {
+        return this.dirtyRectanglesEnabled;
+    }
+
+    /**
+     * @brief Configures if optional Dirty-Rectangles rendering is active.
+     * @param enabled True to optimize with dirty region scans, False to use cell-level diff updates.
+     */
+    public void setDirtyRectanglesEnabled(boolean enabled) {
+        this.dirtyRectanglesEnabled = enabled;
+        if (enabled) {
+            this.clearPrev();
         }
     }
 

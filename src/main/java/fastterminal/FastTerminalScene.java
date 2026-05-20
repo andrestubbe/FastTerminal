@@ -387,4 +387,142 @@ public class FastTerminalScene {
         this.bgBuffer = null;
         this.updater = null;
     }
+
+    /**
+     * @brief Writes a cell with alpha blending (Alpha-Compositing).
+     * 
+     * If the foreground or background alpha is less than 1.0, it is blended
+     * with the existing color in the scene buffers.
+     * 
+     * @param col Target column.
+     * @param row Target row.
+     * @param codepoint UTF-32 character value.
+     * @param fg Foreground color.
+     * @param bg Background color.
+     * @param fgAlpha Foreground alpha opacity (0.0 to 1.0).
+     * @param bgAlpha Background alpha opacity (0.0 to 1.0).
+     */
+    public void writeCellAlpha(int col, int row, int codepoint, int fg, int bg, double fgAlpha, double bgAlpha) {
+        if (col >= 0 && col < this.width && row >= 0 && row < this.height) {
+            int idx = row * this.width + col;
+            
+            // Blend foreground if needed
+            if (fgAlpha < 1.0) {
+                int oldFg = this.fgBuffer[idx];
+                if (oldFg == -1) oldFg = 0x000000;
+                fg = blendColor(oldFg, fg, fgAlpha);
+            }
+            
+            // Blend background if needed
+            if (bgAlpha < 1.0) {
+                int oldBg = this.bgBuffer[idx];
+                if (oldBg == -1) oldBg = 0x000000;
+                bg = blendColor(oldBg, bg, bgAlpha);
+            }
+            
+            this.codepointBuffer[idx] = codepoint;
+            this.fgBuffer[idx] = fg;
+            this.bgBuffer[idx] = bg;
+        }
+    }
+
+    /**
+     * @brief Writes a cell with packed 32-bit ARGB colors (Alpha-Compositing).
+     * 
+     * Colors are in the format 0xAARRGGBB. If the alpha byte AA is 0, it is treated
+     * as fully opaque unless it is explicitly 0x00000000 (fully transparent black).
+     * 
+     * @param col Target column.
+     * @param row Target row.
+     * @param codepoint UTF-32 character value.
+     * @param fgPacked Packed 32-bit ARGB foreground color.
+     * @param bgPacked Packed 32-bit ARGB background color.
+     */
+    public void writeCellARGB(int col, int row, int codepoint, int fgPacked, int bgPacked) {
+        if (col >= 0 && col < this.width && row >= 0 && row < this.height) {
+            int idx = row * this.width + col;
+            
+            // Extract alpha from fg
+            int fgAlphaByte = (fgPacked >>> 24) & 0xFF;
+            int fgColor = fgPacked & 0xFFFFFF;
+            if (fgAlphaByte == 0 && fgPacked != 0) {
+                fgAlphaByte = 255;
+            }
+            if (fgAlphaByte > 0) {
+                if (fgAlphaByte < 255) {
+                    int oldFg = this.fgBuffer[idx];
+                    if (oldFg == -1) oldFg = 0x000000;
+                    fgColor = blendColor(oldFg, fgColor, fgAlphaByte / 255.0);
+                }
+                this.fgBuffer[idx] = fgColor;
+            }
+            
+            // Extract alpha from bg
+            int bgAlphaByte = (bgPacked >>> 24) & 0xFF;
+            int bgColor = bgPacked & 0xFFFFFF;
+            if (bgAlphaByte == 0 && bgPacked != 0) {
+                bgAlphaByte = 255;
+            }
+            if (bgAlphaByte > 0) {
+                if (bgAlphaByte < 255) {
+                    int oldBg = this.bgBuffer[idx];
+                    if (oldBg == -1) oldBg = 0x000000;
+                    bgColor = blendColor(oldBg, bgColor, bgAlphaByte / 255.0);
+                }
+                this.bgBuffer[idx] = bgColor;
+            }
+            
+            if (codepoint != ' ' || fgAlphaByte > 0) {
+                this.codepointBuffer[idx] = codepoint;
+            }
+        }
+    }
+
+    /**
+     * @brief Writes a standard string sequentially to cells with alpha blending.
+     * 
+     * @param startCol Starting cell column.
+     * @param row Target row.
+     * @param text Raw source string.
+     * @param fg Foreground color.
+     * @param bg Background color.
+     * @param fgAlpha Foreground alpha.
+     * @param bgAlpha Background alpha.
+     */
+    public void writeStringAlpha(int startCol, int row, String text, int fg, int bg, double fgAlpha, double bgAlpha) {
+        if (row < 0 || row >= this.height) return;
+        int len = text.length();
+        int col = startCol;
+        for (int i = 0; i < len; ) {
+            if (col >= this.width) break;
+            int cp = text.codePointAt(i);
+            int width = fastemojis.FastEmojis.getWidth(cp);
+            
+            this.writeCellAlpha(col, row, cp, fg, bg, fgAlpha, bgAlpha);
+            if (width == 2 && col + 1 < this.width) {
+                this.writeCellAlpha(col + 1, row, -99, fg, bg, fgAlpha, bgAlpha);
+            }
+            
+            col += width;
+            i += Character.charCount(cp);
+        }
+    }
+
+    private int blendColor(int color1, int color2, double ratio) {
+        if (ratio <= 0.0) return color1;
+        if (ratio >= 1.0) return color2;
+        int r1 = (color1 >> 16) & 0xFF;
+        int g1 = (color1 >> 8) & 0xFF;
+        int b1 = color1 & 0xFF;
+
+        int r2 = (color2 >> 16) & 0xFF;
+        int g2 = (color2 >> 8) & 0xFF;
+        int b2 = color2 & 0xFF;
+
+        int r = (int) (r1 * (1.0 - ratio) + r2 * ratio);
+        int g = (int) (g1 * (1.0 - ratio) + g2 * ratio);
+        int b = (int) (b1 * (1.0 - ratio) + b2 * ratio);
+
+        return (r << 16) | (g << 8) | b;
+    }
 }

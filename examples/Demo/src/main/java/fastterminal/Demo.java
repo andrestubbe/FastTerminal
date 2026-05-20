@@ -26,9 +26,15 @@ import fastkeyboard.FastKeyboardImpl;
 public class Demo {
 
     private static volatile int activeEffectIndex = 0;
+    private static volatile int prevEffectIndex   = 0;
     private static volatile long lastSwitchTime = System.currentTimeMillis();
     private static volatile boolean effectChanged = false;
     private static volatile long cycleDurationMs = 60_000;
+
+    /** Duration of the crossfade between scenes, in seconds. */
+    private static final double FADE_DURATION_S = 5.0;
+    /** 0.0 = showing only prevEffect, 1.0 = fully on activeEffect. */
+    private static volatile double fadeProgress = 1.0;
 
     /**
      * @brief Main program entry point.
@@ -66,7 +72,9 @@ public class Demo {
         } catch (Throwable ignored) {}
 
         FastTerminalRenderer renderer = new FastTerminalRenderer(cols, rows);
-        FastTerminalScene canvas = new FastTerminalScene(0, 0, cols, rows);
+        FastTerminalScene canvas    = new FastTerminalScene(0, 0, cols, rows);
+        FastTerminalScene canvasA   = new FastTerminalScene(0, 0, cols, rows); // offscreen buffer A (prev)
+        FastTerminalScene canvasB   = new FastTerminalScene(0, 0, cols, rows); // offscreen buffer B (next)
         renderer.addScene(canvas);
 
         // Register effects in cyclical array
@@ -127,7 +135,9 @@ public class Demo {
                 cols = size[0];
                 rows = size[1];
                 canvas.resize(cols, rows);
-                
+                canvasA.resize(cols, rows);
+                canvasB.resize(cols, rows);
+
                 // Re-initialize all effects to support new aspect bounds!
                 for (DemosceneEffect effect : effects) {
                     effect.init(cols, rows);
@@ -138,10 +148,14 @@ public class Demo {
             long now = System.currentTimeMillis();
             if (now - lastSwitchTime >= cycleDurationMs || effectChanged) {
                 if (!effectChanged) {
+                    prevEffectIndex   = activeEffectIndex;
                     activeEffectIndex = (activeEffectIndex + 1) % effects.length;
-                    lastSwitchTime = now;
+                    lastSwitchTime    = now;
+                } else {
+                    prevEffectIndex = activeEffectIndex; // arrow-key jump: fade from current
                 }
                 effectChanged = false;
+                fadeProgress  = 0.0; // kick off a new crossfade
                 canvas.clear();
                 renderer.clearPrev();
             }
@@ -149,14 +163,66 @@ public class Demo {
             double time = (now - suiteStartTime) / 1000.0;
             double deltaTime = time - prevTime;
             if (deltaTime < 0.0) deltaTime = 0.0;
-            if (deltaTime > 0.1) deltaTime = 0.1; // Clamp delta to prevent huge jumps on console pause/resize
+            if (deltaTime > 0.1) deltaTime = 0.1;
             prevTime = time;
 
             DemosceneEffect activeEffect = effects[activeEffectIndex];
+            DemosceneEffect prevEffect   = effects[prevEffectIndex];
 
-            // 3. Update physics and render current scene
-            activeEffect.update(time, deltaTime);
-            activeEffect.render(canvas);
+            // Advance fade (0 → 1 over FADE_DURATION_S seconds)
+            if (fadeProgress < 1.0) {
+                fadeProgress = Math.min(1.0, fadeProgress + deltaTime / FADE_DURATION_S);
+            }
+
+            // 3. Render current scene (and previous if crossfading)
+            if (fadeProgress >= 1.0 || prevEffectIndex == activeEffectIndex) {
+                // Fully on current effect — single render, no blending
+                activeEffect.update(time, deltaTime);
+                activeEffect.render(canvas);
+            } else {
+                // Crossfade: render both effects into separate offscreen buffers,
+                // then blend them per-cell into the main canvas.
+                // Smooth ease-in-out curve for a cinematic feel.
+                double t = fadeProgress * fadeProgress * (3.0 - 2.0 * fadeProgress); // smoothstep
+
+                canvasA.clear();
+                canvasB.clear();
+
+                prevEffect.update(time, deltaTime);
+                prevEffect.render(canvasA);
+
+                activeEffect.update(time, deltaTime);
+                activeEffect.render(canvasB);
+
+                // Blend A → B into the main canvas
+                int[] cpA = canvasA.getCodepointBuffer();
+                int[] fgA = canvasA.getFgBuffer();
+                int[] bgA = canvasA.getBgBuffer();
+                int[] cpB = canvasB.getCodepointBuffer();
+                int[] fgB = canvasB.getFgBuffer();
+                int[] bgB = canvasB.getBgBuffer();
+
+                canvas.clear();
+                for (int i = 0; i < cols * rows; i++) {
+                    int cx = i % cols;
+                    int cy = i / cols;
+
+                    // Blend foreground channels
+                    int fA = fgA[i] < 0 ? 0 : fgA[i];
+                    int fB = fgB[i] < 0 ? 0 : fgB[i];
+                    int fgBlend = lerpColor(fA, fB, t);
+
+                    // Blend background channels
+                    int bA = bgA[i] < 0 ? 0 : bgA[i];
+                    int bB = bgB[i] < 0 ? 0 : bgB[i];
+                    int bgBlend = lerpColor(bA, bB, t);
+
+                    // Use the codepoint of whichever scene is more dominant
+                    int cp = (t < 0.5) ? cpA[i] : cpB[i];
+
+                    canvas.writeCell(cx, cy, cp, fgBlend, bgBlend);
+                }
+            }
 
             // 4. Overlap high-fidelity translucent status overlays in the dead vertical center
             double cycleSecs = cycleDurationMs / 1000.0;
@@ -216,5 +282,22 @@ public class Demo {
             }
         }
         return sb.toString().trim();
+    }
+
+    /**
+     * @brief Linearly interpolates two packed 24-bit RGB colors channel by channel.
+     *
+     * @param a Start color (packed 0xRRGGBB).
+     * @param b End color   (packed 0xRRGGBB).
+     * @param t Blend factor in [0, 1]: 0 = fully a, 1 = fully b.
+     * @return Blended packed RGB color.
+     */
+    private static int lerpColor(int a, int b, double t) {
+        int rA = (a >> 16) & 0xFF, gA = (a >> 8) & 0xFF, bA = a & 0xFF;
+        int rB = (b >> 16) & 0xFF, gB = (b >> 8) & 0xFF, bB = b & 0xFF;
+        int r = (int) (rA + (rB - rA) * t);
+        int g = (int) (gA + (gB - gA) * t);
+        int bl = (int) (bA + (bB - bA) * t);
+        return (r << 16) | (g << 8) | bl;
     }
 }

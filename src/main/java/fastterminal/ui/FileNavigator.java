@@ -71,14 +71,9 @@ public class FileNavigator extends Component {
         // 1. Background: NOT drawn here — Panel already drew its (possibly transparent) body.
         //    Only hovered rows and the path/footer bars get explicit backgrounds below.
 
-        // 2. Render Path Header bar
-        for (int c = x; c < x + width; c++) {
-            if (c >= 0 && c < canvas.getWidth() && y >= 0 && y < canvas.getHeight()) {
-                canvas.writeCell(c, y, ' ', pathBarFg, pathBarBg);
-            }
-        }
-        String pathText = "📂 " + truncatePath(currentDir.getAbsolutePath(), width - 7);
-        canvas.writeString(x + 2, y, pathText, pathBarFg, pathBarBg);
+        // 2. Render Path Header bar with transparent background (full width, no margins)
+        String pathText = "📂 " + truncatePath(currentDir.getAbsolutePath(), width - 3);
+        canvas.writeStringAlpha(x, y, pathText, pathBarFg, pathBarBg, 1.0, bgAlpha);
 
         int visibleHeight = height - 2; // Subtract header and footer rows
         if (visibleHeight <= 0) return;
@@ -107,15 +102,13 @@ public class FileNavigator extends Component {
             int rowBg = isHoveredRow ? selectionBg : bgColor;
             int rowFg = isHoveredRow ? selectionFg : fgColor;
 
-            // Clear row — hovered rows are fully opaque; non-hovered rows are transparent
+            // Clear row — hovered rows are fully opaque; non-hovered rows have NO background (fully transparent)
             for (int c = x; c < x + width; c++) {
                 if (c >= 0 && c < canvas.getWidth() && ry >= 0 && ry < canvas.getHeight()) {
                     if (isHoveredRow) {
                         canvas.writeCell(c, ry, ' ', rowFg, rowBg);
-                    } else {
-                        // Use alpha so the Panel's transparent body shows through
-                        canvas.writeCellAlpha(c, ry, ' ', rowFg, rowBg, 1.0, bgAlpha);
                     }
+                    // Non-hovered rows: don't write anything - let Panel's transparent body show through completely
                 }
             }
 
@@ -144,24 +137,27 @@ public class FileNavigator extends Component {
             int fileColor   = isHoveredRow ? selectionFg : fgColor;
             int metaColor   = isHoveredRow ? selectionFg : (isLightBg ? 0x71717A : 0xA1A1AA);
 
-            canvas.writeString(x + 1, ry, displayStr, item.isDirectory() ? folderColor : fileColor, rowBg);
+            // For non-hovered rows, use fully transparent background (alpha 0.0)
+            // For hovered rows, use opaque background (alpha 1.0)
+            double bgAlpha = isHoveredRow ? 1.0 : 0.0;
+            canvas.writeStringAlpha(x + 1, ry, displayStr, item.isDirectory() ? folderColor : fileColor, rowBg, 1.0, bgAlpha);
 
             // Right-aligned file size
             if (!sizeStr.isEmpty()) {
                 int sizeX = x + width - sizeStr.length() - 1;
                 if (sizeX > x + 10) {
-                    canvas.writeString(sizeX, ry, sizeStr, metaColor, rowBg);
+                    canvas.writeStringAlpha(sizeX, ry, sizeStr, metaColor, rowBg, 1.0, bgAlpha);
                 }
             }
         }
 
-        // 4. Render Footer info bar
-        String footerText = " Total: " + filesList.size() + " items | Hover to select";
+        // 4. Render Footer info bar with fully transparent background (only count, no hover info)
+        String footerText = " " + filesList.size() + " items ";
         if (footerText.length() > width) {
             footerText = footerText.substring(0, width);
         }
         int footerColor = isLightBg ? 0x71717A : 0xA1A1AA;
-        canvas.writeString(x + 1, y + height - 1, footerText, footerColor, bgColor);
+        canvas.writeStringAlpha(x + 1, y + height - 1, footerText, footerColor, bgColor, 1.0, 0.0);
     }
 
     @Override

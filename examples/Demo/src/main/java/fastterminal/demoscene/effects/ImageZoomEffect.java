@@ -152,79 +152,102 @@ public class ImageZoomEffect implements DemosceneEffect {
     public void render(FastTerminalScene canvas) {
         BufferedImage imageCurr = images[currentImageIndex];
         BufferedImage imagePrev = images[prevImageIndex];
-        
+
         int imgW = imageCurr.getWidth();
         int imgH = imageCurr.getHeight();
 
+        // ── Aspect-ratio correction ─────────────────────────────────────────────
+        // Terminal cells are NOT square. A typical monospaced cell is ~8 px wide
+        // and ~16 px tall, giving a cell aspect ratio of 0.5 (width/height).
+        // We use half-block '▄' so we get 2 vertical pixels per cell row, making
+        // the effective pixel grid: width × (2*height).
+        // The effective pixel-grid aspect is:  (width * cellAspect) / (2 * height)
+        // where cellAspect ≈ 0.5, so effectively width / (2 * 2 * height) ... no,
+        // let's be precise:
+        //   physicalW = width  * fontW   (pixels)
+        //   physicalH = height * fontH   (pixels), but half-block gives 2 rows/cell
+        //   => physicalH_effective = (2*height) * (fontH/2) = height * fontH
+        // So the effective screen aspect ratio is (width*fontW) / (height*fontH).
+        // With fontW=8, fontH=16 → cellAspect = 8/16 = 0.5.
+        final double CELL_ASPECT = 0.5; // fontW / fontH, typical for most terminals
+
+        // How many image pixels correspond to one terminal column / one half-row:
+        //   scaleX = imgW / (width  * CELL_ASPECT / imgAspect)  ... cover mode
+        //   scaleY = imgH / (2*height)
+        // For a "cover" fill (no black bars, image always fills screen):
+        double imgAspect  = (double) imgW / imgH;
+        double scrAspect  = (width * CELL_ASPECT) / (double) (2 * height); // effective screen aspect
+
+        // pixels-per-column and pixels-per-half-row at zoom=1:
+        double baseScaleX, baseScaleY;
+        if (imgAspect > scrAspect) {
+            // Image is wider than screen → match height, crop sides
+            baseScaleY = (double) imgH / (2 * height);
+            baseScaleX = baseScaleY / CELL_ASPECT;
+        } else {
+            // Image is taller (or equal) → match width, crop top/bottom
+            baseScaleX = (double) imgW / (width * CELL_ASPECT);
+            baseScaleY = baseScaleX * CELL_ASPECT;
+        }
+
         // 1. Compute dynamic camera zoom and circular pan path
-        double zoom = 1.0 + 3.0 * (Math.sin(time) + 1.0) / 2.0; // Zoom factor oscillates between 1.0x and 4.0x
+        double zoom = 1.0 + 3.0 * (Math.sin(time) + 1.0) / 2.0; // 1× … 4×
 
-        // Mathematically compute exact viewport bounds to prevent edge overshooting at any zoom level
-        double viewportHalfW = (imgW / 2.0) / zoom;
-        double viewportHalfH = (imgH / 2.0) / zoom;
+        // Effective image pixels visible in the viewport at this zoom level
+        double viewportHalfW = (width  * CELL_ASPECT * baseScaleX) / (2.0 * zoom); // half-width in img px
+        double viewportHalfH = (2.0 * height * baseScaleY)         / (2.0 * zoom); // half-height in img px
 
-        // Maximum pan offsets allowed so viewport fits perfectly within [0, imgW] and [0, imgH]
-        double maxPanX = imgW / 2.0 - viewportHalfW;
-        double maxPanY = imgH / 2.0 - viewportHalfH;
+        // Clamp max pan so the viewport never leaves the image
+        double maxPanX = Math.max(0, imgW / 2.0 - viewportHalfW);
+        double maxPanY = Math.max(0, imgH / 2.0 - viewportHalfH);
 
         double panX = (imgW / 2.0) + maxPanX * Math.sin(time * 0.7);
         double panY = (imgH / 2.0) + maxPanY * Math.cos(time * 0.5);
 
-        // 2. High-density half-block rendering (double resolution vertical mapping)
+        // 2. High-density half-block rendering (double vertical resolution)
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                // Top half-pixel vertical index
-                double rxTop = panX + (x - width / 2.0) * (imgW / (double) width) / zoom;
-                double ryTop = panY + (2 * y - height) * (imgH / (double) (2 * height)) / zoom;
+                // Map terminal cell (x, y) → image coordinates, correcting for cell aspect
+                double screenX = (x - width  / 2.0) * CELL_ASPECT; // in "square pixel" units
+                double screenYTop = (2 * y     - height);           // top    half-pixel row
+                double screenYBot = (2 * y + 1 - height);           // bottom half-pixel row
 
-                // Bottom half-pixel vertical index
-                double rxBot = panX + (x - width / 2.0) * (imgW / (double) width) / zoom;
-                double ryBot = panY + (2 * y + 1 - height) * (imgH / (double) (2 * height)) / zoom;
+                double rxTop = panX + screenX  * baseScaleX / zoom;
+                double ryTop = panY + screenYTop * baseScaleY / zoom;
+                double rxBot = panX + screenX  * baseScaleX / zoom;
+                double ryBot = panY + screenYBot * baseScaleY / zoom;
 
-                // Extract packed 24-bit RGB values from current active image
+                // Hard clamp to image bounds so we never sample outside
+                rxTop = Math.max(0, Math.min(imgW - 1.001, rxTop));
+                ryTop = Math.max(0, Math.min(imgH - 1.001, ryTop));
+                rxBot = Math.max(0, Math.min(imgW - 1.001, rxBot));
+                ryBot = Math.max(0, Math.min(imgH - 1.001, ryBot));
+
                 int colorTopCurr = sampleBilinear(imageCurr, rxTop, ryTop);
                 int colorBotCurr = sampleBilinear(imageCurr, rxBot, ryBot);
 
                 int colorTop, colorBot;
 
-                // If currently transitioning, smoothly blend (lerp) RGB channels with previous image
                 if (fadeAmount < 1.0) {
                     int colorTopPrev = sampleBilinear(imagePrev, rxTop, ryTop);
                     int colorBotPrev = sampleBilinear(imagePrev, rxBot, ryBot);
 
-                    // Blend Top
-                    int rCurrT = (colorTopCurr >> 16) & 0xFF;
-                    int gCurrT = (colorTopCurr >> 8) & 0xFF;
-                    int bCurrT = colorTopCurr & 0xFF;
+                    int rCurrT = (colorTopCurr >> 16) & 0xFF, gCurrT = (colorTopCurr >> 8) & 0xFF, bCurrT = colorTopCurr & 0xFF;
+                    int rPrevT = (colorTopPrev >> 16) & 0xFF, gPrevT = (colorTopPrev >> 8) & 0xFF, bPrevT = colorTopPrev & 0xFF;
+                    colorTop = (((int)(rPrevT + (rCurrT - rPrevT) * fadeAmount)) << 16)
+                             | (((int)(gPrevT + (gCurrT - gPrevT) * fadeAmount)) << 8)
+                             |  ((int)(bPrevT + (bCurrT - bPrevT) * fadeAmount));
 
-                    int rPrevT = (colorTopPrev >> 16) & 0xFF;
-                    int gPrevT = (colorTopPrev >> 8) & 0xFF;
-                    int bPrevT = colorTopPrev & 0xFF;
-
-                    int rT = (int) (rPrevT + (rCurrT - rPrevT) * fadeAmount);
-                    int gT = (int) (gPrevT + (gCurrT - gPrevT) * fadeAmount);
-                    int bT = (int) (bPrevT + (bCurrT - bPrevT) * fadeAmount);
-                    colorTop = (rT << 16) | (gT << 8) | bT;
-
-                    // Blend Bottom
-                    int rCurrB = (colorBotCurr >> 16) & 0xFF;
-                    int gCurrB = (colorBotCurr >> 8) & 0xFF;
-                    int bCurrB = colorBotCurr & 0xFF;
-
-                    int rPrevB = (colorBotPrev >> 16) & 0xFF;
-                    int gPrevB = (colorBotPrev >> 8) & 0xFF;
-                    int bPrevB = colorBotPrev & 0xFF;
-
-                    int rB = (int) (rPrevB + (rCurrB - rPrevB) * fadeAmount);
-                    int gB = (int) (gPrevB + (gCurrB - gPrevB) * fadeAmount);
-                    int bB = (int) (bPrevB + (bCurrB - bPrevB) * fadeAmount);
-                    colorBot = (rB << 16) | (gB << 8) | bB;
+                    int rCurrB = (colorBotCurr >> 16) & 0xFF, gCurrB = (colorBotCurr >> 8) & 0xFF, bCurrB = colorBotCurr & 0xFF;
+                    int rPrevB = (colorBotPrev >> 16) & 0xFF, gPrevB = (colorBotPrev >> 8) & 0xFF, bPrevB = colorBotPrev & 0xFF;
+                    colorBot = (((int)(rPrevB + (rCurrB - rPrevB) * fadeAmount)) << 16)
+                             | (((int)(gPrevB + (gCurrB - gPrevB) * fadeAmount)) << 8)
+                             |  ((int)(bPrevB + (bCurrB - bPrevB) * fadeAmount));
                 } else {
                     colorTop = colorTopCurr;
                     colorBot = colorBotCurr;
                 }
 
-                // Write half-block character: Foreground represents bottom pixel, Background represents top pixel
                 canvas.writeCell(x, y, '▄', colorBot, colorTop);
             }
         }

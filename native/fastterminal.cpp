@@ -99,6 +99,37 @@ JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setRawMode(JNIEnv* env, jc
     }
 }
 
+/**
+ * @brief Configures high-precision Virtual Terminal raw modes for standard input/output.
+ */
+JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setAnsiRawMode(JNIEnv* env, jclass clazz, jboolean enableRaw) {
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+    if (hInput == INVALID_HANDLE_VALUE || hInput == NULL) return;
+    
+    static DWORD originalMode = 0;
+    static bool hasOriginalMode = false;
+    
+    if (enableRaw) {
+        if (!hasOriginalMode) {
+            GetConsoleMode(hInput, &originalMode);
+            hasOriginalMode = true;
+        }
+        
+        // Disable line input (ENABLE_LINE_INPUT), echo input (ENABLE_ECHO_INPUT),
+        // and processed input (ENABLE_PROCESSED_INPUT) to retrieve keys instantly.
+        // Enable virtual terminal input (0x0200) to instruct conhost/wt to transmit
+        // ANSI mouse sequences (SGR-1006) to the input stream.
+        DWORD rawMode = originalMode;
+        rawMode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
+        rawMode |= 0x0200; // ENABLE_VIRTUAL_TERMINAL_INPUT
+        SetConsoleMode(hInput, rawMode);
+    } else {
+        if (hasOriginalMode) {
+            SetConsoleMode(hInput, originalMode);
+        }
+    }
+}
+
 static BOOL CALLBACK FindTerminalChildEnum(HWND hwnd, LPARAM lParam) {
     char className[256];
     if (GetClassNameA(hwnd, className, sizeof(className))) {
@@ -245,4 +276,50 @@ JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isMouseOverTerminal(JN
         }
     }
     return JNI_FALSE;
+}
+
+static bool cursorHidden = false;
+
+/**
+ * @brief Toggles system mouse pointer cursor visibility globally.
+ * 
+ * Implements: JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setSystemCursorVisible
+ */
+JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setSystemCursorVisible(JNIEnv* env, jclass clazz, jboolean visible) {
+    if (!visible) {
+        if (!cursorHidden) {
+            int w = GetSystemMetrics(SM_CXCURSOR);
+            int h = GetSystemMetrics(SM_CYCURSOR);
+            int maskSize = (w * h) / 8;
+            BYTE* andMask = (BYTE*)malloc(maskSize);
+            BYTE* xorMask = (BYTE*)malloc(maskSize);
+            if (andMask && xorMask) {
+                memset(andMask, 0xFF, maskSize);
+                memset(xorMask, 0x00, maskSize);
+                HCURSOR hEmpty = CreateCursor(GetModuleHandle(NULL), 0, 0, w, h, andMask, xorMask);
+                if (hEmpty != NULL) {
+                    // OCR_NORMAL = 32512
+                    SetSystemCursor(hEmpty, 32512); // Takes ownership and destroys hEmpty
+                    cursorHidden = true;
+                    // Force immediate cursor redraw by setting cursor pos to itself
+                    POINT p;
+                    if (GetCursorPos(&p)) {
+                        SetCursorPos(p.x, p.y);
+                    }
+                }
+            }
+            if (andMask) free(andMask);
+            if (xorMask) free(xorMask);
+        }
+    } else {
+        if (cursorHidden) {
+            SystemParametersInfo(SPI_SETCURSORS, 0, NULL, 0);
+            cursorHidden = false;
+            // Force immediate cursor redraw by setting cursor pos to itself
+            POINT p;
+            if (GetCursorPos(&p)) {
+                SetCursorPos(p.x, p.y);
+            }
+        }
+    }
 }

@@ -49,6 +49,13 @@ public class FastTerminal {
     public static native void setRawMode(boolean enableRaw);
 
     /**
+     * @brief Configures high-precision Virtual Terminal raw modes for standard input/output.
+     * 
+     * @param enableRaw True to enable direct non-blocking raw mode with VT input, false to restore defaults.
+     */
+    public static native void setAnsiRawMode(boolean enableRaw);
+
+    /**
      * @brief Retrieves detailed hardware rect boundaries, client offsets, and console font character cell sizes.
      * 
      * Indexes:
@@ -80,4 +87,11 @@ public class FastTerminal {
      * @return True if hovering, False otherwise.
      */
     public static native boolean isMouseOverTerminal();
+
+    /**
+     * @brief Toggles system mouse pointer cursor visibility globally.
+     * 
+     * @param visible True to show the standard system mouse cursor, False to hide it.
+     */
+    public static native void setSystemCursorVisible(boolean visible);
 }
