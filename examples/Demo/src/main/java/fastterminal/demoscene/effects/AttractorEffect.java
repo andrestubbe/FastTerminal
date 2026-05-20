@@ -56,8 +56,8 @@ public class AttractorEffect implements DemosceneEffect {
      */
     @Override
     public void update(double time, double deltaTime) {
-        // Compute speed factor based on 120 FPS target to preserve physics integration speed
-        double speedFactor = deltaTime * 120.0;
+        // Compute speed factor based on 120 FPS target, scaled down to 40% speed
+        double speedFactor = deltaTime * 120.0 * 0.4;
         double currentDT = DT * speedFactor;
 
         for (int i = 0; i < PARTICLE_COUNT; i++) {
