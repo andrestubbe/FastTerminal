@@ -25,6 +25,7 @@ public class FastTerminalScene {
     private int height;
     private Runnable updater;
     private boolean dirty;
+    private boolean transparentBackground = false;
 
     /**
      * @brief Allocates all cell buffer layers.
@@ -386,6 +387,32 @@ public class FastTerminalScene {
         this.fgBuffer = null;
         this.bgBuffer = null;
         this.updater = null;
+    }
+
+    /**
+     * @brief Returns whether this scene uses transparent compositing.
+     *
+     * When true, cells that are blank (space character, fg=-1, bg=-1) are treated
+     * as transparent during compositing — the layer below shows through those cells.
+     *
+     * @return True if transparent compositing is enabled.
+     */
+    public boolean isTransparentBackground() {
+        return this.transparentBackground;
+    }
+
+    /**
+     * @brief Enables or disables transparent compositing for this scene.
+     *
+     * When enabled, blank cells (space, fg=-1, bg=-1) are skipped during compositing
+     * so lower layers remain visible through them. Useful for overlay scenes that
+     * should only paint specific regions (e.g. a floating panel) without covering
+     * the rest of the screen.
+     *
+     * @param transparent True to enable transparency, false for opaque (default).
+     */
+    public void setTransparentBackground(boolean transparent) {
+        this.transparentBackground = transparent;
     }
 
     /**

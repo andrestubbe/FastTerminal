@@ -9,527 +9,505 @@ import java.util.List;
 /**
  * @class FastTerminalRenderer
  * @brief High-performance double-buffered ANSI rendering and screen compositing engine.
- * 
- * Composites multiple modular FastTerminalScene layers in-place, and converts
- * screen diff state transitions to highly optimized 24-bit True Color ANSI escape streams.
- * Includes strategic cursor span/gap jumps to drastically reduce standard output flush sizes.
+ *
+ * Composites multiple FastTerminalScene layers and converts screen diff state transitions
+ * to optimized 24-bit True Color ANSI escape streams.
+ *
+ * Rendering pipeline per frame:
+ *   clear → compositeScenes → choose strategy → syncPrevBuffers → flushOutput
+ *
+ * Strategies (in priority order):
+ *   1. Dirty-rectangles  — when dirtyRectanglesEnabled + diff mode + no forced redraw
+ *   2. Full redraw       — when diffRenderingEnabled=false or forceFullRedraw=true
+ *   3. Diff / double-buffer — default; only changed cells are emitted
  */
 public final class FastTerminalRenderer {
 
-    private static final String RGB_FG_PREFIX = "\033[38;2;";
-    private static final String RGB_BG_PREFIX = "\033[48;2;";
-    private static final String RGB_SUFFIX = "m";
+    // ── ANSI escape fragments ────────────────────────────────────────────────
+    // RGB_FG/BG prefixes are kept as local constants because FastANSI.fg(r,g,b)
+    // and FastANSI.bg(r,g,b) allocate a new String per call — too expensive for
+    // a hot render loop. We append directly to the StringBuilder instead.
+    private static final String RGB_FG_PREFIX = FastANSI.CSI + "38;2;";
+    private static final String RGB_BG_PREFIX = FastANSI.CSI + "48;2;";
+    private static final String RGB_SUFFIX    = "m";
 
+    // ── Scene registry ───────────────────────────────────────────────────────
     private List<FastTerminalScene> scenes = new ArrayList<>();
+
+    // ── Dimensions ──────────────────────────────────────────────────────────
     private int width;
     private int height;
 
-    // Compositing buffers
+    // ── Composite buffers (current frame) ───────────────────────────────────
     private int[] compositeCodepoints;
     private int[] compositeFg;
     private int[] compositeBg;
 
-    // Double-buffering state for diff rendering
+    // ── Prev buffers (last flushed frame, for diff) ──────────────────────────
     private int[] prevCodepoints;
     private int[] prevFg;
     private int[] prevBg;
-    private boolean forceFullRedraw = true;
-    private boolean diffRenderingEnabled = true;
-    private int lastFlushedBytes = 0;
+
+    // ── Rendering state ──────────────────────────────────────────────────────
+    private boolean forceFullRedraw        = true;
+    private boolean diffRenderingEnabled   = true;
     private boolean dirtyRectanglesEnabled = false;
+    private int     lastFlushedBytes       = 0;
+
+    // ── Reused per-frame output buffer (avoids per-frame allocation) ─────────
+    private final StringBuilder sb;
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Construction / lifecycle
+    // ════════════════════════════════════════════════════════════════════════
 
     /**
-     * @brief Allocates all double-buffered structures in memory.
-     * 
-     * @param width Initial terminal layout columns.
-     * @param height Initial terminal layout rows.
+     * @brief Allocates all double-buffered structures.
+     * @param width  Initial terminal column count.
+     * @param height Initial terminal row count.
      */
     public FastTerminalRenderer(final int width, final int height) {
-        this.width = width;
+        this.width  = width;
         this.height = height;
-        this.compositeCodepoints = new int[width * height];
-        this.compositeFg = new int[width * height];
-        this.compositeBg = new int[width * height];
-        this.prevCodepoints = new int[width * height];
-        this.prevFg = new int[width * height];
-        this.prevBg = new int[width * height];
-        this.clear();
-        this.clearPrev();
+        int cells = width * height;
+        this.compositeCodepoints = new int[cells];
+        this.compositeFg         = new int[cells];
+        this.compositeBg         = new int[cells];
+        this.prevCodepoints      = new int[cells];
+        this.prevFg              = new int[cells];
+        this.prevBg              = new int[cells];
+        this.sb = new StringBuilder(cells * 20);
+        clear();
+        clearPrev();
     }
 
-    /**
-     * @brief Registers an overlay render layer.
-     * @param scene FastTerminalScene layer to composite.
-     */
+    /** @brief Registers an overlay scene layer. */
     public void addScene(final FastTerminalScene scene) {
         this.scenes.add(scene);
     }
 
+    // ════════════════════════════════════════════════════════════════════════
+    // Main render entry point
+    // ════════════════════════════════════════════════════════════════════════
+
     /**
-     * @brief Composites all registered layers and writes changes dynamically to standard out.
-     * 
-     * Applies double-buffer diff comparisons. Toggles absolute vs relative cursor moves
-     * to eliminate terminal scroll flickering.
+     * @brief Composites all layers and writes changes to stdout.
+     *
+     * Pipeline: clear → compositeScenes → strategy → syncPrevBuffers → flushOutput
      */
     public void render() {
-        this.clear();
+        clear();
+        compositeScenes();
+        sb.setLength(0);
 
-        // Composite all layers
-        for (final FastTerminalScene scene : this.scenes) {
-            if (scene.isDirty()) {
-                scene.update();
-                scene.setDirty(false);
-            }
-            this.insertScene(scene);
-        }
-
-        // Build the optimized ANSI True Color rendering buffer
-        StringBuilder sb = new StringBuilder(width * height * 16);
-        int currentFg = -2;
-        int currentBg = -2;
-
-        if (this.dirtyRectanglesEnabled && !this.forceFullRedraw && this.diffRenderingEnabled) {
-            int minX = this.width;
-            int maxX = -1;
-            int minY = this.height;
-            int maxY = -1;
-            
-            for (int i = 0; i < compositeCodepoints.length; i++) {
-                if (compositeCodepoints[i] != prevCodepoints[i] || compositeFg[i] != prevFg[i] || compositeBg[i] != prevBg[i]) {
-                    int y = i / this.width;
-                    int x = i % this.width;
-                    if (x < minX) minX = x;
-                    if (x > maxX) maxX = x;
-                    if (y < minY) minY = y;
-                    if (y > maxY) maxY = y;
-                }
-            }
-            
-            if (maxX != -1) {
-                for (int row = minY; row <= maxY; row++) {
-                    sb.append("\033[").append(row + 1).append(";").append(minX + 1).append("H");
-                    currentFg = -2;
-                    currentBg = -2;
-                    
-                    for (int col = minX; col <= maxX; col++) {
-                        int i = row * this.width + col;
-                        int cp = compositeCodepoints[i];
-                        int fg = compositeFg[i];
-                        int bg = compositeBg[i];
-                        
-                        if (cp == -99) continue;
-                        
-                        if (fg != currentFg) {
-                            if (fg == -1) sb.append(FastANSI.FG_DEFAULT);
-                            else {
-                                int r = (fg >> 16) & 0xFF, g = (fg >> 8) & 0xFF, b = fg & 0xFF;
-                                sb.append(RGB_FG_PREFIX).append(r).append(";").append(g).append(";").append(b).append(RGB_SUFFIX);
-                            }
-                            currentFg = fg;
-                        }
-                        
-                        if (bg != currentBg) {
-                            if (bg == -1) sb.append(FastANSI.BG_DEFAULT);
-                            else {
-                                int r = (bg >> 16) & 0xFF, g = (bg >> 8) & 0xFF, b = bg & 0xFF;
-                                sb.append(RGB_BG_PREFIX).append(r).append(";").append(g).append(";").append(b).append(RGB_SUFFIX);
-                            }
-                            currentBg = bg;
-                        }
-                        
-                        if (Character.isValidCodePoint(cp)) sb.appendCodePoint(cp);
-                        else sb.append(' ');
-                    }
-                }
-                
-                sb.append(FastANSI.RESET);
-                
-                // Sync prev buffers for the region
-                for (int row = minY; row <= maxY; row++) {
-                    int offset = row * this.width + minX;
-                    int length = maxX - minX + 1;
-                    System.arraycopy(this.compositeCodepoints, offset, this.prevCodepoints, offset, length);
-                    System.arraycopy(this.compositeFg, offset, this.prevFg, offset, length);
-                    System.arraycopy(this.compositeBg, offset, this.prevBg, offset, length);
-                }
-                
-                if (sb.length() > 0) {
-                    byte[] bytes = sb.toString().getBytes(StandardCharsets.UTF_8);
-                    this.lastFlushedBytes = bytes.length;
-                    System.out.write(bytes, 0, bytes.length);
-                    System.out.flush();
-                } else {
-                    this.lastFlushedBytes = 0;
-                }
-                return;
+        if (dirtyRectanglesEnabled && diffRenderingEnabled && !forceFullRedraw) {
+            if (renderDirtyRectangles()) {
+                flushOutput();
             } else {
-                this.lastFlushedBytes = 0;
-                return;
+                lastFlushedBytes = 0;
+            }
+            return;
+        }
+
+        if (!diffRenderingEnabled || forceFullRedraw) {
+            renderFullRedraw();
+        } else {
+            renderDiff();
+        }
+
+        syncPrevBuffers();
+        flushOutput();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Rendering strategies
+    // ════════════════════════════════════════════════════════════════════════
+
+    /**
+     * @brief Dirty-rectangles strategy: finds the bounding box of changed cells
+     *        and rewrites only that region.
+     * @return True if any dirty cells were found and written, false if nothing changed.
+     */
+    private boolean renderDirtyRectangles() {
+        int minX = width, maxX = -1, minY = height, maxY = -1;
+        final int cells = compositeCodepoints.length;
+
+        for (int i = 0; i < cells; i++) {
+            if (compositeCodepoints[i] != prevCodepoints[i]
+                    | compositeFg[i] != prevFg[i]
+                    | compositeBg[i] != prevBg[i]) {
+                int y = i / width;
+                int x = i - y * width;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
             }
         }
 
-        if (!this.diffRenderingEnabled || this.forceFullRedraw) {
-            // Full Redraw mode
-            // Print home command to avoid full console clear flash
-            System.out.print(FastANSI.CURSOR_HOME);
+        if (maxX == -1) return false;
 
-            for (int i = 0; i < compositeCodepoints.length; i++) {
+        int curFg = -2, curBg = -2;
+        for (int row = minY; row <= maxY; row++) {
+            moveCursor(sb, row, minX);
+            curFg = -2; curBg = -2;
+            int base = row * width;
+            for (int col = minX; col <= maxX; col++) {
+                int i  = base + col;
                 int cp = compositeCodepoints[i];
+                if (cp == -99) continue;
                 int fg = compositeFg[i];
                 int bg = compositeBg[i];
-
-                if (cp == -99) {
-                    // Wide character continuation cell - skip printing the character
-                    // but we MUST still perform the row split check!
-                    if ((i + 1) % this.width == 0 && (i + 1) < compositeCodepoints.length) {
-                        sb.append(FastANSI.RESET).append("\n");
-                        currentFg = -2;
-                        currentBg = -2;
-                    }
-                    continue;
-                }
-
-                // Optimize foreground escape codes
-                if (fg != currentFg) {
-                    if (fg == -1) {
-                        sb.append(FastANSI.FG_DEFAULT);
-                    } else {
-                        int r = (fg >> 16) & 0xFF;
-                        int g = (fg >> 8) & 0xFF;
-                        int b = fg & 0xFF;
-                        sb.append(RGB_FG_PREFIX).append(r).append(";").append(g).append(";").append(b)
-                                .append(RGB_SUFFIX);
-                    }
-                    currentFg = fg;
-                }
-
-                // Optimize background escape codes
-                if (bg != currentBg) {
-                    if (bg == -1) {
-                        sb.append(FastANSI.BG_DEFAULT);
-                    } else {
-                        int r = (bg >> 16) & 0xFF;
-                        int g = (bg >> 8) & 0xFF;
-                        int b = bg & 0xFF;
-                        sb.append(RGB_BG_PREFIX).append(r).append(";").append(g).append(";").append(b)
-                                .append(RGB_SUFFIX);
-                    }
-                    currentBg = bg;
-                }
-
-                // Write the codepoint safely
-                if (Character.isValidCodePoint(cp)) {
-                    sb.appendCodePoint(cp);
-                } else {
-                    sb.append(' ');
-                }
-
-                // Explicitly force newline at the end of each row
-                if ((i + 1) % this.width == 0 && (i + 1) < compositeCodepoints.length) {
-                    sb.append(FastANSI.RESET).append("\n"); // Reset colors before newline to avoid bleeding
-                    currentFg = -2;
-                    currentBg = -2;
-                }
+                if (fg != curFg) { emitFg(sb, fg); curFg = fg; }
+                if (bg != curBg) { emitBg(sb, bg); curBg = bg; }
+                if (Character.isValidCodePoint(cp)) sb.appendCodePoint(cp); else sb.append(' ');
             }
-
-            sb.append(FastANSI.RESET);
-            this.forceFullRedraw = false;
-        } else {
-            // Diff-Rendering / Double-Buffering mode
-            int expectedPos = -1;
-
-            for (int i = 0; i < compositeCodepoints.length; i++) {
-                int cp = compositeCodepoints[i];
-                int fg = compositeFg[i];
-                int bg = compositeBg[i];
-
-                int prevCp = prevCodepoints[i];
-                int prevFgVal = prevFg[i];
-                int prevBgVal = prevBg[i];
-
-                // If nothing changed, we skip this cell!
-                if (cp == prevCp && fg == prevFgVal && bg == prevBgVal) {
-                    continue;
-                }
-
-                // Wide character continuation cell check
-                if (cp == -99) {
-                    expectedPos = i + 1;
-                    if (expectedPos % this.width == 0) {
-                        expectedPos = -1;
-                    }
-                    continue;
-                }
-
-                // 1. Position cursor if we skipped cells
-                if (i != expectedPos) {
-                    int gap = i - expectedPos;
-                    // Span/Gap Thresholding: If gap is small (<= 4 cells) and on the same row,
-                    // it is much faster to just write the unchanged cells instead of an expensive absolute cursor jump!
-                    if (expectedPos != -1 && gap > 0 && gap <= 4 && (i / this.width == (expectedPos - 1) / this.width)) {
-                        for (int g = expectedPos; g < i; g++) {
-                            int gCp = compositeCodepoints[g];
-                            int gFg = compositeFg[g];
-                            int gBg = compositeBg[g];
-
-                            if (gCp == -99) {
-                                continue;
-                            }
-
-                            if (gFg != currentFg) {
-                                if (gFg == -1) sb.append(FastANSI.FG_DEFAULT);
-                                else {
-                                    int r = (gFg >> 16) & 0xFF, gr = (gFg >> 8) & 0xFF, b = gFg & 0xFF;
-                                    sb.append(RGB_FG_PREFIX).append(r).append(";").append(gr).append(";").append(b).append(RGB_SUFFIX);
-                                }
-                                currentFg = gFg;
-                            }
-                            if (gBg != currentBg) {
-                                if (gBg == -1) sb.append(FastANSI.BG_DEFAULT);
-                                else {
-                                    int r = (gBg >> 16) & 0xFF, gr = (gBg >> 8) & 0xFF, b = gBg & 0xFF;
-                                    sb.append(RGB_BG_PREFIX).append(r).append(";").append(gr).append(";").append(b).append(RGB_SUFFIX);
-                                }
-                                currentBg = gBg;
-                            }
-                            if (Character.isValidCodePoint(gCp)) sb.appendCodePoint(gCp);
-                            else sb.append(' ');
-                        }
-                    } else {
-                        // Perform standard absolute cursor jump
-                        int row = i / this.width;
-                        int col = i % this.width;
-                        sb.append("\033[").append(row + 1).append(";").append(col + 1).append("H");
-                    }
-                }
-
-                // 2. Output foreground escape code
-                if (fg != currentFg) {
-                    if (fg == -1) {
-                        sb.append(FastANSI.FG_DEFAULT);
-                    } else {
-                        int r = (fg >> 16) & 0xFF;
-                        int g = (fg >> 8) & 0xFF;
-                        int b = fg & 0xFF;
-                        sb.append(RGB_FG_PREFIX).append(r).append(";").append(g).append(";").append(b)
-                                .append(RGB_SUFFIX);
-                    }
-                    currentFg = fg;
-                }
-
-                // 3. Output background escape code
-                if (bg != currentBg) {
-                    if (bg == -1) {
-                        sb.append(FastANSI.BG_DEFAULT);
-                    } else {
-                        int r = (bg >> 16) & 0xFF;
-                        int g = (bg >> 8) & 0xFF;
-                        int b = bg & 0xFF;
-                        sb.append(RGB_BG_PREFIX).append(r).append(";").append(g).append(";").append(b)
-                                .append(RGB_SUFFIX);
-                    }
-                    currentBg = bg;
-                }
-
-                // 4. Output the codepoint safely
-                if (Character.isValidCodePoint(cp)) {
-                    sb.appendCodePoint(cp);
-                } else {
-                    sb.append(' ');
-                }
-
-                // Set natural next cursor position
-                expectedPos = i + 1;
-                // If we are at the end of the row, force a manual jump next time to be safe
-                if (expectedPos % this.width == 0) {
-                    expectedPos = -1;
-                }
-            }
-
-            // Always reset styles at the end of the diff updates
-            sb.append(FastANSI.RESET);
         }
+        sb.append(FastANSI.RESET);
 
-        // Keep prev buffers in sync with current composite frame
-        System.arraycopy(this.compositeCodepoints, 0, this.prevCodepoints, 0, this.compositeCodepoints.length);
-        System.arraycopy(this.compositeFg, 0, this.prevFg, 0, this.compositeFg.length);
-        System.arraycopy(this.compositeBg, 0, this.prevBg, 0, this.compositeBg.length);
-
-        // Blit the built buffer to standard output
-        if (sb.length() > 0) {
-            byte[] bytes = sb.toString().getBytes(StandardCharsets.UTF_8);
-            this.lastFlushedBytes = bytes.length;
-            System.out.write(bytes, 0, bytes.length);
-            System.out.flush();
-        } else {
-            this.lastFlushedBytes = 0;
+        // Sync only the dirty region
+        for (int row = minY; row <= maxY; row++) {
+            int offset = row * width + minX;
+            int len    = maxX - minX + 1;
+            System.arraycopy(compositeCodepoints, offset, prevCodepoints, offset, len);
+            System.arraycopy(compositeFg,         offset, prevFg,         offset, len);
+            System.arraycopy(compositeBg,         offset, prevBg,         offset, len);
         }
-    }
-
-    /**
-     * @brief Blits cell segments of a scene layer into the final composite buffer.
-     * @param scene Source overlay scene layer.
-     */
-    private void insertScene(final FastTerminalScene scene) {
-        final int[] srcCodepoints = scene.getCodepointBuffer();
-        final int[] srcFg = scene.getFgBuffer();
-        final int[] srcBg = scene.getBgBuffer();
-        final int srcWidth = scene.getWidth();
-        final int srcHeight = scene.getHeight();
-        final int dstX = scene.getX();
-        final int dstY = scene.getY();
-
-        for (int row = 0; row < srcHeight; row++) {
-            final int dstRow = dstY + row;
-            if (dstRow < 0 || dstRow >= this.height)
-                continue;
-
-            int srcPos = row * srcWidth;
-            int dstPos = dstRow * this.width + dstX;
-            int length = srcWidth;
-
-            if (dstX < 0) {
-                srcPos -= dstX;
-                length += dstX;
-                dstPos = dstRow * this.width;
-            }
-            if (dstX + length > this.width) {
-                length = this.width - dstX;
-            }
-            if (length <= 0)
-                continue;
-
-            System.arraycopy(srcCodepoints, srcPos, this.compositeCodepoints, dstPos, length);
-            System.arraycopy(srcFg, srcPos, this.compositeFg, dstPos, length);
-            System.arraycopy(srcBg, srcPos, this.compositeBg, dstPos, length);
-        }
-    }
-
-    /**
-     * @brief Clears current active composite buffers.
-     */
-    public void clear() {
-        Arrays.fill(this.compositeCodepoints, ' ');
-        Arrays.fill(this.compositeFg, -1);
-        Arrays.fill(this.compositeBg, -1);
-    }
-
-    /**
-     * @brief Resizes compositing, composite diff, and tracking buffers in-place.
-     * 
-     * @param newWidth New width dimensions.
-     * @param newHeight New height dimensions.
-     * @return True if a resizing transition actually happened, false otherwise.
-     */
-    public boolean resize(final int newWidth, final int newHeight) {
-        if (newWidth <= 0 || newHeight <= 0)
-            return false;
-        if (newWidth == this.width && newHeight == this.height)
-            return false;
-
-        this.width = newWidth;
-        this.height = newHeight;
-
-        this.compositeCodepoints = new int[newWidth * newHeight];
-        this.compositeFg = new int[newWidth * newHeight];
-        this.compositeBg = new int[newWidth * newHeight];
-
-        this.prevCodepoints = new int[newWidth * newHeight];
-        this.prevFg = new int[newWidth * newHeight];
-        this.prevBg = new int[newWidth * newHeight];
-
-        this.clear();
-        this.clearPrev();
         return true;
     }
 
     /**
-     * @brief Disposes and frees resources associated with standard scene layers.
+     * @brief Full-redraw strategy: rewrites every cell from CURSOR_HOME using newlines.
+     *        Used on first frame or when diff is disabled.
      */
-    public void dispose() {
-        if (this.scenes != null) {
-            this.scenes.clear();
-            this.scenes = null;
+    private void renderFullRedraw() {
+        System.out.print(FastANSI.CURSOR_HOME);
+        int curFg = -2, curBg = -2;
+        final int cells = compositeCodepoints.length;
+
+        for (int i = 0; i < cells; i++) {
+            int cp = compositeCodepoints[i];
+            if (cp != -99) {
+                int fg = compositeFg[i];
+                int bg = compositeBg[i];
+                if (fg != curFg) { emitFg(sb, fg); curFg = fg; }
+                if (bg != curBg) { emitBg(sb, bg); curBg = bg; }
+                if (Character.isValidCodePoint(cp)) sb.appendCodePoint(cp); else sb.append(' ');
+            }
+            // Newline at end of each row (skip last row to avoid scroll)
+            if ((i + 1) % width == 0 && (i + 1) < cells) {
+                sb.append(FastANSI.RESET).append('\n');
+                curFg = -2; curBg = -2;
+            }
         }
-        this.compositeCodepoints = null;
-        this.compositeFg = null;
-        this.compositeBg = null;
-        this.prevCodepoints = null;
-        this.prevFg = null;
-        this.prevBg = null;
+        sb.append(FastANSI.RESET);
+        forceFullRedraw = false;
     }
 
     /**
-     * @brief Clears previous tracking double-buffers to force full redraws on the next render pass.
+     * @brief Diff strategy: emits only cells that changed since the last frame.
+     *        Uses gap-fill for small skips to avoid expensive cursor jumps.
      */
+    private void renderDiff() {
+        int curFg = -2, curBg = -2;
+        int expectedPos = -1;
+        final int cells = compositeCodepoints.length;
+
+        for (int i = 0; i < cells; i++) {
+            int cp = compositeCodepoints[i];
+            int fg = compositeFg[i];
+            int bg = compositeBg[i];
+
+            if (cp == prevCodepoints[i] && fg == prevFg[i] && bg == prevBg[i]) continue;
+
+            if (cp == -99) {
+                expectedPos = ((i + 1) % width == 0) ? -1 : i + 1;
+                continue;
+            }
+
+            if (i != expectedPos) {
+                int gap = i - expectedPos;
+                // Gap-fill: cheaper than a cursor jump for small same-row gaps
+                if (expectedPos >= 0 && gap > 0 && gap <= 4
+                        && (i / width) == ((expectedPos - 1) / width)) {
+                    for (int g = expectedPos; g < i; g++) {
+                        int gcp = compositeCodepoints[g];
+                        if (gcp == -99) continue;
+                        int gfg = compositeFg[g];
+                        int gbg = compositeBg[g];
+                        if (gfg != curFg) { emitFg(sb, gfg); curFg = gfg; }
+                        if (gbg != curBg) { emitBg(sb, gbg); curBg = gbg; }
+                        if (Character.isValidCodePoint(gcp)) sb.appendCodePoint(gcp); else sb.append(' ');
+                    }
+                } else {
+                    moveCursor(sb, i / width, i % width);
+                }
+            }
+
+            if (fg != curFg) { emitFg(sb, fg); curFg = fg; }
+            if (bg != curBg) { emitBg(sb, bg); curBg = bg; }
+            if (Character.isValidCodePoint(cp)) sb.appendCodePoint(cp); else sb.append(' ');
+
+            expectedPos = ((i + 1) % width == 0) ? -1 : i + 1;
+        }
+        sb.append(FastANSI.RESET);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Pipeline helpers
+    // ════════════════════════════════════════════════════════════════════════
+
+    /** @brief Updates and composites all registered scene layers into the composite buffers. */
+    private void compositeScenes() {
+        for (final FastTerminalScene scene : scenes) {
+            if (scene.isDirty()) {
+                scene.update();
+                scene.setDirty(false);
+            }
+            insertScene(scene);
+        }
+    }
+
+    /** @brief Copies composite buffers into prev buffers to track the last flushed frame. */
+    private void syncPrevBuffers() {
+        System.arraycopy(compositeCodepoints, 0, prevCodepoints, 0, compositeCodepoints.length);
+        System.arraycopy(compositeFg,         0, prevFg,         0, compositeFg.length);
+        System.arraycopy(compositeBg,         0, prevBg,         0, compositeBg.length);
+    }
+
+    /** @brief Encodes the StringBuilder contents as UTF-8 and writes to stdout. */
+    private void flushOutput() {
+        if (sb.length() == 0) { lastFlushedBytes = 0; return; }
+        byte[] bytes = sb.toString().getBytes(StandardCharsets.UTF_8);
+        lastFlushedBytes = bytes.length;
+        System.out.write(bytes, 0, bytes.length);
+        System.out.flush();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // ANSI emission helpers
+    // ════════════════════════════════════════════════════════════════════════
+
+    private static void emitFg(final StringBuilder sb, final int fg) {
+        if (fg == -1) sb.append(FastANSI.FG_DEFAULT);
+        else sb.append(RGB_FG_PREFIX)
+               .append((fg >>> 16) & 0xFF).append(';')
+               .append((fg >>> 8)  & 0xFF).append(';')
+               .append( fg         & 0xFF).append(RGB_SUFFIX);
+    }
+
+    private static void emitBg(final StringBuilder sb, final int bg) {
+        if (bg == -1) sb.append(FastANSI.BG_DEFAULT);
+        else sb.append(RGB_BG_PREFIX)
+               .append((bg >>> 16) & 0xFF).append(';')
+               .append((bg >>> 8)  & 0xFF).append(';')
+               .append( bg         & 0xFF).append(RGB_SUFFIX);
+    }
+
+    private static void moveCursor(final StringBuilder sb, final int row, final int col) {
+        sb.append(FastANSI.CSI).append(row + 1).append(';').append(col + 1).append('H');
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Scene compositing
+    // ════════════════════════════════════════════════════════════════════════
+
+    /**
+     * @brief Blits a scene layer into the composite buffers.
+     *
+     * Opaque scenes overwrite all cells. Transparent scenes skip blank cells
+     * (space, fg=-1, bg=-1) so lower layers show through.
+     */
+    private void insertScene(final FastTerminalScene scene) {
+        final int[] srcCp  = scene.getCodepointBuffer();
+        final int[] srcFg  = scene.getFgBuffer();
+        final int[] srcBg  = scene.getBgBuffer();
+        final int srcWidth  = scene.getWidth();
+        final int srcHeight = scene.getHeight();
+        final int dstX      = scene.getX();
+        final int dstY      = scene.getY();
+        final boolean transparent = scene.isTransparentBackground();
+
+        for (int row = 0; row < srcHeight; row++) {
+            final int dstRow = dstY + row;
+            if (dstRow < 0 || dstRow >= height) continue;
+
+            int srcPos = row * srcWidth;
+            int dstPos = dstRow * width + dstX;
+            int length = srcWidth;
+
+            // Clip left edge
+            if (dstX < 0) {
+                srcPos -= dstX;
+                length += dstX;
+                dstPos  = dstRow * width;
+            }
+            // Clip right edge
+            if (dstX + length > width) length = width - dstX;
+            if (length <= 0) continue;
+
+            if (!transparent) {
+                System.arraycopy(srcCp, srcPos, compositeCodepoints, dstPos, length);
+                System.arraycopy(srcFg, srcPos, compositeFg,         dstPos, length);
+                System.arraycopy(srcBg, srcPos, compositeBg,         dstPos, length);
+            } else {
+                for (int i = 0; i < length; i++) {
+                    int scp = srcCp[srcPos + i];
+                    int sfg = srcFg[srcPos + i];
+                    int sbg = srcBg[srcPos + i];
+                    if (scp == ' ' && sfg == -1 && sbg == -1) continue;
+                    compositeCodepoints[dstPos + i] = scp;
+                    compositeFg        [dstPos + i] = sfg;
+                    compositeBg        [dstPos + i] = sbg;
+                }
+            }
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Buffer management
+    // ════════════════════════════════════════════════════════════════════════
+
+    /** @brief Resets composite buffers to blank/default. */
+    public void clear() {
+        Arrays.fill(compositeCodepoints, ' ');
+        Arrays.fill(compositeFg,         -1);
+        Arrays.fill(compositeBg,         -1);
+    }
+
+    /** @brief Resets prev buffers and forces a full redraw on the next render call. */
     public void clearPrev() {
-        if (this.prevCodepoints != null) {
-            Arrays.fill(this.prevCodepoints, ' ');
-            Arrays.fill(this.prevFg, -1);
-            Arrays.fill(this.prevBg, -1);
+        if (prevCodepoints != null) {
+            Arrays.fill(prevCodepoints, ' ');
+            Arrays.fill(prevFg,         -1);
+            Arrays.fill(prevBg,         -1);
         }
-        this.forceFullRedraw = true;
+        forceFullRedraw = true;
     }
 
     /**
-     * @brief Determines if delta/diff-rendering optimizations are currently enabled.
-     * @return True if enabled, False otherwise.
+     * @brief Suppresses the initial full-redraw pass.
+     *
+     * Useful for overlay scenarios: the prev-buffers start blank/default, matching
+     * an empty canvas, so the diff engine only emits cells that differ — i.e. the
+     * panel — leaving the existing terminal content untouched.
      */
-    public boolean isDiffRenderingEnabled() {
-        return this.diffRenderingEnabled;
+    public void suppressInitialFullRedraw() {
+        forceFullRedraw = false;
     }
 
     /**
-     * @brief Gets the total bytes transmitted to standard out in the last frame render.
-     * @return Total output byte count.
+     * @brief Resizes all buffers in-place.
+     * @return True if dimensions actually changed.
      */
-    public int getLastFlushedBytes() {
-        return this.lastFlushedBytes;
+    public boolean resize(final int newWidth, final int newHeight) {
+        if (newWidth <= 0 || newHeight <= 0)                       return false;
+        if (newWidth == width && newHeight == height)              return false;
+
+        width  = newWidth;
+        height = newHeight;
+        int cells = newWidth * newHeight;
+
+        compositeCodepoints = new int[cells];
+        compositeFg         = new int[cells];
+        compositeBg         = new int[cells];
+        prevCodepoints      = new int[cells];
+        prevFg              = new int[cells];
+        prevBg              = new int[cells];
+
+        clear();
+        clearPrev();
+        return true;
     }
 
+    /** @brief Releases all buffer and scene references. */
+    public void dispose() {
+        if (scenes != null) { scenes.clear(); scenes = null; }
+        compositeCodepoints = null;
+        compositeFg         = null;
+        compositeBg         = null;
+        prevCodepoints      = null;
+        prevFg              = null;
+        prevBg              = null;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Overlay restore (shutdown hook use)
+    // ════════════════════════════════════════════════════════════════════════
+
     /**
-     * @brief Configures if delta double-buffering optimization is active.
-     * @param enabled True to optimize, False to force raw full redraw cycles.
+     * @brief Restores the composite buffer to stdout using absolute cursor positioning.
+     *
+     * Writes every cell of every row up to the last row with real content, using
+     * ESC[row;1H jumps — no CURSOR_HOME, no newlines, no scroll risk.
+     * Places the cursor at the row after last content so the shell prompt lands there.
+     *
+     * Safe to call from a shutdown hook.
      */
+    public void renderAbsolute() {
+        clear();
+        compositeScenes();
+
+        sb.setLength(0);
+
+        // Find last row with any non-blank content (scan from bottom)
+        int lastContentRow = 0;
+        outer:
+        for (int row = height - 1; row >= 0; row--) {
+            int base = row * width;
+            for (int col = 0; col < width; col++) {
+                int i = base + col;
+                if (!((compositeCodepoints[i] == ' ' || compositeCodepoints[i] == 0)
+                        && compositeFg[i] == -1 && compositeBg[i] == -1)) {
+                    lastContentRow = row;
+                    break outer;
+                }
+            }
+        }
+
+        int curFg = -2, curBg = -2;
+        for (int row = 0; row <= lastContentRow; row++) {
+            moveCursor(sb, row, 0);
+            curFg = -2; curBg = -2;
+            int base = row * width;
+            for (int col = 0; col < width; col++) {
+                int i  = base + col;
+                int cp = compositeCodepoints[i];
+                int fg = compositeFg[i];
+                int bg = compositeBg[i];
+                if (cp == -99) { sb.append(' '); continue; }
+                if (fg != curFg) { emitFg(sb, fg); curFg = fg; }
+                if (bg != curBg) { emitBg(sb, bg); curBg = bg; }
+                if (Character.isValidCodePoint(cp)) sb.appendCodePoint(cp); else sb.append(' ');
+            }
+        }
+
+        int promptRow = Math.min(lastContentRow + 2, height);
+        sb.append(FastANSI.RESET);
+        moveCursor(sb, promptRow - 1, 0); // moveCursor is 0-based internally, adds +1
+
+        byte[] bytes = sb.toString().getBytes(StandardCharsets.UTF_8);
+        System.out.write(bytes, 0, bytes.length);
+        System.out.flush();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Accessors
+    // ════════════════════════════════════════════════════════════════════════
+
+    public boolean isDiffRenderingEnabled()    { return diffRenderingEnabled; }
+    public boolean isDirtyRectanglesEnabled()  { return dirtyRectanglesEnabled; }
+    public int     getLastFlushedBytes()       { return lastFlushedBytes; }
+    public int     getWidth()                  { return width; }
+    public int     getHeight()                 { return height; }
+
     public void setDiffRenderingEnabled(boolean enabled) {
-        this.diffRenderingEnabled = enabled;
-        if (!enabled) {
-            this.forceFullRedraw = true;
-        }
+        diffRenderingEnabled = enabled;
+        if (!enabled) forceFullRedraw = true;
     }
 
-    /**
-     * @brief Determines if optional Dirty-Rectangles rendering is enabled.
-     * @return True if enabled, False otherwise.
-     */
-    public boolean isDirtyRectanglesEnabled() {
-        return this.dirtyRectanglesEnabled;
-    }
-
-    /**
-     * @brief Configures if optional Dirty-Rectangles rendering is active.
-     * @param enabled True to optimize with dirty region scans, False to use cell-level diff updates.
-     */
     public void setDirtyRectanglesEnabled(boolean enabled) {
-        this.dirtyRectanglesEnabled = enabled;
-        if (enabled) {
-            this.clearPrev();
-        }
-    }
-
-    /**
-     * @brief Gets the width boundary.
-     * @return Column width.
-     */
-    public int getWidth() {
-        return this.width;
-    }
-
-    /**
-     * @brief Gets the height boundary.
-     * @return Row height.
-     */
-    public int getHeight() {
-        return this.height;
+        dirtyRectanglesEnabled = enabled;
+        if (enabled) clearPrev();
     }
 }

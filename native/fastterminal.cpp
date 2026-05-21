@@ -296,10 +296,13 @@ JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setSystemCursorVisible(JNI
             if (andMask && xorMask) {
                 memset(andMask, 0xFF, maskSize);
                 memset(xorMask, 0x00, maskSize);
-                HCURSOR hEmpty = CreateCursor(GetModuleHandle(NULL), 0, 0, w, h, andMask, xorMask);
-                if (hEmpty != NULL) {
-                    // OCR_NORMAL = 32512
-                    SetSystemCursor(hEmpty, 32512); // Takes ownership and destroys hEmpty
+                HCURSOR hEmptyNormal = CreateCursor(GetModuleHandle(NULL), 0, 0, w, h, andMask, xorMask);
+                HCURSOR hEmptyIBeam = CreateCursor(GetModuleHandle(NULL), 0, 0, w, h, andMask, xorMask);
+                HCURSOR hEmptyHand = CreateCursor(GetModuleHandle(NULL), 0, 0, w, h, andMask, xorMask);
+                if (hEmptyNormal != NULL) {
+                    SetSystemCursor(hEmptyNormal, 32512); // OCR_NORMAL
+                    if (hEmptyIBeam != NULL) SetSystemCursor(hEmptyIBeam, 32513); // OCR_IBEAM
+                    if (hEmptyHand != NULL) SetSystemCursor(hEmptyHand, 32649); // OCR_HAND
                     cursorHidden = true;
                     // Force immediate cursor redraw by setting cursor pos to itself
                     POINT p;
@@ -322,4 +325,155 @@ JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setSystemCursorVisible(JNI
             }
         }
     }
+}
+
+// ============================================================================
+// Console Screen Buffer Snapshot
+// ============================================================================
+
+/**
+ * @brief Legacy 4-bit console color index → 24-bit RGB lookup table.
+ *
+ * Matches the default Windows Terminal / conhost color palette so the snapshot
+ * looks as close as possible to what the user actually sees.
+ *
+ * Index layout (CHAR_INFO attribute nibbles):
+ *   bits 0-3 = foreground color index
+ *   bits 4-7 = background color index
+ */
+static const COLORREF CONSOLE_PALETTE[16] = {
+    0x0C0C0C, // 0  Black
+    0x0037DA, // 1  Dark Blue
+    0x13A10E, // 2  Dark Green
+    0x3A96DD, // 3  Dark Cyan
+    0xC50F1F, // 4  Dark Red
+    0x881798, // 5  Dark Magenta
+    0xC19C00, // 6  Dark Yellow
+    0xCCCCCC, // 7  Gray
+    0x767676, // 8  Dark Gray
+    0x3B78FF, // 9  Blue
+    0x16C60C, // 10 Green
+    0x61D6D6, // 11 Cyan
+    0xE74856, // 12 Red
+    0xB4009E, // 13 Magenta
+    0xF9F1A5, // 14 Yellow
+    0xF2F2F2  // 15 White
+};
+
+/**
+ * @brief Reads the visible console screen buffer and returns cell data as a flat int array.
+ *
+ * Layout: [cols, rows, cp0, fg0, bg0, cp1, fg1, bg1, ...]
+ * Total length = 2 + cols * rows * 3.
+ *
+ * Characters are returned as Unicode codepoints (ReadConsoleOutputW gives WCHAR).
+ * Colors are mapped from the 4-bit CHAR_INFO attribute byte using the default palette.
+ * Falls back gracefully: returns a 2-element array [0, 0] on any failure so Java
+ * can detect the unsupported case (e.g. Windows Terminal pseudo-console).
+ */
+JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_readConsoleOutput(JNIEnv* env, jclass clazz) {
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE || hOut == NULL) {
+        jintArray fail = env->NewIntArray(2);
+        jint z[2] = {0, 0};
+        env->SetIntArrayRegion(fail, 0, 2, z);
+        return fail;
+    }
+
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (!GetConsoleScreenBufferInfo(hOut, &csbi)) {
+        jintArray fail = env->NewIntArray(2);
+        jint z[2] = {0, 0};
+        env->SetIntArrayRegion(fail, 0, 2, z);
+        return fail;
+    }
+
+    // Visible window region only — same as what getTerminalSize() returns
+    int cols = csbi.srWindow.Right  - csbi.srWindow.Left + 1;
+    int rows = csbi.srWindow.Bottom - csbi.srWindow.Top  + 1;
+    int total = cols * rows;
+
+    CHAR_INFO* buf = (CHAR_INFO*)malloc(total * sizeof(CHAR_INFO));
+    if (!buf) {
+        jintArray fail = env->NewIntArray(2);
+        jint z[2] = {0, 0};
+        env->SetIntArrayRegion(fail, 0, 2, z);
+        return fail;
+    }
+
+    COORD bufSize   = { (SHORT)cols, (SHORT)rows };
+    COORD bufOrigin = { 0, 0 };
+    SMALL_RECT readRegion = csbi.srWindow; // read exactly the visible window
+
+    BOOL ok = ReadConsoleOutputW(hOut, buf, bufSize, bufOrigin, &readRegion);
+    if (!ok) {
+        free(buf);
+        jintArray fail = env->NewIntArray(2);
+        jint z[2] = {0, 0};
+        env->SetIntArrayRegion(fail, 0, 2, z);
+        return fail;
+    }
+
+    // Pack result: [cols, rows, cp, fg, bg, cp, fg, bg, ...]
+    int resultLen = 2 + total * 3;
+    jintArray result = env->NewIntArray(resultLen);
+    if (!result) { free(buf); return NULL; }
+
+    jint* data = (jint*)malloc(resultLen * sizeof(jint));
+    if (!data) { free(buf); return NULL; }
+
+    data[0] = (jint)cols;
+    data[1] = (jint)rows;
+
+    for (int i = 0; i < total; i++) {
+        WCHAR wch   = buf[i].Char.UnicodeChar;
+        WORD  attr  = buf[i].Attributes;
+
+        int fgIdx = (attr)      & 0x0F;
+        int bgIdx = (attr >> 4) & 0x0F;
+
+        // Map to 24-bit RGB via palette
+        COLORREF fgRgb = CONSOLE_PALETTE[fgIdx];
+        COLORREF bgRgb = CONSOLE_PALETTE[bgIdx];
+
+        // COLORREF is 0x00BBGGRR — convert to 0xRRGGBB
+        int fg24 = (((fgRgb)       & 0xFF) << 16)  // R
+                 | (((fgRgb >> 8)  & 0xFF) << 8)   // G
+                 |  ((fgRgb >> 16) & 0xFF);         // B
+
+        int bg24 = (((bgRgb)       & 0xFF) << 16)
+                 | (((bgRgb >> 8)  & 0xFF) << 8)
+                 |  ((bgRgb >> 16) & 0xFF);
+
+        // Use space for null/control characters
+        int cp = (wch >= 0x20) ? (int)wch : (int)' ';
+
+        data[2 + i * 3 + 0] = cp;
+        data[2 + i * 3 + 1] = fg24;
+        data[2 + i * 3 + 2] = bg24;
+    }
+
+    env->SetIntArrayRegion(result, 0, resultLen, data);
+    free(data);
+    free(buf);
+    return result;
+}
+
+/**
+ * @brief Returns the current console cursor position as [col, row] (0-based).
+ */
+JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getCursorPosition(JNIEnv* env, jclass clazz) {
+    jintArray result = env->NewIntArray(2);
+    jint pos[2] = {0, 0};
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut != INVALID_HANDLE_VALUE && hOut != NULL) {
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        if (GetConsoleScreenBufferInfo(hOut, &csbi)) {
+            // Return position relative to the visible window top-left
+            pos[0] = csbi.dwCursorPosition.X - csbi.srWindow.Left;
+            pos[1] = csbi.dwCursorPosition.Y - csbi.srWindow.Top;
+        }
+    }
+    env->SetIntArrayRegion(result, 0, 2, pos);
+    return result;
 }

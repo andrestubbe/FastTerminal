@@ -8,4 +8,5 @@ EXPORTS
     Java_fastterminal_FastTerminal_isTerminalFocused
     Java_fastterminal_FastTerminal_isMouseOverTerminal
     Java_fastterminal_FastTerminal_setSystemCursorVisible
-
+    Java_fastterminal_FastTerminal_readConsoleOutput
+    Java_fastterminal_FastTerminal_getCursorPosition

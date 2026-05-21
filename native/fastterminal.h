@@ -93,6 +93,26 @@ JNIEXPORT jboolean JNICALL Java_fastterminal_FastTerminal_isMouseOverTerminal(JN
  */
 JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setSystemCursorVisible(JNIEnv* env, jclass clazz, jboolean visible);
 
+/**
+ * @brief Reads the visible console screen buffer and returns cell data as a flat int array.
+ *
+ * Each cell is encoded as three consecutive ints: [codepoint, fg_rgb, bg_rgb].
+ * Colors are converted from the legacy 4-bit CHAR_INFO attribute byte to 24-bit RGB.
+ * The first two elements of the array are [cols, rows] so the caller knows the dimensions.
+ *
+ * Total array length = 2 + (cols * rows * 3).
+ *
+ * @param env Pointer to the JNI environment.
+ * @param clazz The calling Java class reference.
+ * @return jintArray Flat cell data array, or NULL on failure.
+ */
+JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_readConsoleOutput(JNIEnv* env, jclass clazz);
+
+/**
+ * @brief Returns the current console cursor position as [col, row] (0-based).
+ */
+JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getCursorPosition(JNIEnv* env, jclass clazz);
+
 #ifdef __cplusplus
 }
 #endif

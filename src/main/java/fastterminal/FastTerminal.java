@@ -94,4 +94,24 @@ public class FastTerminal {
      * @param visible True to show the standard system mouse cursor, False to hide it.
      */
     public static native void setSystemCursorVisible(boolean visible);
+
+    /**
+     * @brief Reads the visible console screen buffer as a snapshot.
+     *
+     * Returns a flat int array with layout: [cols, rows, cp0, fg0, bg0, cp1, fg1, bg1, ...]
+     * where each cell is a Unicode codepoint + 24-bit RGB foreground + 24-bit RGB background.
+     * Total length = 2 + cols * rows * 3.
+     *
+     * Returns [0, 0] if the read fails (e.g. running inside Windows Terminal's pseudo-console).
+     *
+     * @return int[] Flat snapshot array, or [0, 0] on failure.
+     */
+    public static native int[] readConsoleOutput();
+
+    /**
+     * @brief Returns the current console cursor position as [col, row] (0-based).
+     *
+     * @return int[] [col, row], or [0, 0] on failure.
+     */
+    public static native int[] getCursorPosition();
 }
