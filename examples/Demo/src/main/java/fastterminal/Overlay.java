@@ -26,7 +26,7 @@ import fastkeyboard.FastKeyboardImpl;
  *   ESC         — exit and restore terminal state
  *   Mouse       — drag, resize, minimize, close the panel
  */
-public class TerminalOverlay {
+public class Overlay {
 
     // 🎨 Panel color constants — BeOS amber theme
     public static final int PANEL_BG_COLOR      = 0xF4F4F5;

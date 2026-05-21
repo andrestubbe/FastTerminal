@@ -156,9 +156,8 @@ See the active Java programs under the `examples/Demo` package:
 | Case | Java Example | Performance / Demo | Details |
 |------|--------------|--------------------|---------|
 | Demoscene Megademo | [Demo.java](examples/Demo/src/main/java/fastterminal/Demo.java) | High-fidelity visual FX catalog | Auto-cycles through active fluid, fire, grids and 3D wireframes |
-| Render Performance Race | [Benchmark.java](examples/Demo/src/main/java/fastterminal/Benchmark.java) | Pure throughput speed benchmark | Renders full-screen alternating patterns at raw throughput limits |
 | Native Mouse Visualizer | [UI.java](examples/Demo/src/main/java/fastterminal/UI.java) | Real-time interactive coordinates & clicks | Draggable, resizable BeOS-style panel with file navigator and custom ANSI cursor over a background image |
-| Terminal Overlay | [TerminalOverlay.java](examples/Demo/src/main/java/fastterminal/TerminalOverlay.java) | Floating panel over live terminal content | Snapshots the console buffer at startup via `ReadConsoleOutputW`, projects a draggable panel on top, and fully restores the original terminal state on exit |
+| Terminal Overlay | [Overlay.java](examples/Demo/src/main/java/fastterminal/Overlay.java) | Floating panel over live terminal content | Snapshots the console buffer at startup via `ReadConsoleOutputW`, projects a draggable panel on top, and fully restores the original terminal state on exit |
 
 ---
 

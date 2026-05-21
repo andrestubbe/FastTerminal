@@ -12,4 +12,4 @@ if %ERRORLEVEL% NEQ 0 ( cd ..\.. & echo Compile failed. & pause & exit /b )
 cd ..\..
 
 echo [INFO] Launching Terminal Overlay Demo...
-java -Dfile.encoding=UTF-8 --enable-native-access=ALL-UNNAMED -cp "examples\Demo\target\classes;examples\Demo\target\dependency\*" fastterminal.TerminalOverlay
+java -Dfile.encoding=UTF-8 --enable-native-access=ALL-UNNAMED -cp "examples\Demo\target\classes;examples\Demo\target\dependency\*" fastterminal.Overlay
