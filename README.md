@@ -4,11 +4,6 @@
 
 [![FastTerminal Showcase](docs/screenshot.png)](https://www.youtube.com/watch?v=e0vSTnUgKEc)
 
-[![Java](https://img.shields.io/badge/Java-17+-blue.svg)](https://www.java.com)
-[![Platform](https://img.shields.io/badge/Platform-Windows%2010+%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![JitPack](https://jitpack.io/v/andrestubbe/FastTerminal.svg)](https://jitpack.io/#andrestubbe/FastTerminal)
-
 FastTerminal is the high-performance terminal substrate of the **FastJava** ecosystem. It introduces a lightweight, cell-buffered virtual viewport using primitive integer buffers for full 24-bit True Color (foreground & background) and emoji-safe UTF-32 Codepoint grids, operating completely independently of standard bloated frameworks.
 
 To achieve a completely responsive, zero-latency desktop terminal experience, FastTerminal is designed to pair natively with the input, styling, and helper modules of the **FastJava** ecosystem:
@@ -36,6 +31,12 @@ public class Demo {
     }
 }
 ```
+
+[![Status](https://img.shields.io/badge/status-v0.1.0-brightgreen.svg)](https://github.com/andrestubbe/FastTerminal/releases/tag/v0.1.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Java](https://img.shields.io/badge/Java-17+-blue.svg)](https://www.java.com)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010+-lightgrey.svg)]()
+[![JitPack](https://img.shields.io/badge/JitPack-ready-green.svg)](https://jitpack.io/#andrestubbe)
 
 ## Table of Contents
 - [Mission](#mission)
