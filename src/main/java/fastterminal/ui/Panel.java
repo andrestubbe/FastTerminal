@@ -113,6 +113,16 @@ public class Panel extends Component {
     }
 
     /**
+     * Toggles the visibility of the interactive resize button.
+     */
+    public void setHasResizeButton(boolean hasResizeButton) {
+        this.hasResizeButton = hasResizeButton;
+        if (this.resizeButton != null) {
+            this.resizeButton.setVisible(hasResizeButton);
+        }
+    }
+
+    /**
      * Toggles the panel between fully hidden (desktop icon) and restored state.
      */
     public void toggleMinimize() {
@@ -288,6 +298,19 @@ public class Panel extends Component {
                 // Draw corners
                 canvas.writeCell(x, y, tlCp, borderFg, bgColor);
                 canvas.writeCell(x + width - 1, y, trCp, borderFg, bgColor);
+                canvas.writeCell(x, y + height - 1, blCp, borderFg, bgColor);
+                canvas.writeCell(x + width - 1, y + height - 1, brCp, borderFg, bgColor);
+            } else {
+                // Draw bottom border
+                for (int c = x + 1; c < x + width - 1; c++) {
+                    canvas.writeCell(c, y + height - 1, hCp, borderFg, bgColor);
+                }
+                // Draw vertical borders
+                for (int r = y + 1; r < y + height - 1; r++) {
+                    canvas.writeCell(x, r, vCp, borderFg, bgColor);
+                    canvas.writeCell(x + width - 1, r, vCp, borderFg, bgColor);
+                }
+                // Draw bottom corners
                 canvas.writeCell(x, y + height - 1, blCp, borderFg, bgColor);
                 canvas.writeCell(x + width - 1, y + height - 1, brCp, borderFg, bgColor);
             }

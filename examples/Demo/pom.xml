@@ -26,14 +26,12 @@
         <dependency>
             <groupId>io.github.andrestubbe</groupId>
             <artifactId>fastcore</artifactId>
-            <version>1.0.0</version>
+            <version>v0.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.andrestubbe</groupId>
             <artifactId>fastterminal</artifactId>
             <version>0.1.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/../../target/fastterminal-0.1.0.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>io.github.andrestubbe</groupId>
@@ -52,10 +50,8 @@
         </dependency>
         <dependency>
             <groupId>com.github.andrestubbe</groupId>
-            <artifactId>fastkeyboard</artifactId>
-            <version>0.2.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/../../../FastKeyboard/target/FastKeyboard-0.2.0.jar</systemPath>
+            <artifactId>FastKeyboard</artifactId>
+            <version>v0.2.0</version>
         </dependency>
     </dependencies>
     
@@ -83,3 +79,5 @@
         </plugins>
     </build>
 </project>
+
+

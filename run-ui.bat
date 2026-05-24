@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 
 echo [INFO] Building FastTerminal library...
 call mvn -q package -DskipTests
@@ -10,7 +11,7 @@ call mvn -q compile dependency:copy-dependencies -DincludeScope=runtime -DskipTe
 if %ERRORLEVEL% NEQ 0 ( cd ..\.. & echo Compile failed. & pause & exit /b )
 
 echo [INFO] Launching UI Demo...
-java --enable-native-access=ALL-UNNAMED -cp "target/classes;target/dependency/*;../../target/fastterminal-0.1.0.jar;../../../FastKeyboard/target/FastKeyboard-0.2.0.jar" fastterminal.UI
+java -Dfile.encoding=UTF-8 --enable-native-access=ALL-UNNAMED -cp "target/classes;target/dependency/*" fastterminal.UI
 
 cd ..\..
 pause

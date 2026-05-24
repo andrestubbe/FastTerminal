@@ -12,7 +12,7 @@ call mvn -q compile dependency:copy-dependencies -DincludeScope=runtime -DskipTe
 if %ERRORLEVEL% NEQ 0 ( cd ..\.. & pause & exit /b )
 
 echo [INFO] Running High-Performance Demoscene Demo...
-java --enable-native-access=ALL-UNNAMED -cp "target/classes;target/dependency/*;../../target/fastterminal-0.1.0.jar;../../../FastKeyboard/target/FastKeyboard-0.2.0.jar" fastterminal.Demo
+java --enable-native-access=ALL-UNNAMED -cp "target/classes;target/dependency/*" fastterminal.Demo
 
 cd ..\..
 pause

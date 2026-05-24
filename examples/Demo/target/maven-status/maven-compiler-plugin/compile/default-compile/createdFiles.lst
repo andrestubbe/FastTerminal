@@ -4,6 +4,8 @@ fastterminal\demoscene\effects\CheckerboardEffect.class
 fastterminal\demoscene\effects\IntroEffect.class
 fastterminal\UI.class
 fastterminal\demoscene\effects\AsciiTunnelEffect.class
+fastterminal\Overlay.class
+fastterminal\Overlay$1.class
 fastterminal\demoscene\effects\ImageZoomEffect.class
 fastterminal\Demo.class
 fastterminal\demoscene\effects\DoomFireEffect.class
