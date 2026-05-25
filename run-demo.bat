@@ -1,18 +1,15 @@
 @echo off
-:: Configure Windows Console to UTF-8 to support True-Color and Grid rendering cleanly
-chcp 65001 > nul
+chcp 65001 >nul
+cls
 
-echo [INFO] Building Main FastTerminal Library...
+echo ⚡ Building Main FastTerminal Library...
 call mvn -q package -DskipTests
 if %ERRORLEVEL% NEQ 0 ( pause & exit /b )
 
-echo [INFO] Compiling Demo...
+echo 🔧 Compiling Demo...
 cd examples\Demo
 call mvn -q compile dependency:copy-dependencies -DincludeScope=runtime -DskipTests
-if %ERRORLEVEL% NEQ 0 ( cd ..\.. & pause & exit /b )
+if %ERRORLEVEL% NEQ 0 ( cd ..\.. & echo Compile failed. & pause & exit /b )
 
-echo [INFO] Running High-Performance Demoscene Demo...
+echo 🚀 Running Demo...
 java --enable-native-access=ALL-UNNAMED -cp "target/classes;target/dependency/*" fastterminal.Demo
-
-cd ..\..
-pause
