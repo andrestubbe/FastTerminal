@@ -35,8 +35,8 @@ echo This will take a few minutes to complete as JMH isolates,
 echo warms up, and measures throughput rigorously.
 echo.
 
-REM Run JMH Benchmark
-java -jar target\benchmarks.jar
+REM Run JMH Benchmark (EXTRA verbosity disables the broken # progress bar on Windows)
+java -jar target\benchmarks.jar -v EXTRA
 
 echo.
 echo [DONE] Benchmark Complete.
