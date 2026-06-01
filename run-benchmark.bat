@@ -35,8 +35,8 @@ echo This will take a few minutes to complete as JMH isolates,
 echo warms up, and measures throughput rigorously.
 echo.
 
-REM Run JMH Benchmark (Hide Experimental VM warnings)
-java -jar target\benchmarks.jar | findstr /V /C:"NOTE: Current JVM experimentally supports Compiler Blackholes" /C:"extra caution when trusting the results" /C:"works, and factor in a small probability" /C:"different JVMs are already problematic" /C:"modes can be very significant"
+REM Run JMH Benchmark
+java -jar target\benchmarks.jar
 
 echo.
 echo [DONE] Benchmark Complete.
