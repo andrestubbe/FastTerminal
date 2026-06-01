@@ -23,11 +23,11 @@ with the input, styling, and helper modules of the **FastJava** ecosystem:
 * 🖱️ **[FastMouse](https://github.com/andrestubbe/FastMouse)** — Precise hardware-level and virtual console-mode mouse
   tracking.
 
-[**Watch the Demo**](YOUR_YOUTUBE_LINK_HERE) | [**Watch the JMH Benchmark**](YOUR_YOUTUBE_LINK_HERE)
+[**Watch the Demo**](https://www.youtube.com/watch?v=e0vSTnUgKEc) | [**Watch the JMH Benchmark**](https://www.youtube.com/watch?v=SAFlmP3dpQs)
 
 ---
 
-[![FastTerminal Showcase](docs/screenshot.png)](YOUR_YOUTUBE_LINK_HERE)
+[![FastTerminal Showcase](docs/screenshot.png)](https://www.youtube.com/watch?v=e0vSTnUgKEc)
 
 ```java
 // Quick Start — Example
@@ -99,7 +99,7 @@ via **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** and **[FastM
 
 FastTerminal is designed to run the pure mathematics of a UI rendering pipeline (diffing, double-buffering, and composite layering) entirely outside the garbage collector's reach.
 
-[**Watch the JMH Benchmark**](YOUR_YOUTUBE_LINK_HERE)
+[**Watch the JMH Benchmark**](https://www.youtube.com/watch?v=SAFlmP3dpQs)
 
 In the official [JMH Benchmark](examples/Benchmark), the system measured the core `FastTerminalRenderer` performance on a standard 120x30 console output:
 
