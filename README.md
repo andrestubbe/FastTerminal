@@ -105,7 +105,7 @@ integer arrays, eliminating object allocation overhead:
   └── bgColorBuffer   (int[] - packed 24-bit RGB values)
 ```
 
-Composites are blitted to standard output using the highly-optimized **[TerminalRenderer](REFERENCE.md)**.
+Composites are blitted to standard output using the highly-optimized **[TerminalRenderer](docs/REFERENCE.md)**.
 
 ---
 
@@ -113,13 +113,13 @@ Composites are blitted to standard output using the highly-optimized **[Terminal
 
 | Method                                | Description                                              | Path                                    |
 |---------------------------------------|----------------------------------------------------------|-----------------------------------------|
-| `writeCell(col, row, cp, fg, bg)`     | Writes a single codepoint and packed colors to the grid. | [Reference →](REFERENCE.md#writecell)   |
-| `writeString(col, row, text, fg, bg)` | Renders a string including standard emojis safely.       | [Reference →](REFERENCE.md#writestring) |
-| `render()`                            | Blits all active scenes to the console screen buffer.    | [Reference →](REFERENCE.md#render)      |
-| `clear()`                             | Resets all layers to default spaces and standard styles. | [Reference →](REFERENCE.md#clear)       |
+| `writeCell(col, row, cp, fg, bg)`     | Writes a single codepoint and packed colors to the grid. | [Reference →](docs/REFERENCE.md#writecell)   |
+| `writeString(col, row, text, fg, bg)` | Renders a string including standard emojis safely.       | [Reference →](docs/REFERENCE.md#writestring) |
+| `render()`                            | Blits all active scenes to the console screen buffer.    | [Reference →](docs/REFERENCE.md#render)      |
+| `clear()`                             | Resets all layers to default spaces and standard styles. | [Reference →](docs/REFERENCE.md#clear)       |
 
 > [!TIP]
-> See **[REFERENCE.md](REFERENCE.md)** for full class definitions, packed color utilities, and JNI specs.
+> See **[REFERENCE.md](docs/REFERENCE.md)** for full class definitions, packed color utilities, and JNI specs.
 
 ---
 

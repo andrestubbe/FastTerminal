@@ -1,17 +1,42 @@
 @echo off
-chcp 65001 >nul
-cls
+setlocal EnableDelayedExpansion
 
-echo ⚡ Building Main FastTerminal Library...
-call mvn -q package -DskipTests
-if %ERRORLEVEL% NEQ 0 ( pause & exit /b )
+REM Change to script directory
+cd /d "%~dp0"
 
-echo 🔧 Compiling Demo...
-cd examples\Demo
-call mvn -q compile dependency:copy-dependencies -DincludeScope=runtime -DskipTests
-if %ERRORLEVEL% NEQ 0 ( cd ..\.. & echo Compile failed. & pause & exit /b )
+echo ===========================================
+echo FastTerminal Benchmark Runner
+echo ===========================================
 
-echo 🚀 Running Demo...
-java --enable-native-access=ALL-UNNAMED -cp "target/classes;target/dependency/*" fastterminal.Benchmark
+echo [INFO] Building Main FastTerminal Project...
+call mvn clean install -DskipTests
+if %ERRORLEVEL% neq 0 (
+    echo [ERROR] Main project build failed.
+    pause
+    exit /b %ERRORLEVEL%
+)
 
+echo [INFO] Building Benchmark...
+cd examples\Benchmark
+call mvn clean package
+if %ERRORLEVEL% neq 0 (
+    echo [ERROR] Benchmark build failed.
+    pause
+    exit /b %ERRORLEVEL%
+)
 
+echo.
+echo ===========================================
+echo FastTerminal Benchmark (120x30 Console)
+echo ===========================================
+echo.
+echo [INFO] Initializing JMH Runner...
+echo This will take a few minutes to complete as JMH isolates, 
+echo warms up, and measures throughput rigorously.
+echo.
+
+REM Run JMH Benchmark
+java -jar target\benchmarks.jar
+
+echo.
+echo [DONE] Benchmark Complete.
