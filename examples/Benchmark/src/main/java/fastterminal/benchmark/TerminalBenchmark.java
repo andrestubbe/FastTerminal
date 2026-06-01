@@ -4,6 +4,8 @@ import fastterminal.FastTerminalRenderer;
 import fastterminal.FastTerminalScene;
 import org.openjdk.jmh.annotations.*;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Thread)
@@ -20,6 +22,17 @@ public class TerminalBenchmark {
 
     @Setup(Level.Trial)
     public void setup() {
+        // Redirect System.out to a NullOutputStream so FastTerminalRenderer doesn't spam the console!
+        System.setOut(new PrintStream(new OutputStream() {
+            @Override
+            public void write(int b) {
+                // Do nothing (Null bitbucket)
+            }
+            @Override
+            public void write(byte[] b, int off, int len) {
+            }
+        }));
+
         // Typical full-screen terminal size
         int width = 120;
         int height = 30;
