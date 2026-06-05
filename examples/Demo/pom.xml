@@ -25,27 +25,27 @@
     <dependencies>
         <dependency>
             <groupId>com.github.andrestubbe</groupId>
-            <artifactId>fastcore</artifactId>
+            <artifactId>FastCore</artifactId>
             <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.andrestubbe</groupId>
-            <artifactId>fastterminal</artifactId>
+            <artifactId>FastTerminal</artifactId>
             <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.andrestubbe</groupId>
-            <artifactId>fastmouse</artifactId>
+            <artifactId>FastMouse</artifactId>
             <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.andrestubbe</groupId>
-            <artifactId>fastemojis</artifactId>
+            <artifactId>FastEmojis</artifactId>
             <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.andrestubbe</groupId>
-            <artifactId>fastansi</artifactId>
+            <artifactId>FastANSI</artifactId>
             <version>0.1.0</version>
         </dependency>
         <dependency>
