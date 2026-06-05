@@ -7,7 +7,7 @@
 
     <groupId>com.github.andrestubbe</groupId>
     <artifactId>FastTerminal</artifactId>
-    <version>0.1.0</version>
+    <version>v0.1.0</version>
     <packaging>jar</packaging>
 
     <name>FastTerminal</name>
@@ -53,14 +53,14 @@
         <!-- FastCore - Unified JNI loader -->
         <dependency>
             <groupId>com.github.andrestubbe</groupId>
-            <artifactId>fastcore</artifactId>
-            <version>0.1.0</version>
+            <artifactId>FastCore</artifactId>
+            <version>v0.1.0</version>
         </dependency>
         <!-- FastMouse - Native mouse inputs -->
         <dependency>
             <groupId>io.github.andrestubbe</groupId>
-            <artifactId>fastmouse</artifactId>
-            <version>0.1.0</version>
+            <artifactId>FastMouse</artifactId>
+            <version>v0.1.0</version>
         </dependency>
         <!-- JLine dependency (kept for backcompat, eventually removed) -->
         <dependency>
@@ -71,8 +71,8 @@
         <!-- FastEmojis - Zero-allocation emoji EAW engine -->
         <dependency>
             <groupId>com.github.andrestubbe</groupId>
-            <artifactId>fastemojis</artifactId>
-            <version>0.1.0</version>
+            <artifactId>FastEmojis</artifactId>
+            <version>v0.1.0</version>
         </dependency>
         <!-- FastANSI - Zero-allocation ANSI escape codes parser -->
         <dependency>
