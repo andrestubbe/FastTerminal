@@ -6,7 +6,7 @@
 
     <groupId>fastterminal.benchmark</groupId>
     <artifactId>fastterminal-benchmark</artifactId>
-    <version>0.1.0</version>
+    <version>v0.1.0</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -26,8 +26,8 @@
         <!-- The library we are benchmarking -->
         <dependency>
             <groupId>com.github.andrestubbe</groupId>
-            <artifactId>fastterminal</artifactId>
-            <version>0.1.0</version>
+            <artifactId>FastTerminal</artifactId>
+            <version>v0.1.0</version>
         </dependency>
 
         <!-- JMH Dependencies -->

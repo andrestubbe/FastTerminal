@@ -1,12 +1,11 @@
-﻿@echo off
-chcp 65001 >nul
+@echo off
 cls
 
 echo âš¡ Building Main FastTerminal Library...
 
 echo ðŸ”§ Compiling Demo...
 cd examples\Demo
-call mvn -q compile dependency:copy-dependencies -DincludeScope=runtime -DskipTests
+call mvn compile dependency:copy-dependencies -DincludeScope=runtime -DskipTests
 if %ERRORLEVEL% NEQ 0 ( cd ..\.. & echo Compile failed. & pause & exit /b )
 
 echo ðŸš€ Running Demo...
