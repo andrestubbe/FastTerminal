@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 setlocal EnableDelayedExpansion
 
 REM Change to script directory
@@ -9,8 +9,6 @@ echo FastTerminal Benchmark Runner
 echo ===========================================
 
 echo [INFO] Building Main FastTerminal Project...
-call mvn clean install -DskipTests -q
-if %ERRORLEVEL% neq 0 (
     echo [ERROR] Main project build failed.
     pause
     exit /b %ERRORLEVEL%
@@ -18,8 +16,6 @@ if %ERRORLEVEL% neq 0 (
 
 echo [INFO] Building Benchmark...
 cd examples\Benchmark
-call mvn clean package -q
-if %ERRORLEVEL% neq 0 (
     echo [ERROR] Benchmark build failed.
     pause
     exit /b %ERRORLEVEL%
