@@ -1,6 +1,6 @@
-﻿# FastTerminal v0.1.0 [ALPHA] â€” High-Performance True-Color Terminal Engine for Java
+﻿# FastTerminal 0.1.0 [ALPHA] â€” High-Performance True-Color Terminal Engine for Java
 
-[![Status](https://img.shields.io/badge/status-v0.1.0-brightgreen.svg)](https://github.com/andrestubbe/FastTerminal/releases/tag/v0.1.0)
+[![Status](https://img.shields.io/badge/status-0.1.0-brightgreen.svg)](https://github.com/andrestubbe/FastTerminal/releases/tag/0.1.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java](https://img.shields.io/badge/Java-17+-blue.svg)](https://www.java.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010+-lightgrey.svg)]()
@@ -18,7 +18,7 @@ with the input, styling, and helper modules of the **FastJava** ecosystem:
 
 * âš¡ **[FastANSI](https://github.com/andrestubbe/FastANSI)** â€” Micro-optimized, garbage-free ANSI escape sequence builder
   and parser for terminal graphics.
-* ðŸš€ **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** â€” Direct, low-latency, asynchronous raw global and
+* ðŸš€ **[FastTerminal](https://github.com/andrestubbe/FastTerminal)** â€” Direct, low-latency, asynchronous raw global and
   local keyboard event handling.
 * ðŸ–±ï¸ **[FastMouse](https://github.com/andrestubbe/FastMouse)** â€” Precise hardware-level and virtual console-mode mouse
   tracking.
@@ -72,7 +72,7 @@ public class Demo {
 
 The mission is to build the fastest, most robust native execution kernel on the JVM for console rendering and TUI
 interactivity. By combining cell-buffered graphics, double-buffered layouts, and immediate OS hardware input telemetry
-via **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** and **[FastMouse](https://github.com/andrestubbe/FastMouse)**, we empower developers to create premium, interactive command-line terminals that rival native C++ applications in visual fidelity and input responseâ€”without external dependencies.
+via **[FastTerminal](https://github.com/andrestubbe/FastTerminal)** and **[FastMouse](https://github.com/andrestubbe/FastMouse)**, we empower developers to create premium, interactive command-line terminals that rival native C++ applications in visual fidelity and input responseâ€”without external dependencies.
 
 ---
 
@@ -88,7 +88,7 @@ via **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** and **[FastM
   ** by only emitting escape codes when color states change, reducing console stream bandwidth by up to **80%**.
 * **ðŸ“º Alternate Screen Buffer** â€” Seamlessly enters full-screen TUI buffer mode (`\033[?1049h`) and hides the cursor (
   `\033[?25l`) using **[FastANSI](https://github.com/andrestubbe/FastANSI)** utilities for clean dashboard applications.
-* **ðŸŽ¹ Native Input Substrates** â€” Built-in telemetry anchors designed for instant integration with `FastKeyboard` and
+* **ðŸŽ¹ Native Input Substrates** â€” Built-in telemetry anchors designed for instant integration with `FastTerminal` and
   `FastMouse` to process mouse tracking, window resizing, and raw key captures natively.
 * **ðŸ“¥ apt/npm Style Indicators** â€” Built-in dynamic bottom-anchored multi-line progress overlays using cursor
   save/restore positions.
@@ -163,14 +163,14 @@ Add the JitPack repository and the dependencies to your `pom.xml`:
 <dependency>
     <groupId>com.github.andrestubbe</groupId>
     <artifactId>fastterminal</artifactId>
-    <version>v0.1.0</version>
+    <version>0.1.0</version>
 </dependency>
 
 <!-- FastCore (Required Native Loader) -->
 <dependency>
     <groupId>com.github.andrestubbe</groupId>
     <artifactId>fastcore</artifactId>
-    <version>v0.1.0</version>
+    <version>0.1.0</version>
 </dependency>
 </dependencies>
 ```
@@ -183,8 +183,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.andrestubbe:fastterminal:v0.1.0'
-    implementation 'com.github.andrestubbe:fastcore:v0.1.0'
+    implementation 'com.github.andrestubbe:fastterminal:0.1.0'
+    implementation 'com.github.andrestubbe:fastcore:0.1.0'
 }
 ```
 
@@ -192,8 +192,8 @@ dependencies {
 
 Download the latest JARs directly to add them to your classpath:
 
-1. ðŸ“¦ **[fastterminal-v0.1.0.jar](https://github.com/andrestubbe/FastTerminal/releases/download/v0.1.0/fastterminal-v0.1.0.jar)** (The Core Library)
-2. âš™ï¸ **[fastcore-v0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/v0.1.0/fastcore-v0.1.0.jar)** (The Mandatory Native Loader)
+1. ðŸ“¦ **[fastterminal-0.1.0.jar](https://github.com/andrestubbe/FastTerminal/releases/download/0.1.0/fastterminal-0.1.0.jar)** (The Core Library)
+2. âš™ï¸ **[fastcore-0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/0.1.0/fastcore-0.1.0.jar)** (The Mandatory Native Loader)
 
 > [!IMPORTANT]
 > All JARs must be in your classpath for the native JNI calls to function correctly.
@@ -231,7 +231,7 @@ MIT License â€” See [LICENSE](LICENSE) file for details.
 ## Related Projects
 
 - [FastCore](https://github.com/andrestubbe/FastCore) â€” Native Library Loader for Java
-- [FastKeyboard](https://github.com/andrestubbe/FastKeyboard) â€” High-performance RawInput engine
+- [FastTerminal](https://github.com/andrestubbe/FastTerminal) â€” High-performance RawInput engine
 - [FastTheme](https://github.com/andrestubbe/FastTheme) â€” Advanced UI styling engine
 
 ---
