@@ -1,4 +1,4 @@
-package fastterminal.ui;
+package fastterminal.component;
 
 import fastterminal.FastTerminalScene;
 
@@ -46,6 +46,9 @@ public abstract class Component {
             return true;
         }
         return false;
+    }
+
+    public void handleMouseDrag(int cellX, int cellY) {
     }
 
     protected void onHoverChanged(boolean hovered) {}

@@ -112,8 +112,8 @@ public class FastTerminalScene {
         if (col >= 0 && col < this.width && row >= 0 && row < this.height) {
             int idx = row * this.width + col;
             this.codepointBuffer[idx] = codepoint;
-            this.fgBuffer[idx] = fg;
-            this.bgBuffer[idx] = bg;
+            if (fg != -2) this.fgBuffer[idx] = fg;
+            if (bg != -2) this.bgBuffer[idx] = bg;
         }
     }
 

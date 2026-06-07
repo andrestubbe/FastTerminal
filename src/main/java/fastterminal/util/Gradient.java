@@ -1,4 +1,6 @@
-package fastterminal;
+package fastterminal.util;
+
+import fastterminal.FastTerminalScene;
 
 /**
  * @class Gradient
@@ -161,6 +163,85 @@ public final class Gradient {
                 
                 double t = width > 1 ? (double) c / (width - 1) : 0.0;
                 fg[row * sceneW + col] = interpolate(colorStart, colorEnd, t);
+            }
+        }
+        scene.setDirty(true);
+    }
+    public static void applyVerticalFg(FastTerminalScene scene, int startX, int startY, int width, int height, int colorStart, int colorEnd) {
+        int sceneW = scene.getWidth();
+        int sceneH = scene.getHeight();
+        int[] fg = scene.getFgBuffer();
+        for (int r = 0; r < height; r++) {
+            int row = startY + r;
+            if (row < 0 || row >= sceneH) continue;
+            double t = height > 1 ? (double) r / (height - 1) : 0.0;
+            int color = interpolate(colorStart, colorEnd, t);
+            for (int c = 0; c < width; c++) {
+                int col = startX + c;
+                if (col < 0 || col >= sceneW) continue;
+                fg[row * sceneW + col] = color;
+            }
+        }
+        scene.setDirty(true);
+    }
+
+    public static void applyDiagonalFg(FastTerminalScene scene, int startX, int startY, int width, int height, int colorStart, int colorEnd) {
+        int sceneW = scene.getWidth();
+        int sceneH = scene.getHeight();
+        int[] fg = scene.getFgBuffer();
+        int maxDist = (width - 1) + (height - 1);
+        for (int r = 0; r < height; r++) {
+            int row = startY + r;
+            if (row < 0 || row >= sceneH) continue;
+            for (int c = 0; c < width; c++) {
+                int col = startX + c;
+                if (col < 0 || col >= sceneW) continue;
+                double t = maxDist > 0 ? (double) (c + r) / maxDist : 0.0;
+                fg[row * sceneW + col] = interpolate(colorStart, colorEnd, t);
+            }
+        }
+        scene.setDirty(true);
+    }
+
+    public static void applyRadialBg(FastTerminalScene scene, int startX, int startY, int width, int height, int colorStart, int colorEnd) {
+        int sceneW = scene.getWidth();
+        int sceneH = scene.getHeight();
+        int[] bg = scene.getBgBuffer();
+        double cx = width / 2.0;
+        double cy = height / 2.0;
+        double maxDist = Math.sqrt(cx * cx + cy * cy);
+        
+        for (int r = 0; r < height; r++) {
+            int row = startY + r;
+            if (row < 0 || row >= sceneH) continue;
+            for (int c = 0; c < width; c++) {
+                int col = startX + c;
+                if (col < 0 || col >= sceneW) continue;
+                double dist = Math.sqrt((c - cx) * (c - cx) + (r - cy) * (r - cy));
+                double t = maxDist > 0 ? dist / maxDist : 0.0;
+                bg[row * sceneW + col] = interpolate(colorStart, colorEnd, t);
+            }
+        }
+        scene.setDirty(true);
+    }
+
+    public static void applyConicBg(FastTerminalScene scene, int startX, int startY, int width, int height, int colorStart, int colorEnd) {
+        int sceneW = scene.getWidth();
+        int sceneH = scene.getHeight();
+        int[] bg = scene.getBgBuffer();
+        double cx = width / 2.0;
+        double cy = height / 2.0;
+        
+        for (int r = 0; r < height; r++) {
+            int row = startY + r;
+            if (row < 0 || row >= sceneH) continue;
+            for (int c = 0; c < width; c++) {
+                int col = startX + c;
+                if (col < 0 || col >= sceneW) continue;
+                double angle = Math.atan2(r - cy, c - cx);
+                // Map angle from [-PI, PI] to [0, 1]
+                double t = (angle + Math.PI) / (2 * Math.PI);
+                bg[row * sceneW + col] = interpolate(colorStart, colorEnd, t);
             }
         }
         scene.setDirty(true);

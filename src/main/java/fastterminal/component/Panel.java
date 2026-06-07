@@ -1,7 +1,8 @@
-package fastterminal.ui;
+package fastterminal.component;
 
 import fastterminal.FastTerminalScene;
 import fastemojis.FastEmojis;
+import fastterminal.composable.Button;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -361,6 +362,14 @@ public class Panel extends Component {
         if (minimizeButton != null) minimizeButton.render(canvas);
         if (closeButton != null) closeButton.render(canvas);
         if (resizeButton != null) resizeButton.render(canvas);
+    }
+
+    @Override
+    public void handleMouseDrag(int cellX, int cellY) {
+        if (!visible) return;
+        for (Component child : children) {
+            child.handleMouseDrag(cellX, cellY);
+        }
     }
 
     @Override

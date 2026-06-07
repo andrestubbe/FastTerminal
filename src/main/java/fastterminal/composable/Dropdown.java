@@ -1,4 +1,6 @@
-package fastterminal.ui;
+package fastterminal.composable;
+import fastterminal.component.Component;
+import fastterminal.component.Panel;
 
 import fastterminal.FastTerminalScene;
 import java.util.List;

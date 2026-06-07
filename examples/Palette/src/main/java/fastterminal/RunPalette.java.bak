@@ -1,0 +1,260 @@
+package fastterminal;
+
+import fastansi.FastANSI;
+import fastkeyboard.FastKeyboard;
+import fastkeyboard.FastKeyboardImpl;
+import fastkeyboard.FastKeyboardListener;
+import fastmouse.FastMouseListener;
+import fastterminal.component.*;
+import fastterminal.composable.*;
+import fastterminal.layout.*;
+
+import java.util.Arrays;
+import java.util.Random;
+
+public class RunPalette {
+    private static final int DEFAULT_WIDTH = 100;
+    private static final int DEFAULT_HEIGHT = 30;
+
+    private static volatile int mouseCellX = -1;
+    private static volatile int mouseCellY = -1;
+    private static volatile boolean isLeftPressed = false;
+    
+    private static TextBox focusedTextBox = null;
+
+    public static void main(String[] args) throws Exception {
+        System.out.println("Initializing Palette Demo...");
+
+        boolean useSwing = false;
+        for (String arg : args) {
+            if (arg.equals("--swing")) useSwing = true;
+        }
+
+        int cols = DEFAULT_WIDTH;
+        int rows = DEFAULT_HEIGHT;
+        try {
+            int[] size = FastTerminal.getTerminalSize();
+            if (size != null && size[0] > 0 && size[1] > 0) {
+                cols = size[0];
+                rows = size[1];
+            }
+        } catch (Throwable ignored) {}
+
+        if (!useSwing) {
+            System.out.print(FastANSI.ALT_BUFFER_ON + FastANSI.CURSOR_HIDE);
+        }
+        
+        FastTerminalRenderer renderer = null;
+        fastterminal.swing.SwingTerminalRenderer swingRenderer = null;
+        FastTerminalScene canvas = new FastTerminalScene(0, 0, cols, rows);
+        
+        if (useSwing) {
+            swingRenderer = new fastterminal.swing.SwingTerminalRenderer(cols, rows, "FastTerminal Component Palette");
+        } else {
+            renderer = new FastTerminalRenderer(cols, rows);
+            renderer.addScene(canvas);
+        }
+
+        int dashW = Math.max(60, cols - 10);
+        int dashH = Math.max(20, rows - 4);
+        int dashX = (cols - dashW) / 2;
+        int dashY = (rows - dashH) / 2;
+
+        Panel dashboard = new Panel(dashX, dashY, dashW, dashH, 0x111111);
+        dashboard.setBorderStyle(Panel.BorderStyle.ROUNDED);
+        dashboard.setBorderFg(0x555555);
+        dashboard.setHasHeaderBar(true);
+        dashboard.setHeaderBg(0x333333);
+        dashboard.setHeaderFg(0xFFFFFF);
+        dashboard.setTitle("FastTerminal Component Palette");
+
+        Tabs tabs = new Tabs(0, 1, dashW, dashH - 1);
+        
+        // --- TAB 1: Basic Inputs ---
+        Panel pnlBasic = new Panel(0, 0, dashW, dashH - 3, 0x111111);
+        TextBox tb = new TextBox(0, 0, 30);
+        CheckBox cb = new CheckBox(0, 0, "Enable Advanced Feature", false, null);
+        RadioGroup rg = new RadioGroup();
+        RadioButton rb1 = new RadioButton(0, 0, "Option A", rg, true);
+        RadioButton rb2 = new RadioButton(0, 0, "Option B", rg, false);
+        pnlBasic.add(tb);
+        pnlBasic.add(cb);
+        pnlBasic.add(rb1);
+        pnlBasic.add(rb2);
+        
+        Slider slider = new Slider(0, 0, 30, 1);
+        slider.setStyle(SliderStyle.LINE);
+        
+        RangeSlider rangeSlider = new RangeSlider(0, 0, 30, 1);
+        rangeSlider.setStyle(SliderStyle.BLOCK);
+        
+        Slider retroSlider = new Slider(0, 0, 30, 1);
+        retroSlider.setStyle(SliderStyle.RETRO);
+
+        pnlBasic.add(slider);
+        pnlBasic.add(rangeSlider);
+        pnlBasic.add(retroSlider);
+        
+        LinearLayout linear = new LinearLayout(LinearLayout.Direction.VERTICAL, 1);
+        linear.layout(2, 2, dashW - 4, dashH - 6, pnlBasic.getChildren());
+        
+        // Focus handling will be setup at the bottom
+
+        // --- TAB 2: Advanced ---
+        Panel pnlAdv = new Panel(0, 0, dashW, dashH - 3, 0x111111);
+        ListBox listBox = new ListBox(0, 0, 20, 10, Arrays.asList("Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6"));
+        
+        String[] headers = {"ID", "Name", "Status"};
+        String[][] data = {
+            {"1", "Server Alpha", "ONLINE"},
+            {"2", "Server Beta",  "OFFLINE"},
+            {"3", "Database X",   "SYNCING"}
+        };
+        int[] colWidths = {2, 12, 8};
+        Table table = new Table(0, 0, 32, 10, headers, data, colWidths);
+        
+        pnlAdv.add(listBox);
+        pnlAdv.add(table);
+
+        GridLayout grid = new GridLayout(1, 2, 2, 0);
+        grid.layout(2, 2, dashW - 4, 10, pnlAdv.getChildren());
+
+        // --- TAB 3: Legacy ---
+        Panel pnlLegacy = new Panel(0, 0, dashW, dashH - 3, 0x111111);
+        fastterminal.composable.Button btn = new fastterminal.composable.Button(2, 2, 12, 1, "Click Me", () -> {});
+        ProgressBar pBar = new ProgressBar(0xFFFFFF, 0x555555);
+        PercentageLabel pLabel = new PercentageLabel(0xFFFFFF, -1);
+        Badge badge = new Badge(0x000000, 0xFFFFFF);
+        Graph graph = new Graph(0xFFFFFF);
+        pnlLegacy.add(btn);
+        
+        tabs.addTab("Basic Inputs", pnlBasic);
+        tabs.addTab("Advanced UI", pnlAdv);
+        tabs.addTab("Legacy Demo", pnlLegacy);
+        
+        dashboard.add(tabs);
+
+        final boolean finalUseSwing = useSwing;
+        FastKeyboardListener kbListener = (deviceHandle, vKey, makeCode, isPressed, isE0, timestamp, keyCharStr) -> {
+            if (isPressed && (finalUseSwing || FastTerminal.isTerminalFocused())) {
+                if (vKey == 0x1B) System.exit(0); // ESC
+                if (focusedTextBox != null) {
+                    char c = (keyCharStr != null && !keyCharStr.isEmpty()) ? keyCharStr.charAt(0) : '\0';
+                    focusedTextBox.handleKey(vKey, c);
+                }
+            }
+        };
+
+        FastMouseListener msListener = new FastMouseListener() {
+            @Override
+            public void onMouseMove(long deviceHandle, int deltaX, int deltaY, int absX, int absY) {
+                mouseCellX = absX;
+                mouseCellY = absY;
+                if (isLeftPressed) {
+                    dashboard.handleMouseDrag(absX, absY);
+                } else {
+                    dashboard.handleMouseMove(absX, absY);
+                }
+            }
+
+            @Override
+            public void onMouseButton(long deviceHandle, int buttonId, boolean isPressed) {
+                if (buttonId == 0) {
+                    isLeftPressed = isPressed;
+                    if (isPressed) {
+                        if (dashboard.isCloseClick(mouseCellX, mouseCellY)) System.exit(0);
+                    }
+                    if (!dashboard.handleMouseClick(mouseCellX, mouseCellY, isPressed)) {
+                        if (focusedTextBox != null) focusedTextBox.setFocused(false);
+                        focusedTextBox = null;
+                    } else if (tb.contains(mouseCellX, mouseCellY) && isPressed) {
+                        focusedTextBox = tb;
+                    }
+                }
+            }
+
+            @Override
+            public void onMouseWheel(long deviceHandle, int delta) {
+                if (listBox.contains(mouseCellX, mouseCellY)) {
+                    listBox.scroll(delta < 0 ? 1 : -1);
+                }
+            }
+        };
+
+        FastKeyboard keyboard = null;
+        AnsiMouse mouse = null;
+        
+        if (useSwing) {
+            swingRenderer.setKeyboardListener(kbListener);
+            swingRenderer.setMouseListener(msListener);
+        } else {
+            keyboard = new FastKeyboardImpl();
+            keyboard.startListening(kbListener);
+            mouse = AnsiMouse.open(msListener);
+        }
+
+        final FastKeyboard finalKeyboard = keyboard;
+        final AnsiMouse finalMouse = mouse;
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (!finalUseSwing) {
+                System.out.print(FastANSI.ALT_BUFFER_OFF + FastANSI.CURSOR_SHOW + FastANSI.RESET);
+                try { if (finalKeyboard != null) finalKeyboard.stopListening(); } catch (Throwable ignored) {}
+                try { if (finalMouse != null) finalMouse.close(); } catch (Throwable ignored) {}
+            }
+        }));
+
+        Random random = new Random();
+        int percent = 0;
+        int[] history = new int[20];
+
+        while (true) {
+            long startTime = System.currentTimeMillis();
+
+            canvas.clear();
+            dashboard.render(canvas);
+
+            if (tabs.getSelectedIndex() == 2) {
+                percent += random.nextInt(11) - 5;
+                if (percent < 0) percent = 0;
+                if (percent > 100) percent = 100;
+                
+                System.arraycopy(history, 1, history, 0, history.length - 1);
+                history[history.length - 1] = percent;
+                
+                int lx = dashboard.getX() + 2;
+                int ly = dashboard.getY() + 6;
+                
+                canvas.writeString(lx, ly, "Bar: ", 0xFFFFFF, -1);
+                pBar.draw(canvas, lx + 6, ly, 30, percent);
+                ly += 2;
+                
+                canvas.writeString(lx, ly, "Label: ", 0xFFFFFF, -1);
+                pLabel.draw(canvas, lx + 8, ly, percent);
+                ly += 2;
+                
+                canvas.writeString(lx, ly, "Badge: ", 0xFFFFFF, -1);
+                badge.draw(canvas, lx + 8, ly, percent < 50 ? "OK" : "HOT");
+                ly += 2;
+                
+                canvas.writeString(lx, ly, "Graph: ", 0xFFFFFF, -1);
+                graph.draw(canvas, lx + 8, ly, 20, 4, history);
+            }
+
+            if (mouseCellX >= 0 && mouseCellY >= 0) {
+                int cursorBg = isLeftPressed ? 0xEF4444 : 0x10B981;
+                canvas.writeCellAlpha(mouseCellX, mouseCellY, '↖', 0xFFFFFF, cursorBg, 1.0, 0.4);
+            }
+
+            if (useSwing) {
+                swingRenderer.render(canvas);
+            } else {
+                renderer.render();
+            }
+
+            long elapsed = System.currentTimeMillis() - startTime;
+            long sleepTime = 16 - elapsed; // ~60fps
+            if (sleepTime > 0) Thread.sleep(sleepTime);
+        }
+    }
+}
+

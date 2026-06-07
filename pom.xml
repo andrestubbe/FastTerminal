@@ -62,6 +62,18 @@
             <artifactId>FastMouse</artifactId>
             <version>0.1.0</version>
         </dependency>
+        <!-- FastTheme - Native window styling -->
+        <dependency>
+            <groupId>com.github.andrestubbe</groupId>
+            <artifactId>FastTheme</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <!-- FastKeyboard - Native keyboard inputs -->
+        <dependency>
+            <groupId>com.github.andrestubbe</groupId>
+            <artifactId>FastKeyboard</artifactId>
+            <version>0.1.0</version>
+        </dependency>
         <!-- JLine dependency (kept for backcompat, eventually removed) -->
         <dependency>
             <groupId>org.jline</groupId>

@@ -1,6 +1,7 @@
-package fastterminal.ui;
+package fastterminal.composable;
 
 import fastterminal.FastTerminalScene;
+import fastterminal.component.Component;
 
 /**
  * A highly-responsive click-sensitive TUI button supporting hover, active states, and custom action callbacks.
@@ -17,6 +18,9 @@ public class Button extends Component {
     private int activeFg = 0x000000; // Black active text
     
     private boolean isPressedState = false;
+
+    public enum Alignment { LEFT, CENTER, RIGHT }
+    private Alignment alignment = Alignment.CENTER;
 
     public Button(int x, int y, int width, int height, String text, Runnable action) {
         super(x, y, width, height);
@@ -48,8 +52,13 @@ public class Button extends Component {
             }
         }
 
-        // Render centered text
-        int textX = x + (width - text.length()) / 2;
+        // Render text
+        int textX = x;
+        if (alignment == Alignment.CENTER) {
+            textX = x + (width - text.length()) / 2;
+        } else if (alignment == Alignment.RIGHT) {
+            textX = x + width - text.length();
+        }
         int textY = y + height / 2;
         if (textX < x) textX = x;
 
@@ -79,6 +88,9 @@ public class Button extends Component {
     public String getText() { return text; }
     public void setText(String text) { this.text = text; }
     
+    public Alignment getAlignment() { return alignment; }
+    public void setAlignment(Alignment alignment) { this.alignment = alignment; }
+
     public int getNormalBg() { return normalBg; }
     public void setNormalBg(int normalBg) { this.normalBg = normalBg; }
     public int getHoverBg() { return hoverBg; }
