@@ -13,7 +13,7 @@ import java.util.Arrays;
  * 
  * Supports inline style processing via zero-allocation on-the-fly ANSI escapes.
  */
-public class FastTerminalScene {
+public class FastTerminalScene implements fastansi.CellConsumer {
 
     private int[] codepointBuffer;
     private int[] fgBuffer;
