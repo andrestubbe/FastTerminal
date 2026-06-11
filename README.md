@@ -1,4 +1,4 @@
-﻿# FastTerminal 0.1.0 [ALPHA] â€” High-Performance True-Color Terminal Engine for Java
+# FastTerminal 0.1.0 [ALPHA] — High-Performance True-Color Terminal Engine for Java
 
 [![Status](https://img.shields.io/badge/status-0.1.0-brightgreen.svg)](https://github.com/andrestubbe/FastTerminal/releases/tag/0.1.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -6,7 +6,7 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010+-lightgrey.svg)]()
 [![JitPack](https://img.shields.io/badge/JitPack-ready-green.svg)](https://jitpack.io/#andrestubbe/FastTerminal)
 
-**âš¡ A zero-dependency terminal graphics and TUI engine for Java, engineered for high-refresh rates, 24-bit True Color,
+**⚡ A zero-dependency terminal graphics and TUI engine for Java, engineered for high-refresh rates, 24-bit True Color,
 and native JNI console optimizations with seamless keyboard and mouse integrations.**
 
 FastTerminal is the high-performance terminal substrate of the **FastJava** ecosystem. It introduces a lightweight,
@@ -16,11 +16,11 @@ emoji-safe UTF-32 Codepoint grids, operating completely independently of standar
 To achieve a completely responsive, zero-latency desktop terminal experience, FastTerminal is designed to pair natively
 with the input, styling, and helper modules of the **FastJava** ecosystem:
 
-* âš¡ **[FastANSI](https://github.com/andrestubbe/FastANSI)** â€” Micro-optimized, garbage-free ANSI escape sequence builder
+* ⚡ **[FastANSI](https://github.com/andrestubbe/FastANSI)** — Micro-optimized, garbage-free ANSI escape sequence builder
   and parser for terminal graphics.
-* ðŸš€ **[FastTerminal](https://github.com/andrestubbe/FastTerminal)** â€” Direct, low-latency, asynchronous raw global and
+* 🚀 **[FastTerminal](https://github.com/andrestubbe/FastTerminal)** — Direct, low-latency, asynchronous raw global and
   local keyboard event handling.
-* ðŸ–±ï¸ **[FastMouse](https://github.com/andrestubbe/FastMouse)** â€” Precise hardware-level and virtual console-mode mouse
+* 🖱️ **[FastMouse](https://github.com/andrestubbe/FastMouse)** — Precise hardware-level and virtual console-mode mouse
   tracking.
 
 [**Watch the Demo**](https://www.youtube.com/watch?v=JoxdReMqjas) | [**Watch the JMH Benchmark**](https://www.youtube.com/watch?v=SAFlmP3dpQs)
@@ -30,7 +30,7 @@ with the input, styling, and helper modules of the **FastJava** ecosystem:
 [![FastTerminal Showcase](docs/screenshot.png)](https://www.youtube.com/watch?v=JoxdReMqjas)
 
 ```java
-// Quick Start â€” Example
+// Quick Start — Example
 
 import fastterminal.TerminalRenderer;
 import fastterminal.TerminalScene;
@@ -42,8 +42,8 @@ public class Demo {
         TerminalScene scene = new TerminalScene(0, 0, 80, 24);
 
         // Write standard text & high-unicode emojis in True Color
-        scene.writeString(5, 2, "âš¡ FastTerminal Engine âš¡", 0xFFCC00, 0x111111);
-        scene.writeString(5, 3, "ðŸš€ True Color, Mouse & Keyboard support!", 0xFFFFFF, -1);
+        scene.writeString(5, 2, "⚡ FastTerminal Engine ⚡", 0xFFCC00, 0x111111);
+        scene.writeString(5, 3, "🚀 True Color, Mouse & Keyboard support!", 0xFFFFFF, -1);
 
         renderer.addScene(scene);
         renderer.render(); // Blits directly to stdout
@@ -68,29 +68,29 @@ public class Demo {
 
 ---
 
-## ðŸŽ¯ Mission
+## 🎯 Mission
 
 The mission is to build the fastest, most robust native execution kernel on the JVM for console rendering and TUI
 interactivity. By combining cell-buffered graphics, double-buffered layouts, and immediate OS hardware input telemetry
-via **[FastTerminal](https://github.com/andrestubbe/FastTerminal)** and **[FastMouse](https://github.com/andrestubbe/FastMouse)**, we empower developers to create premium, interactive command-line terminals that rival native C++ applications in visual fidelity and input responseâ€”without external dependencies.
+via **[FastTerminal](https://github.com/andrestubbe/FastTerminal)** and **[FastMouse](https://github.com/andrestubbe/FastMouse)**, we empower developers to create premium, interactive command-line terminals that rival native C++ applications in visual fidelity and input response—without external dependencies.
 
 ---
 
 ## Key Features
 
-* **ðŸš« Zero Dependencies** â€” Bypasses all high-latency third-party blocking input loops.
-* **ðŸŽ¨ 24-bit True Color** â€” Complete support for direct RGB escape codes powered by *
+* **🚫 Zero Dependencies** — Bypasses all high-latency third-party blocking input loops.
+* **🎨 24-bit True Color** — Complete support for direct RGB escape codes powered by *
   *[FastANSI](https://github.com/andrestubbe/FastANSI)** (`\033[38;2;R;G;Bm` for foreground and `\033[48;2;R;G;Bm` for
   background).
-* **ðŸŒ Emoji & Unicode-Safe** â€” Eliminates UTF-16 surrogate split bugs by using `int` (UTF-32) codepoint cell buffers
-  rather than `char[]` arrays, guaranteeing that Emojis (e.g. `ðŸš€`, `ðŸŒˆ`) fit exactly in 1 cell without warping rows.
-* **âš¡ State-Minimized Renderer** â€” Optimizes stdout rendering via **[FastANSI](https://github.com/andrestubbe/FastANSI)
+* **🌍 Emoji & Unicode-Safe** — Eliminates UTF-16 surrogate split bugs by using `int` (UTF-32) codepoint cell buffers
+  rather than `char[]` arrays, guaranteeing that Emojis (e.g. `🚀`, `🌈`) fit exactly in 1 cell without warping rows.
+* **⚡ State-Minimized Renderer** — Optimizes stdout rendering via **[FastANSI](https://github.com/andrestubbe/FastANSI)
   ** by only emitting escape codes when color states change, reducing console stream bandwidth by up to **80%**.
-* **ðŸ“º Alternate Screen Buffer** â€” Seamlessly enters full-screen TUI buffer mode (`\033[?1049h`) and hides the cursor (
+* **📺 Alternate Screen Buffer** — Seamlessly enters full-screen TUI buffer mode (`\033[?1049h`) and hides the cursor (
   `\033[?25l`) using **[FastANSI](https://github.com/andrestubbe/FastANSI)** utilities for clean dashboard applications.
-* **ðŸŽ¹ Native Input Substrates** â€” Built-in telemetry anchors designed for instant integration with `FastTerminal` and
+* **🎹 Native Input Substrates** — Built-in telemetry anchors designed for instant integration with `FastTerminal` and
   `FastMouse` to process mouse tracking, window resizing, and raw key captures natively.
-* **ðŸ“¥ apt/npm Style Indicators** â€” Built-in dynamic bottom-anchored multi-line progress overlays using cursor
+* **📥 apt/npm Style Indicators** — Built-in dynamic bottom-anchored multi-line progress overlays using cursor
   save/restore positions.
 
 ---
@@ -105,24 +105,24 @@ In the official [JMH Benchmark](examples/Benchmark), the system measured the cor
 
 ```text
 Benchmark                               Mode  Cnt   Score    Error   Units
-TerminalBenchmark.benchmarkDiffRender  thrpt    5  66,281 Â± 18,213  ops/ms
-TerminalBenchmark.benchmarkFullRedraw  thrpt    5  34,134 Â±  1,509  ops/ms
+TerminalBenchmark.benchmarkDiffRender  thrpt    5  66,281 ± 18,213  ops/ms
+TerminalBenchmark.benchmarkFullRedraw  thrpt    5  34,134 ±  1,509  ops/ms
 ```
 
 > **66,000,000 Operations per Second**: By bypassing the Windows OS Console I/O bottleneck (which artificially caps traditional terminals), the `FastTerminal` pure math double-buffering engine can generate diffs and compose TrueColor ansi streams at an astonishing **66 Million Frames per Second**. Even when forced to completely calculate a full 120x30 TrueColor redraw from scratch, the engine operates at **34 Million FPS**. Zero garbage, pure speed.
 
 ---
 
-## ðŸ“Š Architecture & Grid Layout
+## 📊 Architecture & Grid Layout
 
 FastTerminal operates on a double-buffered layer compositor. Each cell in a `TerminalScene` is backed by primitive
 integer arrays, eliminating object allocation overhead:
 
 ```
 [ TerminalScene Viewport Layer ]
-  â”œâ”€â”€ codepointBuffer (int[] - UTF-32 Unicode codepoints)
-  â”œâ”€â”€ fgColorBuffer   (int[] - packed 24-bit RGB values)
-  â””â”€â”€ bgColorBuffer   (int[] - packed 24-bit RGB values)
+  ├─ codepointBuffer (int[] - UTF-32 Unicode codepoints)
+  ├─ fgColorBuffer   (int[] - packed 24-bit RGB values)
+  └─ bgColorBuffer   (int[] - packed 24-bit RGB values)
 ```
 
 Composites are blitted to standard output using the highly-optimized **[TerminalRenderer](docs/REFERENCE.md)**.
@@ -133,10 +133,10 @@ Composites are blitted to standard output using the highly-optimized **[Terminal
 
 | Method                                | Description                                              | Path                                    |
 |---------------------------------------|----------------------------------------------------------|-----------------------------------------|
-| `writeCell(col, row, cp, fg, bg)`     | Writes a single codepoint and packed colors to the grid. | [Reference â†’](docs/REFERENCE.md#writecell)   |
-| `writeString(col, row, text, fg, bg)` | Renders a string including standard emojis safely.       | [Reference â†’](docs/REFERENCE.md#writestring) |
-| `render()`                            | Blits all active scenes to the console screen buffer.    | [Reference â†’](docs/REFERENCE.md#render)      |
-| `clear()`                             | Resets all layers to default spaces and standard styles. | [Reference â†’](docs/REFERENCE.md#clear)       |
+| `writeCell(col, row, cp, fg, bg)`     | Writes a single codepoint and packed colors to the grid. | [Reference →](docs/REFERENCE.md#writecell)   |
+| `writeString(col, row, text, fg, bg)` | Renders a string including standard emojis safely.       | [Reference →](docs/REFERENCE.md#writestring) |
+| `render()`                            | Blits all active scenes to the console screen buffer.    | [Reference →](docs/REFERENCE.md#render)      |
+| `clear()`                             | Resets all layers to default spaces and standard styles. | [Reference →](docs/REFERENCE.md#clear)       |
 
 > [!TIP]
 > See **[REFERENCE.md](docs/REFERENCE.md)** for full class definitions, packed color utilities, and JNI specs.
@@ -192,8 +192,8 @@ dependencies {
 
 Download the latest JARs directly to add them to your classpath:
 
-1. ðŸ“¦ **[fastterminal-0.1.0.jar](https://github.com/andrestubbe/FastTerminal/releases/download/0.1.0/fastterminal-0.1.0.jar)** (The Core Library)
-2. âš™ï¸ **[fastcore-0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/0.1.0/fastcore-0.1.0.jar)** (The Mandatory Native Loader)
+1. 📦 **[fastterminal-0.1.0.jar](https://github.com/andrestubbe/FastTerminal/releases/download/0.1.0/fastterminal-0.1.0.jar)** (The Core Library)
+2. ⚙️ **[fastcore-0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/0.1.0/fastcore-0.1.0.jar)** (The Mandatory Native Loader)
 
 > [!IMPORTANT]
 > All JARs must be in your classpath for the native JNI calls to function correctly.
@@ -215,26 +215,31 @@ See the active Java programs under the `examples/Demo` package:
 While fully functional via optimized ANSI escapes, FastTerminal is architected for native Windows console hardware
 blitting:
 
-* **`GetConsoleScreenBufferInfo`** â€” Retrieves precise buffer columns and rows on-the-fly.
-* **`WriteConsoleOutputW`** â€” Direct console frame buffer hardware writes bypassing standard streams (up to **200 FPS
+* **`GetConsoleScreenBufferInfo`** — Retrieves precise buffer columns and rows on-the-fly.
+* **`WriteConsoleOutputW`** — Direct console frame buffer hardware writes bypassing standard streams (up to **200 FPS
   **).
-* **`SetConsoleMode`** â€” Hooks raw mouse and window buffer change inputs natively.
+* **`SetConsoleMode`** — Hooks raw mouse and window buffer change inputs natively.
 
 ---
 
 ## License
 
-MIT License â€” See [LICENSE](LICENSE) file for details.
+MIT License — See [LICENSE](LICENSE) file for details.
 
 ---
 
 ## Related Projects
 
-- [FastCore](https://github.com/andrestubbe/FastCore) â€” Native Library Loader for Java
-- [FastTerminal](https://github.com/andrestubbe/FastTerminal) â€” High-performance RawInput engine
-- [FastTheme](https://github.com/andrestubbe/FastTheme) â€” Advanced UI styling engine
+- [FastTerminal](https://github.com/andrestubbe/FastTerminal)
+- [FastANSI](https://github.com/andrestubbe/FastANSI)
+- [FastEmojis](https://github.com/andrestubbe/FastEmojis)
+- [FastUI](https://github.com/andrestubbe/FastUI)
+- [FastGrid](https://github.com/andrestubbe/FastGrid)
+- [FastProportion](https://github.com/andrestubbe/FastProportion)
+- [FastTheme](https://github.com/andrestubbe/FastTheme)
+- [FastCore](https://github.com/andrestubbe/FastCore)
 
 ---
-**Part of the FastJava Ecosystem** â€” *Making the JVM faster.*
+**Part of the FastJava Ecosystem** — *Making the JVM faster.*
 
 
