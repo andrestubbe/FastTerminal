@@ -55,7 +55,7 @@ public class Demo {
 
 ## Table of Contents
 
-- [Mission](#mission)
+- [Why FastTerminal?](#why-fastterminal)
 - [Key Features](#key-features)
 - [Performance Benchmarks](#performance-benchmarks)
 - [Architecture & Grid Layout](#architecture--grid-layout)
@@ -68,7 +68,7 @@ public class Demo {
 
 ---
 
-## 🎯 Mission
+## Why FastTerminal?
 
 The mission is to build the fastest, most robust native execution kernel on the JVM for console rendering and TUI
 interactivity. By combining cell-buffered graphics, double-buffered layouts, and immediate OS hardware input telemetry
