@@ -19,16 +19,28 @@
             <artifactId>FastTerminal</artifactId>
             <version>0.1.2</version>
         </dependency>
+    
+        <dependency>
+            <groupId>com.github.andrestubbe</groupId>
+            <artifactId>FastTUI</artifactId>
+            <version>0.1.0</version>
+        </dependency>
     </dependencies>
     
     <build>
         <plugins>
-            <plugin>
+                        <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>fastterminal.Demo</mainClass>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>--enable-native-access=ALL-UNNAMED</argument>
+                        <argument>-classpath</argument>
+                        <classpath/>
+                        <argument>fastterminal.Demo</argument>
+                    </arguments>
                 </configuration>
             </plugin>
         </plugins>

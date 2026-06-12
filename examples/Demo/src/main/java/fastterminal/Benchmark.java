@@ -1,7 +1,7 @@
 package fastterminal;
 
 import fastansi.FastANSI;
-import fastterminal.component.Panel;
+
 
 /**
  * Dedicated high-performance telemetry and diff-rendering benchmark for FastTerminal.
@@ -110,11 +110,14 @@ public class Benchmark {
             int px = (cols - panelW) / 2;
             int py = 6;
 
-            Panel statPanel = new Panel(px, py, panelW, panelH, 0x0F172A);
-            statPanel.setBorderStyle(Panel.BorderStyle.DOUBLE);
-            statPanel.setBorderFg(useDiff ? 0x10B981 : 0xEF4444); // Green border for diff, red for full
-            statPanel.setTitle("⚡ RENDERING PERFORMANCE TELEMETRY ⚡");
-            statPanel.render(canvas);
+            int bg = 0x0F172A;
+            for (int y = py; y < py + panelH; y++) {
+                for (int x = px; x < px + panelW; x++) {
+                    canvas.writeCell(x, y, ' ', -1, bg);
+                }
+            }
+            int bColor = useDiff ? 0x10B981 : 0xEF4444;
+            canvas.writeString(px + 2, py, "[ RENDERING PERFORMANCE TELEMETRY ]", bColor, bg);
 
             int lastFlushed = renderer.getLastFlushedBytes();
             
@@ -133,17 +136,17 @@ public class Benchmark {
 
             // Render text inside panel
             int ty = py + 2;
-            canvas.writeString(px + 3, ty,     "Mode:        ", 0x94A3B8, statPanel.getBgColor());
+            canvas.writeString(px + 3, ty,     "Mode:        ", 0x94A3B8, bg);
             if (useDiff) {
-                canvas.writeString(px + 16, ty, "[GAP-DIFF DOUBLE-BUFFERING]", 0x10B981, statPanel.getBgColor());
+                canvas.writeString(px + 16, ty, "[GAP-DIFF DOUBLE-BUFFERING]", 0x10B981, bg);
             } else {
-                canvas.writeString(px + 16, ty, "[FULL BUFFER REDRAW FLUSH] ", 0xEF4444, statPanel.getBgColor());
+                canvas.writeString(px + 16, ty, "[FULL BUFFER REDRAW FLUSH] ", 0xEF4444, bg);
             }
 
-            canvas.writeString(px + 3, ty + 2, String.format("Frame Bytes:  %d bytes", lastFlushed), 0xE2E8F0, statPanel.getBgColor());
-            canvas.writeString(px + 3, ty + 3, String.format("Avg Diff Mode:%d bytes", (int)avgDiff), 0x34D399, statPanel.getBgColor());
-            canvas.writeString(px + 3, ty + 4, String.format("Avg Full Mode:%d bytes", (int)avgFull), 0xF87171, statPanel.getBgColor());
-            canvas.writeString(px + 3, ty + 5, String.format("Bandwidth Saved:  %.1f%% (Zero-Copy)", pctSavings), 0xFBBF24, statPanel.getBgColor());
+            canvas.writeString(px + 3, ty + 2, String.format("Frame Bytes:  %d bytes", lastFlushed), 0xE2E8F0, bg);
+            canvas.writeString(px + 3, ty + 3, String.format("Avg Diff Mode:%d bytes", (int)avgDiff), 0x34D399, bg);
+            canvas.writeString(px + 3, ty + 4, String.format("Avg Full Mode:%d bytes", (int)avgFull), 0xF87171, bg);
+            canvas.writeString(px + 3, ty + 5, String.format("Bandwidth Saved:  %.1f%% (Zero-Copy)", pctSavings), 0xFBBF24, bg);
 
             // 6. Draw header and footer
             int bannerX = (cols - 46) / 2;
