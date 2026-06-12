@@ -23,6 +23,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Text processing (UTF-8 Parser, Emoji Width Fixes, Word-Wrap, Text-Shaping)
 - Performance optimizations (SIMD-Blitting, Native Line-Drawing, GPU-Terminal-Mode)
 
+## v0.1.2 [ALPHA] - FastASCII Method Patch
+- **Dependency Update**: Bumped FastASCII dependency to 0.1.1 to resolve missing writeAscii symbol during compilation.
+
+## v0.1.1 [ALPHA] - FastASCII & FastANSI Upgrade
+- **FastASCII Integration**: Upgraded internal dependencies to use FastASCII 0.1.0 and FastANSI 0.1.1.
+- **Glyph Density Extracted**: FastGlyphDensity logic natively delegated to FastASCII.
+
 ## [0.1.0] - YYYY-MM-DD
 
 ### Added
