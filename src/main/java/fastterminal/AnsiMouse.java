@@ -74,11 +74,8 @@ public class AnsiMouse {
     private void readLoop() {
         InputStream in = System.in;
         byte[] buffer = new byte[4096];
-        
-        int state = 0; // 0=idle, 1=ESC, 2='[', 3='<', 4=parsing button, 5=parsing col, 6=parsing row
-        int button = 0;
-        int col = 0;
-        int row = 0;
+        byte[] seqBuf = new byte[64];
+        int seqLen = 0;
         
         int lastCellX = -1;
         int lastCellY = -1;
@@ -94,92 +91,73 @@ public class AnsiMouse {
                 for (int i = 0; i < read; i++) {
                     byte b = buffer[i];
                     
-                    switch (state) {
-                        case 0:
-                            if (b == 27) { // ESC (0x1B)
-                                state = 1;
-                            }
-                            break;
-                        case 1:
-                            if (b == '[') {
-                                state = 2;
-                            } else {
-                                state = 0;
-                                if (b == 27) state = 1;
-                            }
-                            break;
-                        case 2:
-                            if (b == '<') {
-                                state = 3;
-                                button = 0;
-                                col = 0;
-                                row = 0;
-                            } else {
-                                state = 0;
-                                if (b == 27) state = 1;
-                            }
-                            break;
-                        case 3: // Parsing button ID
-                            if (b >= '0' && b <= '9') {
-                                button = button * 10 + (b - '0');
-                            } else if (b == ';') {
-                                state = 4;
-                            } else {
-                                state = 0;
-                                if (b == 27) state = 1;
-                            }
-                            break;
-                        case 4: // Parsing 1-based column coordinate
-                            if (b >= '0' && b <= '9') {
-                                col = col * 10 + (b - '0');
-                            } else if (b == ';') {
-                                state = 5;
-                            } else {
-                                state = 0;
-                                if (b == 27) state = 1;
-                            }
-                            break;
-                        case 5: // Parsing 1-based row coordinate
-                            if (b >= '0' && b <= '9') {
-                                row = row * 10 + (b - '0');
-                            } else if (b == 'M' || b == 'm') {
-                                boolean isPressed = (b == 'M');
+                    if (seqLen < seqBuf.length) {
+                        seqBuf[seqLen++] = b;
+                    } else {
+                        // Buffer overflow. Cap and reset.
+                        seqLen = 0;
+                        seqBuf[seqLen++] = b;
+                    }
+                    
+                    if (seqLen == 1 && b != 27) {
+                        seqLen = 0;
+                        continue;
+                    }
+                    if (seqLen == 2 && b != '[') {
+                        seqLen = 0;
+                        if (b == 27) seqBuf[seqLen++] = b;
+                        continue;
+                    }
+                    if (seqLen == 3 && b != '<') {
+                        seqLen = 0;
+                        if (b == 27) seqBuf[seqLen++] = b;
+                        continue;
+                    }
+                    
+                    if (seqLen > 3 && (b == 'M' || b == 'm')) {
+                        boolean isPressed = (b == 'M');
+                        
+                        int start = 3;
+                        int end = seqLen - 1;
+                        
+                        int firstSemi = fastascii.FastASCIIReader.readUntil(seqBuf, start, end, (byte) ';');
+                        if (firstSemi != -1) {
+                            int button = fastascii.FastASCIIReader.parseUInt(seqBuf, start, firstSemi);
+                            int secondSemi = fastascii.FastASCIIReader.readUntil(seqBuf, firstSemi + 1, end, (byte) ';');
+                            if (secondSemi != -1) {
+                                int col = fastascii.FastASCIIReader.parseUInt(seqBuf, firstSemi + 1, secondSemi);
+                                int row = fastascii.FastASCIIReader.parseUInt(seqBuf, secondSemi + 1, end);
+                                
                                 int cellX = col - 1;
                                 int cellY = row - 1;
                                 
-                                // Dispatch mouse hover / movement if cell boundaries changed
                                 if (cellX != lastCellX || cellY != lastCellY) {
                                     lastCellX = cellX;
                                     lastCellY = cellY;
                                     listener.onMouseMove(0, 0, 0, cellX, cellY);
                                 }
                                 
-                                // Parse and dispatch clicks and scrolling
                                 if (button == 35) {
-                                    // Pure mouse motion, already dispatched via onMouseMove
+                                    // motion already dispatched
                                 } else if (button == 64) {
                                     listener.onMouseWheel(0, 1);
                                 } else if (button == 65) {
                                     listener.onMouseWheel(0, -1);
                                 } else {
-                                    // SGR Button Layout: 0=Left, 1=Middle, 2=Right
-                                    // FastMouse Listener expects: 0=Left, 1=Right, 2=Middle
                                     int mappedButton = -1;
                                     int rawBtn = button & 3;
-                                    if (rawBtn == 0) mappedButton = 0; // Left
-                                    else if (rawBtn == 1) mappedButton = 2; // Middle
-                                    else if (rawBtn == 2) mappedButton = 1; // Right
+                                    if (rawBtn == 0) mappedButton = 0;
+                                    else if (rawBtn == 1) mappedButton = 2;
+                                    else if (rawBtn == 2) mappedButton = 1;
                                     
                                     if (mappedButton != -1) {
                                         listener.onMouseButton(0, mappedButton, isPressed);
                                     }
                                 }
-                                state = 0;
-                            } else {
-                                state = 0;
-                                if (b == 27) state = 1;
                             }
-                            break;
+                        }
+                        
+                        seqLen = 0;
                     }
                 }
             } catch (IOException e) {

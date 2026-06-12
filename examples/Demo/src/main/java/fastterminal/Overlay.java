@@ -6,8 +6,8 @@ import fastterminal.AnsiMouse;
 import fastterminal.FastTerminal;
 import fastterminal.FastTerminalRenderer;
 import fastterminal.FastTerminalScene;
-import fastterminal.ui.Panel;
-import fastterminal.ui.FileNavigator;
+import fastterminal.component.Panel;
+import fastterminal.composable.FileNavigator;
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
 

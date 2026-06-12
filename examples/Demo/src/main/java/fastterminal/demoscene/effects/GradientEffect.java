@@ -1,7 +1,7 @@
 package fastterminal.demoscene.effects;
 
 import fastterminal.FastTerminalScene;
-import fastterminal.Gradient;
+import fastterminal.util.Gradient;
 import fastterminal.demoscene.DemosceneEffect;
 
 /**
@@ -77,8 +77,8 @@ public class GradientEffect implements DemosceneEffect {
         // Compute diagonal gradient color boundaries
         double t1 = (Math.sin(phase) + 1.0) / 2.0;
         double t2 = (Math.cos(phase * 0.8) + 1.0) / 2.0;
-        int bgStart = fastterminal.Gradient.interpolate(0x6366F1, 0xD946EF, t1);
-        int bgEnd = fastterminal.Gradient.interpolate(0x06B6D4, 0x14B8A6, t2);
+        int bgStart = fastterminal.util.Gradient.interpolate(0x6366F1, 0xD946EF, t1);
+        int bgEnd = fastterminal.util.Gradient.interpolate(0x06B6D4, 0x14B8A6, t2);
 
         int doubleHeight = 2 * height;
 
@@ -94,10 +94,10 @@ public class GradientEffect implements DemosceneEffect {
 
                 // 1. Calculate diagonal gradient subpixel colors
                 double factorTop = (double) (x + yTop) / (width + doubleHeight);
-                int colorTopGrad = fastterminal.Gradient.interpolate(bgStart, bgEnd, factorTop);
+                int colorTopGrad = fastterminal.util.Gradient.interpolate(bgStart, bgEnd, factorTop);
 
                 double factorBot = (double) (x + yBot) / (width + doubleHeight);
-                int colorBotGrad = fastterminal.Gradient.interpolate(bgStart, bgEnd, factorBot);
+                int colorBotGrad = fastterminal.util.Gradient.interpolate(bgStart, bgEnd, factorBot);
 
                 // 2. Calculate sinusoidal plasma subpixel colors
                 double v1Top = Math.sin(x / 12.0 + time);

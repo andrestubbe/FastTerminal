@@ -6,12 +6,12 @@ import fastterminal.AnsiMouse;
 import fastterminal.FastTerminal;
 import fastterminal.FastTerminalRenderer;
 import fastterminal.FastTerminalScene;
-import fastterminal.Gradient;
-import fastterminal.ui.Panel;
-import fastterminal.ui.Button;
-import fastterminal.ui.ProgressBar;
-import fastterminal.ui.Dropdown;
-import fastterminal.ui.FileNavigator;
+import fastterminal.util.Gradient;
+import fastterminal.component.Panel;
+import fastterminal.composable.Button;
+import fastterminal.composable.ProgressBar;
+import fastterminal.composable.Dropdown;
+import fastterminal.composable.FileNavigator;
 import fastkeyboard.FastKeyboard;
 import fastkeyboard.FastKeyboardImpl;
 

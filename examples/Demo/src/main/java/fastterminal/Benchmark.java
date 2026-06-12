@@ -1,7 +1,7 @@
 package fastterminal;
 
 import fastansi.FastANSI;
-import fastterminal.ui.Panel;
+import fastterminal.component.Panel;
 
 /**
  * Dedicated high-performance telemetry and diff-rendering benchmark for FastTerminal.
