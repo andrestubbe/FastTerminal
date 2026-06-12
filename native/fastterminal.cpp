@@ -28,6 +28,9 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
     switch (ul_reason_for_call) {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hModule);
+            // Force the Windows Console to natively interpret UTF-8 outputs
+            SetConsoleOutputCP(CP_UTF8);
+            SetConsoleCP(CP_UTF8);
             break;
         case DLL_PROCESS_DETACH:
             break;

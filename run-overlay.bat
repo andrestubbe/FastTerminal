@@ -1,13 +1,18 @@
 ﻿@echo off
-chcp 65001 > nul
+chcp 65001 >nul
+cls
 
-echo âš¡ Building Main FastTerminal Library...
+echo ⚡ Building Main Project...
+call mvn clean install -DskipTests -q
+if %ERRORLEVEL% NEQ 0 ( echo ❌ Build failed. & pause & exit /b %ERRORLEVEL% )
 
-echo ðŸ”§ Compiling Demo...
+echo 🛠  Compiling Overlay Demo...
 cd examples\Demo
-call mvn -q compile dependency:copy-dependencies -DincludeScope=runtime -DskipTests
-if %ERRORLEVEL% NEQ 0 ( cd ..\.. & echo Compile failed. & pause & exit /b )
-cd ..\..
+call mvn compile dependency:copy-dependencies -DincludeScope=runtime -DskipTests -q
+if %ERRORLEVEL% NEQ 0 ( echo ❌ Compile failed. & pause & exit /b %ERRORLEVEL% )
 
-echo ðŸš€ Running Demo...
-java --enable-native-access=ALL-UNNAMED -cp "examples\Demo\target\classes;examples\Demo\target\dependency\*" fastterminal.Overlay
+echo 🚀 Running Overlay Demo...
+java --enable-native-access=ALL-UNNAMED -cp "target/classes;target/dependency/*" fastterminal.Overlay
+
+cd ..\..
+pause

@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 :: FastJava Native DLL Compiler Script
 :: Auto-detects Visual Studio and JAVA_HOME
 

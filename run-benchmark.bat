@@ -1,38 +1,18 @@
 ﻿@echo off
-setlocal EnableDelayedExpansion
+chcp 65001 >nul
+cls
 
-REM Change to script directory
-cd /d "%~dp0"
+echo ⚡ Building Main Project...
+call mvn clean install -DskipTests -q
+if %ERRORLEVEL% NEQ 0 ( echo ❌ Build failed. & pause & exit /b %ERRORLEVEL% )
 
-echo ===========================================
-echo FastTerminal Benchmark Runner
-echo ===========================================
-
-echo [INFO] Building Main FastTerminal Project...
-    echo [ERROR] Main project build failed.
-    pause
-    exit /b %ERRORLEVEL%
-)
-
-echo [INFO] Building Benchmark...
+echo 🛠  Compiling Benchmark...
 cd examples\Benchmark
-    echo [ERROR] Benchmark build failed.
-    pause
-    exit /b %ERRORLEVEL%
-)
+call mvn clean package -DskipTests -q
+if %ERRORLEVEL% NEQ 0 ( echo ❌ Benchmark build failed. & pause & exit /b %ERRORLEVEL% )
 
-echo.
-echo ===========================================
-echo FastTerminal Benchmark (120x30 Console)
-echo ===========================================
-echo.
-echo [INFO] Initializing JMH Runner...
-echo This will take a few minutes to complete as JMH isolates, 
-echo warms up, and measures throughput rigorously.
-echo.
-
-REM Run JMH Benchmark (EXTRA verbosity disables the broken # progress bar on Windows)
+echo 🚀 Running Benchmark...
 java -jar target\benchmarks.jar -v EXTRA
 
-echo.
-echo [DONE] Benchmark Complete.
+cd ..\..
+pause
