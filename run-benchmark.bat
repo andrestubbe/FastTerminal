@@ -12,7 +12,7 @@ call mvn clean package -DskipTests -q
 if %ERRORLEVEL% NEQ 0 ( echo ❌ Benchmark build failed. & pause & exit /b %ERRORLEVEL% )
 
 echo 🚀 Running Benchmark...
-java -jar target\benchmarks.jar -v EXTRA
+java -jar target\benchmarks.jar -v EXTRA 2>nul
 
 cd ..\..
 pause
