@@ -1,6 +1,6 @@
-# FastTerminal 0.1.0 [ALPHA] — High-Performance True-Color Terminal Engine for Java
+# FastTerminal 0.1.1 [ALPHA] — High-Performance True-Color Terminal Engine for Java
 
-[![Status](https://img.shields.io/badge/status-0.1.0-brightgreen.svg)](https://github.com/andrestubbe/FastTerminal/releases/tag/0.1.0)
+[![Status](https://img.shields.io/badge/status-0.1.1-brightgreen.svg)](https://github.com/andrestubbe/FastTerminal/releases/tag/0.1.1)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java](https://img.shields.io/badge/Java-17+-blue.svg)](https://www.java.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010+-lightgrey.svg)]()
@@ -163,14 +163,14 @@ Add the JitPack repository and the dependencies to your `pom.xml`:
 <dependency>
     <groupId>com.github.andrestubbe</groupId>
     <artifactId>fastterminal</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 </dependency>
 
 <!-- FastCore (Required Native Loader) -->
 <dependency>
     <groupId>com.github.andrestubbe</groupId>
     <artifactId>fastcore</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 </dependency>
 </dependencies>
 ```
@@ -183,7 +183,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.andrestubbe:fastterminal:0.1.0'
+    implementation 'com.github.andrestubbe:fastterminal:0.1.1'
     implementation 'com.github.andrestubbe:fastcore:0.1.0'
 }
 ```
@@ -192,8 +192,8 @@ dependencies {
 
 Download the latest JARs directly to add them to your classpath:
 
-1. 📦 **[fastterminal-0.1.0.jar](https://github.com/andrestubbe/FastTerminal/releases/download/0.1.0/fastterminal-0.1.0.jar)** (The Core Library)
-2. ⚙️ **[fastcore-0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/0.1.0/fastcore-0.1.0.jar)** (The Mandatory Native Loader)
+1. 📦 **[fastterminal-0.1.1.jar](https://github.com/andrestubbe/FastTerminal/releases/download/0.1.1/fastterminal-0.1.1.jar)** (The Core Library)
+2. ⚙️ **[fastcore-0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/0.1.1/fastcore-0.1.0.jar)** (The Mandatory Native Loader)
 
 > [!IMPORTANT]
 > All JARs must be in your classpath for the native JNI calls to function correctly.
