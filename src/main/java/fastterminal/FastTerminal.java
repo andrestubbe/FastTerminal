@@ -114,4 +114,39 @@ public class FastTerminal {
      * @return int[] [col, row], or [0, 0] on failure.
      */
     public static native int[] getCursorPosition();
+
+    /**
+     * @brief Captures the current visible console screen buffer as a FastTerminalScene.
+     *
+     * @param defaultCols Standard fallback column width.
+     * @param defaultRows Standard fallback row height.
+     * @return FastTerminalScene populated with the snapshot, or a transparent scene on failure.
+     */
+    public static FastTerminalScene captureScreen(int defaultCols, int defaultRows) {
+        int w = defaultCols;
+        int h = defaultRows;
+        try {
+            int[] size = getTerminalSize();
+            if (size != null && size[0] > 0 && size[1] > 0) {
+                w = size[0];
+                h = size[1];
+            }
+        } catch (Throwable ignored) {}
+
+        FastTerminalScene scene = new FastTerminalScene(0, 0, w, h);
+        try {
+            int[] snap = readConsoleOutput();
+            if (snap != null && snap.length >= 2 && snap[0] > 0 && snap[1] > 0) {
+                int sC = snap[0], sR = snap[1];
+                int uC = Math.min(sC, w), uR = Math.min(sR, h);
+                for (int r = 0; r < uR; r++) {
+                    for (int c = 0; c < uC; c++) {
+                        int b = 2 + (r * sC + c) * 3;
+                        scene.writeCell(c, r, snap[b], snap[b+1], snap[b+2]);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+        return scene;
+    }
 }
