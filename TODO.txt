@@ -1,0 +1,8 @@
+TODO:
+Add support for setting the terminal window title via an ANSI escape sequence directly in the FastTerminal library.
+
+Example implementation:
+public static void setTitle(String title) {
+    System.out.print("\033]0;" + title + "\007");
+    System.out.flush();
+}
