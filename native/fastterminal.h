@@ -113,6 +113,25 @@ JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_readConsoleOutput(JNI
  */
 JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getCursorPosition(JNIEnv* env, jclass clazz);
 
+/**
+ * @brief High-performance JNI rendering function for ANSI double-buffering.
+ */
+JNIEXPORT jint JNICALL Java_fastterminal_FastTerminalRenderer_renderAnsiNative(
+    JNIEnv* env, jclass clazz,
+    jintArray compositeCPArray, jintArray compositeFgArray, jintArray compositeBgArray,
+    jintArray prevCPArray, jintArray prevFgArray, jintArray prevBgArray,
+    jbyteArray outBufferArray, jint width, jint height,
+    jboolean forceFullRedraw, jboolean diffRenderingEnabled, jboolean dirtyRectanglesEnabled
+);
+
+/**
+ * @brief Sets the console window title string.
+ * @param env Pointer to the JNI environment.
+ * @param clazz The calling Java class reference.
+ * @param titleStr The Java string to set as the window title.
+ */
+JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setTitle(JNIEnv* env, jclass clazz, jstring titleStr);
+
 #ifdef __cplusplus
 }
 #endif

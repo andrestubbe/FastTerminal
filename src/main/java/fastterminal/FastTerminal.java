@@ -149,4 +149,11 @@ public class FastTerminal {
         } catch (Throwable ignored) {}
         return scene;
     }
+
+    /**
+     * @brief Sets the console window title string.
+     *
+     * @param title The title to display in the terminal window frame.
+     */
+    public static native void setTitle(String title);
 }
