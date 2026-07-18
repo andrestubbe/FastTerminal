@@ -2,7 +2,7 @@ package fastterminal;
 
 import fastansi.FastANSI;
 import fastascii.FastASCIIWriter;
-import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,24 +10,24 @@ import java.util.List;
 /**
  * @class FastTerminalRenderer
  * @brief High-performance double-buffered ANSI rendering and screen compositing engine.
- *
+ * <p>
  * Composites multiple FastTerminalScene layers and converts screen diff state transitions
  * to optimized 24-bit True Color ANSI escape streams.
- *
+ * <p>
  * Rendering pipeline per frame:
- *   clear -> compositeScenes -> choose strategy -> syncPrevBuffers -> flushOutput
- *
+ * clear -> compositeScenes -> choose strategy -> syncPrevBuffers -> flushOutput
+ * <p>
  * Strategies (in priority order):
- *   1. Dirty-rectangles  - when dirtyRectanglesEnabled + diff mode + no forced redraw
- *   2. Full redraw       - when diffRenderingEnabled=false or forceFullRedraw=true
- *   3. Diff / double-buffer - default; only changed cells are emitted
+ * 1. Dirty-rectangles  - when dirtyRectanglesEnabled + diff mode + no forced redraw
+ * 2. Full redraw       - when diffRenderingEnabled=false or forceFullRedraw=true
+ * 3. Diff / double-buffer - default; only changed cells are emitted
  */
 public final class FastTerminalRenderer {
 
     //  ANSI escape fragments 
     private static final String RGB_FG_PREFIX = FastANSI.CSI + "38;2;";
     private static final String RGB_BG_PREFIX = FastANSI.CSI + "48;2;";
-    private static final String RGB_SUFFIX    = "m";
+    private static final String RGB_SUFFIX = "m";
 
     //  Scene registry 
     private List<FastTerminalScene> scenes = new ArrayList<>();
@@ -47,10 +47,10 @@ public final class FastTerminalRenderer {
     private int[] prevBg;
 
     //  Rendering state 
-    private boolean forceFullRedraw        = true;
-    private boolean diffRenderingEnabled   = true;
+    private boolean forceFullRedraw = true;
+    private boolean diffRenderingEnabled = true;
     private boolean dirtyRectanglesEnabled = false;
-    private int     lastFlushedBytes       = 0;
+    private int lastFlushedBytes = 0;
 
     //  Reused per-frame native output buffer (avoids per-frame allocation) 
     private byte[] outBuffer;
@@ -78,27 +78,29 @@ public final class FastTerminalRenderer {
     // ════════════════════════════════════════════════════════════════════════
 
     /**
-     * @brief Allocates all double-buffered structures.
      * @param width  Initial terminal column count.
      * @param height Initial terminal row count.
+     * @brief Allocates all double-buffered structures.
      */
     public FastTerminalRenderer(final int width, final int height) {
-        this.width  = width;
+        this.width = width;
         this.height = height;
         int cells = width * height;
         this.compositeCodepoints = new int[cells];
-        this.compositeFg         = new int[cells];
-        this.compositeBg         = new int[cells];
-        this.prevCodepoints      = new int[cells];
-        this.prevFg              = new int[cells];
-        this.prevBg              = new int[cells];
+        this.compositeFg = new int[cells];
+        this.compositeBg = new int[cells];
+        this.prevCodepoints = new int[cells];
+        this.prevFg = new int[cells];
+        this.prevBg = new int[cells];
         // 25 bytes per cell is plenty for extreme worst case: CSI 38;2;255;255;255m + CSI 48;2;255;255;255m + 4-byte UTF8
-        this.outBuffer = new byte[cells * 40 + 1024]; 
+        this.outBuffer = new byte[cells * 40 + 1024];
         clear();
         clearPrev();
     }
 
-    /** @brief Registers an overlay scene layer. */
+    /**
+     * @brief Registers an overlay scene layer.
+     */
     public void addScene(final FastTerminalScene scene) {
         this.scenes.add(scene);
     }
@@ -176,16 +178,23 @@ public final class FastTerminalRenderer {
         int curFg = -2, curBg = -2;
         for (int row = minY; row <= maxY; row++) {
             outLen += moveCursor(outBuffer, outLen, row, minX);
-            curFg = -2; curBg = -2;
+            curFg = -2;
+            curBg = -2;
             int base = row * width;
             for (int col = minX; col <= maxX; col++) {
-                int i  = base + col;
+                int i = base + col;
                 int cp = compositeCodepoints[i];
                 if (cp == -99) continue;
                 int fg = compositeFg[i];
                 int bg = compositeBg[i];
-                if (fg != curFg) { outLen += emitFg(outBuffer, outLen, fg); curFg = fg; }
-                if (bg != curBg) { outLen += emitBg(outBuffer, outLen, bg); curBg = bg; }
+                if (fg != curFg) {
+                    outLen += emitFg(outBuffer, outLen, fg);
+                    curFg = fg;
+                }
+                if (bg != curBg) {
+                    outLen += emitBg(outBuffer, outLen, bg);
+                    curBg = bg;
+                }
                 if (Character.isValidCodePoint(cp)) {
                     outLen += FastASCIIWriter.writeUtf8(outBuffer, outLen, cp);
                 } else {
@@ -198,10 +207,10 @@ public final class FastTerminalRenderer {
         // Sync only the dirty region
         for (int row = minY; row <= maxY; row++) {
             int offset = row * width + minX;
-            int len    = maxX - minX + 1;
+            int len = maxX - minX + 1;
             System.arraycopy(compositeCodepoints, offset, prevCodepoints, offset, len);
-            System.arraycopy(compositeFg,         offset, prevFg,         offset, len);
-            System.arraycopy(compositeBg,         offset, prevBg,         offset, len);
+            System.arraycopy(compositeFg, offset, prevFg, offset, len);
+            System.arraycopy(compositeBg, offset, prevBg, offset, len);
         }
         return true;
     }
@@ -216,8 +225,14 @@ public final class FastTerminalRenderer {
             if (cp != -99) {
                 int fg = compositeFg[i];
                 int bg = compositeBg[i];
-                if (fg != curFg) { outLen += emitFg(outBuffer, outLen, fg); curFg = fg; }
-                if (bg != curBg) { outLen += emitBg(outBuffer, outLen, bg); curBg = bg; }
+                if (fg != curFg) {
+                    outLen += emitFg(outBuffer, outLen, fg);
+                    curFg = fg;
+                }
+                if (bg != curBg) {
+                    outLen += emitBg(outBuffer, outLen, bg);
+                    curBg = bg;
+                }
                 if (Character.isValidCodePoint(cp)) {
                     outLen += FastASCIIWriter.writeUtf8(outBuffer, outLen, cp);
                 } else {
@@ -228,7 +243,8 @@ public final class FastTerminalRenderer {
             if ((i + 1) % width == 0 && (i + 1) < cells) {
                 outLen += FastASCIIWriter.writeAscii(outBuffer, outLen, FastANSI.RESET);
                 outBuffer[outLen++] = '\n';
-                curFg = -2; curBg = -2;
+                curFg = -2;
+                curBg = -2;
             }
         }
         outLen += FastASCIIWriter.writeAscii(outBuffer, outLen, FastANSI.RESET);
@@ -262,8 +278,14 @@ public final class FastTerminalRenderer {
                         if (gcp == -99) continue;
                         int gfg = compositeFg[g];
                         int gbg = compositeBg[g];
-                        if (gfg != curFg) { outLen += emitFg(outBuffer, outLen, gfg); curFg = gfg; }
-                        if (gbg != curBg) { outLen += emitBg(outBuffer, outLen, gbg); curBg = gbg; }
+                        if (gfg != curFg) {
+                            outLen += emitFg(outBuffer, outLen, gfg);
+                            curFg = gfg;
+                        }
+                        if (gbg != curBg) {
+                            outLen += emitBg(outBuffer, outLen, gbg);
+                            curBg = gbg;
+                        }
                         if (Character.isValidCodePoint(gcp)) {
                             outLen += FastASCIIWriter.writeUtf8(outBuffer, outLen, gcp);
                         } else {
@@ -275,8 +297,14 @@ public final class FastTerminalRenderer {
                 }
             }
 
-            if (fg != curFg) { outLen += emitFg(outBuffer, outLen, fg); curFg = fg; }
-            if (bg != curBg) { outLen += emitBg(outBuffer, outLen, bg); curBg = bg; }
+            if (fg != curFg) {
+                outLen += emitFg(outBuffer, outLen, fg);
+                curFg = fg;
+            }
+            if (bg != curBg) {
+                outLen += emitBg(outBuffer, outLen, bg);
+                curBg = bg;
+            }
             if (Character.isValidCodePoint(cp)) {
                 outLen += FastASCIIWriter.writeUtf8(outBuffer, outLen, cp);
             } else {
@@ -304,12 +332,15 @@ public final class FastTerminalRenderer {
 
     private void syncPrevBuffers() {
         System.arraycopy(compositeCodepoints, 0, prevCodepoints, 0, compositeCodepoints.length);
-        System.arraycopy(compositeFg,         0, prevFg,         0, compositeFg.length);
-        System.arraycopy(compositeBg,         0, prevBg,         0, compositeBg.length);
+        System.arraycopy(compositeFg, 0, prevFg, 0, compositeFg.length);
+        System.arraycopy(compositeBg, 0, prevBg, 0, compositeBg.length);
     }
 
     private void flushOutput() {
-        if (outLen == 0) { lastFlushedBytes = 0; return; }
+        if (outLen == 0) {
+            lastFlushedBytes = 0;
+            return;
+        }
         lastFlushedBytes = outLen;
         System.out.write(outBuffer, 0, outLen);
         System.out.flush();
@@ -364,13 +395,13 @@ public final class FastTerminalRenderer {
     // ════════════════════════════════════════════════════════════════════════
 
     private void insertScene(final FastTerminalScene scene) {
-        final int[] srcCp  = scene.getCodepointBuffer();
-        final int[] srcFg  = scene.getFgBuffer();
-        final int[] srcBg  = scene.getBgBuffer();
-        final int srcWidth  = scene.getWidth();
+        final int[] srcCp = scene.getCodepointBuffer();
+        final int[] srcFg = scene.getFgBuffer();
+        final int[] srcBg = scene.getBgBuffer();
+        final int srcWidth = scene.getWidth();
         final int srcHeight = scene.getHeight();
-        final int dstX      = scene.getX();
-        final int dstY      = scene.getY();
+        final int dstX = scene.getX();
+        final int dstY = scene.getY();
         final boolean transparent = scene.isTransparentBackground();
 
         for (int row = 0; row < srcHeight; row++) {
@@ -385,7 +416,7 @@ public final class FastTerminalRenderer {
             if (dstX < 0) {
                 srcPos -= dstX;
                 length += dstX;
-                dstPos  = dstRow * width;
+                dstPos = dstRow * width;
             }
             // Clip right edge
             if (dstX + length > width) length = width - dstX;
@@ -393,8 +424,8 @@ public final class FastTerminalRenderer {
 
             if (!transparent) {
                 System.arraycopy(srcCp, srcPos, compositeCodepoints, dstPos, length);
-                System.arraycopy(srcFg, srcPos, compositeFg,         dstPos, length);
-                System.arraycopy(srcBg, srcPos, compositeBg,         dstPos, length);
+                System.arraycopy(srcFg, srcPos, compositeFg, dstPos, length);
+                System.arraycopy(srcBg, srcPos, compositeBg, dstPos, length);
             } else {
                 for (int i = 0; i < length; i++) {
                     int scp = srcCp[srcPos + i];
@@ -402,8 +433,8 @@ public final class FastTerminalRenderer {
                     int sbg = srcBg[srcPos + i];
                     if (scp == ' ' && sfg == -1 && sbg == -1) continue;
                     compositeCodepoints[dstPos + i] = scp;
-                    compositeFg        [dstPos + i] = sfg;
-                    compositeBg        [dstPos + i] = sbg;
+                    compositeFg[dstPos + i] = sfg;
+                    compositeBg[dstPos + i] = sbg;
                 }
             }
         }
@@ -415,15 +446,15 @@ public final class FastTerminalRenderer {
 
     public void clear() {
         Arrays.fill(compositeCodepoints, ' ');
-        Arrays.fill(compositeFg,         -1);
-        Arrays.fill(compositeBg,         -1);
+        Arrays.fill(compositeFg, -1);
+        Arrays.fill(compositeBg, -1);
     }
 
     public void clearPrev() {
         if (prevCodepoints != null) {
             Arrays.fill(prevCodepoints, ' ');
-            Arrays.fill(prevFg,         -1);
-            Arrays.fill(prevBg,         -1);
+            Arrays.fill(prevFg, -1);
+            Arrays.fill(prevBg, -1);
         }
         forceFullRedraw = true;
     }
@@ -433,20 +464,20 @@ public final class FastTerminalRenderer {
     }
 
     public boolean resize(final int newWidth, final int newHeight) {
-        if (newWidth <= 0 || newHeight <= 0)                       return false;
-        if (newWidth == width && newHeight == height)              return false;
+        if (newWidth <= 0 || newHeight <= 0) return false;
+        if (newWidth == width && newHeight == height) return false;
 
-        width  = newWidth;
+        width = newWidth;
         height = newHeight;
         int cells = newWidth * newHeight;
 
         compositeCodepoints = new int[cells];
-        compositeFg         = new int[cells];
-        compositeBg         = new int[cells];
-        prevCodepoints      = new int[cells];
-        prevFg              = new int[cells];
-        prevBg              = new int[cells];
-        
+        compositeFg = new int[cells];
+        compositeBg = new int[cells];
+        prevCodepoints = new int[cells];
+        prevFg = new int[cells];
+        prevBg = new int[cells];
+
         outBuffer = new byte[cells * 40 + 1024];
 
         clear();
@@ -455,14 +486,17 @@ public final class FastTerminalRenderer {
     }
 
     public void dispose() {
-        if (scenes != null) { scenes.clear(); scenes = null; }
+        if (scenes != null) {
+            scenes.clear();
+            scenes = null;
+        }
         compositeCodepoints = null;
-        compositeFg         = null;
-        compositeBg         = null;
-        prevCodepoints      = null;
-        prevFg              = null;
-        prevBg              = null;
-        outBuffer           = null;
+        compositeFg = null;
+        compositeBg = null;
+        prevCodepoints = null;
+        prevFg = null;
+        prevBg = null;
+        outBuffer = null;
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -493,16 +527,26 @@ public final class FastTerminalRenderer {
         int curFg = -2, curBg = -2;
         for (int row = 0; row <= lastContentRow; row++) {
             outLen += moveCursor(outBuffer, outLen, row, 0);
-            curFg = -2; curBg = -2;
+            curFg = -2;
+            curBg = -2;
             int base = row * width;
             for (int col = 0; col < width; col++) {
-                int i  = base + col;
+                int i = base + col;
                 int cp = compositeCodepoints[i];
                 int fg = compositeFg[i];
                 int bg = compositeBg[i];
-                if (cp == -99) { outBuffer[outLen++] = ' '; continue; }
-                if (fg != curFg) { outLen += emitFg(outBuffer, outLen, fg); curFg = fg; }
-                if (bg != curBg) { outLen += emitBg(outBuffer, outLen, bg); curBg = bg; }
+                if (cp == -99) {
+                    outBuffer[outLen++] = ' ';
+                    continue;
+                }
+                if (fg != curFg) {
+                    outLen += emitFg(outBuffer, outLen, fg);
+                    curFg = fg;
+                }
+                if (bg != curBg) {
+                    outLen += emitBg(outBuffer, outLen, bg);
+                    curBg = bg;
+                }
                 if (Character.isValidCodePoint(cp)) {
                     outLen += FastASCIIWriter.writeUtf8(outBuffer, outLen, cp);
                 } else {
@@ -523,11 +567,25 @@ public final class FastTerminalRenderer {
     // Accessors
     // ════════════════════════════════════════════════════════════════════════
 
-    public boolean isDiffRenderingEnabled()    { return diffRenderingEnabled; }
-    public boolean isDirtyRectanglesEnabled()  { return dirtyRectanglesEnabled; }
-    public int     getLastFlushedBytes()       { return lastFlushedBytes; }
-    public int     getWidth()                  { return width; }
-    public int     getHeight()                 { return height; }
+    public boolean isDiffRenderingEnabled() {
+        return diffRenderingEnabled;
+    }
+
+    public boolean isDirtyRectanglesEnabled() {
+        return dirtyRectanglesEnabled;
+    }
+
+    public int getLastFlushedBytes() {
+        return lastFlushedBytes;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
 
     public void setDiffRenderingEnabled(boolean enabled) {
         diffRenderingEnabled = enabled;

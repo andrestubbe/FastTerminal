@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.1.4] - 2026-07-18
+
+### Added
+- **Native Event-driven Resize Watcher**: Implemented native Windows buffer size listener using a separate CONIN$ handle, avoiding input loss and polling.
+- **ResizeListener API**: Added `addResizeListener(ResizeListener)` and `removeResizeListener(ResizeListener)` on `FastTerminal`.
+- **Javadocs**: Documented all resize-related JNI and Java API methods.
+
+## [0.1.3] - 2026-07-12
 
 ### Added
 - Initial JNI implementation

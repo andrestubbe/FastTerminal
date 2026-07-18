@@ -4,11 +4,11 @@ This document outlines the detailed API contracts, class structures, rendering p
 
 ---
 
-## 1. Class: `TerminalScene`
+## 1. Class: `FastTerminalScene`
 Represents a layer/viewport grid within the console. It encapsulates dynamic codepoint and RGB color buffers using primitive arrays.
 
 ### Constructors
-*   `public TerminalScene(int x, int y, int width, int height)`
+*   `public FastTerminalScene(int x, int y, int width, int height)`
     Creates a scene at coordinate `(x, y)` with the specified dimensions. Initializes cell buffers to spaces (' ') and default style codes (-1).
 
 ### Methods
@@ -29,15 +29,15 @@ Represents a layer/viewport grid within the console. It encapsulates dynamic cod
 
 ---
 
-## 2. Class: `TerminalRenderer`
+## 2. Class: `FastTerminalRenderer`
 Main compositor engine that coordinates multi-scene compositing and blits to standard output.
 
 ### Constructors
-*   `public TerminalRenderer(int width, int height)`
+*   `public FastTerminalRenderer(int width, int height)`
     Initializes a composite back-buffer grid of specified dimensions.
 
 ### Methods
-*   `public void addScene(TerminalScene scene)`
+*   `public void addScene(FastTerminalScene scene)`
     *   **Description**: Adds a layer viewport to the compositing pipeline. Scenes added later render on top of earlier scenes.
 *   `public void render()`
     *   **Description**: Composites all dirty scenes into a unified screen buffer and writes standard bytes to `System.out`.
@@ -56,6 +56,10 @@ Provides direct operating system bindings to handle low-level terminal control.
     *   **Description**: Directly queries console dimensions natively. On Windows, uses `GetConsoleScreenBufferInfo` from the Win32 API.
 *   `public static native void setRawMode(boolean enable)`
     *   **Description**: Configures raw console input mode, bypassing stdout buffering, input line parsing, and local key echo.
+*   `public static void addResizeListener(ResizeListener l)`
+    *   **Description**: Registers a callback to receive immediate, event-driven terminal resize notifications.
+*   `public static void removeResizeListener(ResizeListener l)`
+    *   **Description**: Deregisters a listener.
 
 ---
 

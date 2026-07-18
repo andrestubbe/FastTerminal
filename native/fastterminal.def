@@ -12,3 +12,5 @@ EXPORTS
     Java_fastterminal_FastTerminal_getCursorPosition
     Java_fastterminal_FastTerminalRenderer_renderAnsiNative
     Java_fastterminal_FastTerminal_setTitle
+    Java_fastterminal_FastTerminal_startNativeResizeWatcher
+    Java_fastterminal_FastTerminal_stopNativeResizeWatcher

@@ -1,62 +1,77 @@
-# Building FastXXX from Source
+# Building from Source
 
 ## Prerequisites
 
-- **JDK 17+** — [Download](https://adoptium.net/)
-- **Maven 3.9+** — [Download](https://maven.apache.org/download.cgi)
-- **Visual Studio 2022** — Community/Professional/Enterprise/BuildTools
+- JDK 17+
+- Maven 3.9+
+- **Windows:** Visual Studio 2019+ or Build Tools
 
-## Quick Build
+## Build
+
+### Windows
 
 ```bash
-# 1. Build native DLL first (Windows)
 compile.bat
-
-# 2. Build JAR
-mvn clean package -DskipTests
+mvn clean package
 ```
 
-## Build Commands
+The build script compiles the native library and packages it with the JAR.
 
-| Command | Purpose |
-|---------|---------|
-| `compile.bat` | Build native DLL (Windows) |
-| `mvn clean compile` | Compile Java only |
-| `mvn clean package` | Build FatJAR with DLL embedded |
-| `mvn test` | Run unit tests |
+## Run Examples
 
-## Native DLL Build
-
-The `compile.bat` script:
-- Auto-detects Visual Studio 2019/2022
-- Auto-detects JAVA_HOME
-- Uses `native\fastXXX.def` for JNI exports
-- Outputs to `build\fastXXX.dll`
-
-The Maven `pom.xml` will automatically pick up `build\fastXXX.dll` and bundle it inside the JAR.
-
-## JNI Exports (.def File)
-
-When using JNI, you MUST export your native functions in the `native\fastXXX.def` file:
-
-```def
-LIBRARY fastXXX
-EXPORTS
-    Java_fastXXX_FastXXX_doSomethingNative
+```bash
+run-demo.bat
 ```
 
-**Important:** Function names must match Java's expected format:
-- Pattern: `Java_packagename_Classname_methodname`
+## Installation
 
-Without the `.def` file, JNI methods won't be exported and you'll get `UnsatisfiedLinkError`.
+### JitPack (Recommended)
+
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>com.github.andrestubbe</groupId>
+        <artifactId>FastTerminal</artifactId>
+        <version>0.1.4</version>
+    </dependency>
+    <dependency>
+        <groupId>com.github.andrestubbe</groupId>
+        <artifactId>FastCore</artifactId>
+        <version>0.1.0</version>
+    </dependency>
+</dependencies>
+```
+
+### Gradle (JitPack)
+
+```groovy
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation 'com.github.andrestubbe:FastTerminal:0.1.4'
+    implementation 'com.github.andrestubbe:FastCore:0.1.0'
+}
+```
+
+## Download Pre-built JAR
+
+See [Releases Page](https://github.com/andrestubbe/FastTerminal/releases)
 
 ## Troubleshooting
 
-**"Cannot find DLL"** — Run `compile.bat` first
+### JNI UnsatisfiedLinkError
 
-**"UnsatisfiedLinkError"** — Common causes:
-1. DLL built but not included in JAR (check `build/` folder).
-2. JNI exports missing — Verify `.def` file.
-3. Wrong function name — Must match `Java_package_Class_method` exactly.
+If you get `UnsatisfiedLinkError`, the native library was not found:
 
-**"Java version mismatch"** — Ensure JDK 17+ is installed and JAVA_HOME is set.
+1. Ensure `compile.bat` was run successfully
+2. Check that the DLL exists in the `build/` folder
+3. Ensure you have VS C++ Redistributable installed

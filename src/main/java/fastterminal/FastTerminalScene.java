@@ -15,6 +15,26 @@ import java.util.Arrays;
  */
 public class FastTerminalScene implements fastansi.CellConsumer {
 
+    private static final int[] ANSI_COLORS_24BIT = {
+            0x000000, // 0: Black
+            0xCD3131, // 1: Red
+            0x0DBC79, // 2: Green
+            0xE5E510, // 3: Yellow
+            0x2472C8, // 4: Blue
+            0xBC3FBC, // 5: Magenta
+            0x11A8CD, // 6: Cyan
+            0xE5E5E5, // 7: White
+            0x666666, // 8: Bright Black (Gray)
+            0xF14C4C, // 9: Bright Red
+            0x23D18B, // 10: Bright Green
+            0xF5F543, // 11: Bright Yellow
+            0x3B8EEA, // 12: Bright Blue
+            0xD670D6, // 13: Bright Magenta
+            0x29B8DB, // 14: Bright Cyan
+            0xFFFFFF  // 15: Bright White
+    };
+
+
     private int[] codepointBuffer;
     private int[] fgBuffer;
     private int[] bgBuffer;
@@ -29,7 +49,7 @@ public class FastTerminalScene implements fastansi.CellConsumer {
 
     /**
      * @brief Allocates all cell buffer layers.
-     * 
+     *
      * @param x Initial absolute offset X coordinate.
      * @param y Initial absolute offset Y coordinate.
      * @param width Scene viewport width columns.
@@ -68,7 +88,7 @@ public class FastTerminalScene implements fastansi.CellConsumer {
 
     /**
      * @brief Dynamically resizes scene arrays in-place.
-     * 
+     *
      * @param newWidth New column width.
      * @param newHeight New row height.
      * @return True if a resizing transition actually happened, false otherwise.
@@ -88,20 +108,18 @@ public class FastTerminalScene implements fastansi.CellConsumer {
     }
 
     /**
-     * @brief Adjusts scene's rendering offsets in screen space coordinates.
-     * 
-     * @param newX Viewport offset columns.
-     * @param newY Viewport offset rows.
+     * @brief Disposes and dereferences buffers inside the scene layer.
      */
-    public void setPosition(final int newX, final int newY) {
-        this.x = newX;
-        this.y = newY;
-        this.dirty = true;
+    public void dispose() {
+        this.codepointBuffer = null;
+        this.fgBuffer = null;
+        this.bgBuffer = null;
+        this.updater = null;
     }
 
     /**
      * @brief Writes a specific cell's formatting parameters, performing safe boundary clips.
-     * 
+     *
      * @param col Target cell column index.
      * @param row Target cell row index.
      * @param codepoint UTF-32 character value.
@@ -119,7 +137,7 @@ public class FastTerminalScene implements fastansi.CellConsumer {
 
     /**
      * @brief Writes a standard string sequentially to cells, tracking double-wide continuation boundaries.
-     * 
+     *
      * @param startCol Starting cell column.
      * @param row Target row.
      * @param text Raw source string.
@@ -134,39 +152,20 @@ public class FastTerminalScene implements fastansi.CellConsumer {
             if (col >= this.width) break;
             int cp = text.codePointAt(i);
             int width = fastemojis.FastEmojis.getWidth(cp);
-            
+
             this.writeCell(col, row, cp, fg, bg);
             if (width == 2 && col + 1 < this.width) {
                 this.writeCell(col + 1, row, -99, fg, bg); // Native continuation cell marker
             }
-            
+
             col += width;
             i += Character.charCount(cp);
         }
     }
 
-    private static final int[] ANSI_COLORS_24BIT = {
-        0x000000, // 0: Black
-        0xCD3131, // 1: Red
-        0x0DBC79, // 2: Green
-        0xE5E510, // 3: Yellow
-        0x2472C8, // 4: Blue
-        0xBC3FBC, // 5: Magenta
-        0x11A8CD, // 6: Cyan
-        0xE5E5E5, // 7: White
-        0x666666, // 8: Bright Black (Gray)
-        0xF14C4C, // 9: Bright Red
-        0x23D18B, // 10: Bright Green
-        0xF5F543, // 11: Bright Yellow
-        0x3B8EEA, // 12: Bright Blue
-        0xD670D6, // 13: Bright Magenta
-        0x29B8DB, // 14: Bright Cyan
-        0xFFFFFF  // 15: Bright White
-    };
-
     /**
      * @brief Interpolates and normalizes 4-bit and 8-bit ANSI codes into standard True Color values.
-     * 
+     *
      * @param colorType Code color format type (0: 4-bit, 1: 8-bit, 2: 24-bit).
      * @param r Red parameter (or ANSI index if colorType < 2).
      * @param g Green parameter.
@@ -201,7 +200,7 @@ public class FastTerminalScene implements fastansi.CellConsumer {
 
     /**
      * @brief Writes a styled ANSI string, parsing tokens in a zero-allocation parsing sweep.
-     * 
+     *
      * @param startCol Starting column coordinate.
      * @param row Target row.
      * @param text Raw source ANSI formatting string.
@@ -210,7 +209,7 @@ public class FastTerminalScene implements fastansi.CellConsumer {
      */
     public void writeAnsiString(int startCol, int row, String text, int defaultFg, int defaultBg) {
         if (row < 0 || row >= this.height) return;
-        
+
         final int[] col = { startCol };
         final int[] activeFg = { defaultFg };
         final int[] activeBg = { defaultBg };
@@ -222,12 +221,12 @@ public class FastTerminalScene implements fastansi.CellConsumer {
                     if (col[0] >= width) break;
                     int cp = Character.codePointAt(text, i);
                     int charWidth = fastemojis.FastEmojis.getWidth(cp);
-                    
+
                     writeCell(col[0], row, cp, activeFg[0], activeBg[0]);
                     if (charWidth == 2 && col[0] + 1 < width) {
                         writeCell(col[0] + 1, row, -99, activeFg[0], activeBg[0]);
                     }
-                    
+
                     col[0] += charWidth;
                     i += Character.charCount(cp);
                 }
@@ -300,6 +299,144 @@ public class FastTerminalScene implements fastansi.CellConsumer {
     }
 
     /**
+     * @brief Writes a cell with alpha blending (Alpha-Compositing).
+     *
+     * If the foreground or background alpha is less than 1.0, it is blended
+     * with the existing color in the scene buffers.
+     *
+     * @param col Target column.
+     * @param row Target row.
+     * @param codepoint UTF-32 character value.
+     * @param fg Foreground color.
+     * @param bg Background color.
+     * @param fgAlpha Foreground alpha opacity (0.0 to 1.0).
+     * @param bgAlpha Background alpha opacity (0.0 to 1.0).
+     */
+    public void writeCellAlpha(int col, int row, int codepoint, int fg, int bg, double fgAlpha, double bgAlpha) {
+        if (col >= 0 && col < this.width && row >= 0 && row < this.height) {
+            int idx = row * this.width + col;
+
+            // Blend foreground if needed
+            if (fgAlpha < 1.0) {
+                int oldFg = this.fgBuffer[idx];
+                if (oldFg == -1) oldFg = 0x000000;
+                fg = blendColor(oldFg, fg, fgAlpha);
+            }
+
+            // Blend background if needed
+            if (bgAlpha < 1.0) {
+                int oldBg = this.bgBuffer[idx];
+                if (oldBg == -1) oldBg = 0x000000;
+                bg = blendColor(oldBg, bg, bgAlpha);
+            }
+
+            this.codepointBuffer[idx] = codepoint;
+            this.fgBuffer[idx] = fg;
+            this.bgBuffer[idx] = bg;
+        }
+    }
+
+    /**
+     * @brief Writes a cell with packed 32-bit ARGB colors (Alpha-Compositing).
+     *
+     * Colors are in the format 0xAARRGGBB. If the alpha byte AA is 0, it is treated
+     * as fully opaque unless it is explicitly 0x00000000 (fully transparent black).
+     *
+     * @param col Target column.
+     * @param row Target row.
+     * @param codepoint UTF-32 character value.
+     * @param fgPacked Packed 32-bit ARGB foreground color.
+     * @param bgPacked Packed 32-bit ARGB background color.
+     */
+    public void writeCellARGB(int col, int row, int codepoint, int fgPacked, int bgPacked) {
+        if (col >= 0 && col < this.width && row >= 0 && row < this.height) {
+            int idx = row * this.width + col;
+
+            // Extract alpha from fg
+            int fgAlphaByte = (fgPacked >>> 24) & 0xFF;
+            int fgColor = fgPacked & 0xFFFFFF;
+            if (fgAlphaByte == 0 && fgPacked != 0) {
+                fgAlphaByte = 255;
+            }
+            if (fgAlphaByte > 0) {
+                if (fgAlphaByte < 255) {
+                    int oldFg = this.fgBuffer[idx];
+                    if (oldFg == -1) oldFg = 0x000000;
+                    fgColor = blendColor(oldFg, fgColor, fgAlphaByte / 255.0);
+                }
+                this.fgBuffer[idx] = fgColor;
+            }
+
+            // Extract alpha from bg
+            int bgAlphaByte = (bgPacked >>> 24) & 0xFF;
+            int bgColor = bgPacked & 0xFFFFFF;
+            if (bgAlphaByte == 0 && bgPacked != 0) {
+                bgAlphaByte = 255;
+            }
+            if (bgAlphaByte > 0) {
+                if (bgAlphaByte < 255) {
+                    int oldBg = this.bgBuffer[idx];
+                    if (oldBg == -1) oldBg = 0x000000;
+                    bgColor = blendColor(oldBg, bgColor, bgAlphaByte / 255.0);
+                }
+                this.bgBuffer[idx] = bgColor;
+            }
+
+            if (codepoint != ' ' || fgAlphaByte > 0) {
+                this.codepointBuffer[idx] = codepoint;
+            }
+        }
+    }
+
+    /**
+     * @brief Writes a standard string sequentially to cells with alpha blending.
+     *
+     * @param startCol Starting cell column.
+     * @param row Target row.
+     * @param text Raw source string.
+     * @param fg Foreground color.
+     * @param bg Background color.
+     * @param fgAlpha Foreground alpha.
+     * @param bgAlpha Background alpha.
+     */
+    public void writeStringAlpha(int startCol, int row, String text, int fg, int bg, double fgAlpha, double bgAlpha) {
+        if (row < 0 || row >= this.height) return;
+        int len = text.length();
+        int col = startCol;
+        for (int i = 0; i < len; ) {
+            if (col >= this.width) break;
+            int cp = text.codePointAt(i);
+            int width = fastemojis.FastEmojis.getWidth(cp);
+
+            this.writeCellAlpha(col, row, cp, fg, bg, fgAlpha, bgAlpha);
+            if (width == 2 && col + 1 < this.width) {
+                this.writeCellAlpha(col + 1, row, -99, fg, bg, fgAlpha, bgAlpha);
+            }
+
+            col += width;
+            i += Character.charCount(cp);
+        }
+    }
+
+    private int blendColor(int color1, int color2, double ratio) {
+        if (ratio <= 0.0) return color1;
+        if (ratio >= 1.0) return color2;
+        int r1 = (color1 >> 16) & 0xFF;
+        int g1 = (color1 >> 8) & 0xFF;
+        int b1 = color1 & 0xFF;
+
+        int r2 = (color2 >> 16) & 0xFF;
+        int g2 = (color2 >> 8) & 0xFF;
+        int b2 = color2 & 0xFF;
+
+        int r = (int) (r1 * (1.0 - ratio) + r2 * ratio);
+        int g = (int) (g1 * (1.0 - ratio) + g2 * ratio);
+        int b = (int) (b1 * (1.0 - ratio) + b2 * ratio);
+
+        return (r << 16) | (g << 8) | b;
+    }
+
+    /**
      * @brief Gets dirty flag state.
      * @return True if modified, False otherwise.
      */
@@ -308,19 +445,15 @@ public class FastTerminalScene implements fastansi.CellConsumer {
     }
 
     /**
-     * @brief Manually flags dirty composition states.
-     * @param dirty Target dirty flag state.
+     * @brief Returns whether this scene uses transparent compositing.
+     *
+     * When true, cells that are blank (space character, fg=-1, bg=-1) are treated
+     * as transparent during compositing — the layer below shows through those cells.
+     *
+     * @return True if transparent compositing is enabled.
      */
-    public void setDirty(final boolean dirty) {
-        this.dirty = dirty;
-    }
-
-    /**
-     * @brief Sets lazy update hook runnable.
-     * @param updater Target update callback.
-     */
-    public void setUpdater(final Runnable updater) {
-        this.updater = updater;
+    public boolean isTransparentBackground() {
+        return this.transparentBackground;
     }
 
     /**
@@ -380,25 +513,31 @@ public class FastTerminalScene implements fastansi.CellConsumer {
     }
 
     /**
-     * @brief Disposes and dereferences buffers inside the scene layer.
+     * @brief Adjusts scene's rendering offsets in screen space coordinates.
+     *
+     * @param newX Viewport offset columns.
+     * @param newY Viewport offset rows.
      */
-    public void dispose() {
-        this.codepointBuffer = null;
-        this.fgBuffer = null;
-        this.bgBuffer = null;
-        this.updater = null;
+    public void setPosition(final int newX, final int newY) {
+        this.x = newX;
+        this.y = newY;
+        this.dirty = true;
     }
 
     /**
-     * @brief Returns whether this scene uses transparent compositing.
-     *
-     * When true, cells that are blank (space character, fg=-1, bg=-1) are treated
-     * as transparent during compositing — the layer below shows through those cells.
-     *
-     * @return True if transparent compositing is enabled.
+     * @brief Manually flags dirty composition states.
+     * @param dirty Target dirty flag state.
      */
-    public boolean isTransparentBackground() {
-        return this.transparentBackground;
+    public void setDirty(final boolean dirty) {
+        this.dirty = dirty;
+    }
+
+    /**
+     * @brief Sets lazy update hook runnable.
+     * @param updater Target update callback.
+     */
+    public void setUpdater(final Runnable updater) {
+        this.updater = updater;
     }
 
     /**
@@ -413,143 +552,5 @@ public class FastTerminalScene implements fastansi.CellConsumer {
      */
     public void setTransparentBackground(boolean transparent) {
         this.transparentBackground = transparent;
-    }
-
-    /**
-     * @brief Writes a cell with alpha blending (Alpha-Compositing).
-     * 
-     * If the foreground or background alpha is less than 1.0, it is blended
-     * with the existing color in the scene buffers.
-     * 
-     * @param col Target column.
-     * @param row Target row.
-     * @param codepoint UTF-32 character value.
-     * @param fg Foreground color.
-     * @param bg Background color.
-     * @param fgAlpha Foreground alpha opacity (0.0 to 1.0).
-     * @param bgAlpha Background alpha opacity (0.0 to 1.0).
-     */
-    public void writeCellAlpha(int col, int row, int codepoint, int fg, int bg, double fgAlpha, double bgAlpha) {
-        if (col >= 0 && col < this.width && row >= 0 && row < this.height) {
-            int idx = row * this.width + col;
-            
-            // Blend foreground if needed
-            if (fgAlpha < 1.0) {
-                int oldFg = this.fgBuffer[idx];
-                if (oldFg == -1) oldFg = 0x000000;
-                fg = blendColor(oldFg, fg, fgAlpha);
-            }
-            
-            // Blend background if needed
-            if (bgAlpha < 1.0) {
-                int oldBg = this.bgBuffer[idx];
-                if (oldBg == -1) oldBg = 0x000000;
-                bg = blendColor(oldBg, bg, bgAlpha);
-            }
-            
-            this.codepointBuffer[idx] = codepoint;
-            this.fgBuffer[idx] = fg;
-            this.bgBuffer[idx] = bg;
-        }
-    }
-
-    /**
-     * @brief Writes a cell with packed 32-bit ARGB colors (Alpha-Compositing).
-     * 
-     * Colors are in the format 0xAARRGGBB. If the alpha byte AA is 0, it is treated
-     * as fully opaque unless it is explicitly 0x00000000 (fully transparent black).
-     * 
-     * @param col Target column.
-     * @param row Target row.
-     * @param codepoint UTF-32 character value.
-     * @param fgPacked Packed 32-bit ARGB foreground color.
-     * @param bgPacked Packed 32-bit ARGB background color.
-     */
-    public void writeCellARGB(int col, int row, int codepoint, int fgPacked, int bgPacked) {
-        if (col >= 0 && col < this.width && row >= 0 && row < this.height) {
-            int idx = row * this.width + col;
-            
-            // Extract alpha from fg
-            int fgAlphaByte = (fgPacked >>> 24) & 0xFF;
-            int fgColor = fgPacked & 0xFFFFFF;
-            if (fgAlphaByte == 0 && fgPacked != 0) {
-                fgAlphaByte = 255;
-            }
-            if (fgAlphaByte > 0) {
-                if (fgAlphaByte < 255) {
-                    int oldFg = this.fgBuffer[idx];
-                    if (oldFg == -1) oldFg = 0x000000;
-                    fgColor = blendColor(oldFg, fgColor, fgAlphaByte / 255.0);
-                }
-                this.fgBuffer[idx] = fgColor;
-            }
-            
-            // Extract alpha from bg
-            int bgAlphaByte = (bgPacked >>> 24) & 0xFF;
-            int bgColor = bgPacked & 0xFFFFFF;
-            if (bgAlphaByte == 0 && bgPacked != 0) {
-                bgAlphaByte = 255;
-            }
-            if (bgAlphaByte > 0) {
-                if (bgAlphaByte < 255) {
-                    int oldBg = this.bgBuffer[idx];
-                    if (oldBg == -1) oldBg = 0x000000;
-                    bgColor = blendColor(oldBg, bgColor, bgAlphaByte / 255.0);
-                }
-                this.bgBuffer[idx] = bgColor;
-            }
-            
-            if (codepoint != ' ' || fgAlphaByte > 0) {
-                this.codepointBuffer[idx] = codepoint;
-            }
-        }
-    }
-
-    /**
-     * @brief Writes a standard string sequentially to cells with alpha blending.
-     * 
-     * @param startCol Starting cell column.
-     * @param row Target row.
-     * @param text Raw source string.
-     * @param fg Foreground color.
-     * @param bg Background color.
-     * @param fgAlpha Foreground alpha.
-     * @param bgAlpha Background alpha.
-     */
-    public void writeStringAlpha(int startCol, int row, String text, int fg, int bg, double fgAlpha, double bgAlpha) {
-        if (row < 0 || row >= this.height) return;
-        int len = text.length();
-        int col = startCol;
-        for (int i = 0; i < len; ) {
-            if (col >= this.width) break;
-            int cp = text.codePointAt(i);
-            int width = fastemojis.FastEmojis.getWidth(cp);
-            
-            this.writeCellAlpha(col, row, cp, fg, bg, fgAlpha, bgAlpha);
-            if (width == 2 && col + 1 < this.width) {
-                this.writeCellAlpha(col + 1, row, -99, fg, bg, fgAlpha, bgAlpha);
-            }
-            
-            col += width;
-            i += Character.charCount(cp);
-        }
-    }
-
-    private int blendColor(int color1, int color2, double ratio) {
-        if (ratio <= 0.0) return color1;
-        if (ratio >= 1.0) return color2;
-        int r1 = (color1 >> 16) & 0xFF;
-        int g1 = (color1 >> 8) & 0xFF;
-        int b1 = color1 & 0xFF;
-
-        int r2 = (color2 >> 16) & 0xFF;
-        int g2 = (color2 >> 8) & 0xFF;
-        int b2 = color2 & 0xFF;
-
-        int r = (int) (r1 * (1.0 - ratio) + r2 * ratio);
-        int g = (int) (g1 * (1.0 - ratio) + g2 * ratio);
-        int b = (int) (b1 * (1.0 - ratio) + b2 * ratio);
-
-        return (r << 16) | (g << 8) | b;
     }
 }

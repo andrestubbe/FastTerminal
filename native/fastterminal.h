@@ -132,6 +132,9 @@ JNIEXPORT jint JNICALL Java_fastterminal_FastTerminalRenderer_renderAnsiNative(
  */
 JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_setTitle(JNIEnv* env, jclass clazz, jstring titleStr);
 
+JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_startNativeResizeWatcher(JNIEnv* env, jclass clazz);
+JNIEXPORT void JNICALL Java_fastterminal_FastTerminal_stopNativeResizeWatcher(JNIEnv* env, jclass clazz);
+
 #ifdef __cplusplus
 }
 #endif
