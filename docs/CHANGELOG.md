@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.5] - 2026-07-19
+
+### Added
+- **Optimized Hybrid-BufferedScene**: Redesigned `BufferedScene` using a cache-friendly 2-array layout (`int[]` codepoints and `long[]` packed colors) to reduce read memory bandwidth by 33%.
+- **Pre-clipped Loop Blitter**: Shifted bounds checks out of inner rendering loops in `BufferedScene` to enable maximum compiler optimization and JIT loop unrolling.
+- **Native Compatibility**: Implemented JNI-compatible fast-unpacking inside the blitter, allowing seamless drawing onto `FastTerminalScene`'s 3-array layout without breaking the native C++ renderer.
+
 ## [0.1.4] - 2026-07-18
 
 ### Added

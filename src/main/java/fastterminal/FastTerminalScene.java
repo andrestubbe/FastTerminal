@@ -129,8 +129,10 @@ public class FastTerminalScene implements fastansi.CellConsumer {
     public void writeCell(int col, int row, int codepoint, int fg, int bg) {
         if (col >= 0 && col < this.width && row >= 0 && row < this.height) {
             int idx = row * this.width + col;
-            this.codepointBuffer[idx] = codepoint;
-            if (fg != -2) this.fgBuffer[idx] = fg;
+            if (fg != -2) {
+                this.codepointBuffer[idx] = codepoint;
+                this.fgBuffer[idx] = fg;
+            }
             if (bg != -2) this.bgBuffer[idx] = bg;
         }
     }
