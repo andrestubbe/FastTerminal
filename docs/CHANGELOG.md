@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.6] - 2026-07-19
+
+### Added
+- **CellConsumer Integration**: Implemented `fastansi.CellConsumer` on `BufferedScene` and refactored layout/styling engines like `Gradient` to draw directly onto generic `CellConsumer` targets.
+- **Partial Cell Color Updates**: Added support for partial color updates (updating only fg or bg) in `BufferedScene.writeCell` by preserving existing packed values.
+- **Writability Safety**: Supported passing `-2` as a codepoint to `FastTerminalScene` and `BufferedScene` to update cell colors without overwriting character glyphs.
+
 ## [0.1.5] - 2026-07-19
 
 ### Added

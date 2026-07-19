@@ -39,7 +39,7 @@ run-demo.bat
     <dependency>
         <groupId>com.github.andrestubbe</groupId>
         <artifactId>FastTerminal</artifactId>
-        <version>0.1.5</version>
+        <version>0.1.6</version>
     </dependency>
     <dependency>
         <groupId>com.github.andrestubbe</groupId>
@@ -57,7 +57,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.andrestubbe:FastTerminal:0.1.5'
+    implementation 'com.github.andrestubbe:FastTerminal:0.1.6'
     implementation 'com.github.andrestubbe:FastCore:0.1.0'
 }
 ```

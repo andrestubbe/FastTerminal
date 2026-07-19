@@ -2,7 +2,7 @@ package fastterminal;
 
 import java.util.Arrays;
 
-public class BufferedScene {
+public class BufferedScene implements fastansi.CellConsumer {
 
     private final int width;
     private final int height;
@@ -23,18 +23,32 @@ public class BufferedScene {
         Arrays.fill(colors, 0L); // 0 = komplett transparent
     }
 
+    @Override
     public void writeCell(int col, int row, int codepoint, int fgColor, int bgColor) {
         if ((col | row) >= 0 && col < width && row < height) {
             int idx = row * width + col;
-            codepoints[idx] = codepoint;
 
-            if (fgColor == -2 && bgColor == -2) {
-                colors[idx] = 0L; // komplett transparent
+            long current = colors[idx];
+            int oldFg = (int) (current >>> 32);
+            int oldBg = (int) current;
+
+            // If current is 0L (fully transparent), treat defaults as -2 (transparent)
+            if (current == 0L) {
+                oldFg = -2;
+                oldBg = -2;
+            }
+
+            int newFg = fgColor != -2 ? fgColor : oldFg;
+            int newBg = bgColor != -2 ? bgColor : oldBg;
+
+            if (newFg == -2 && newBg == -2) {
+                colors[idx] = 0L; // completely transparent
             } else {
-                long packed =
-                    ((long)fgColor << 32) |
-                    (bgColor & 0xFFFFFFFFL);
-                colors[idx] = packed;
+                colors[idx] = ((long)newFg << 32) | (newBg & 0xFFFFFFFFL);
+            }
+
+            if (codepoint != -2) {
+                codepoints[idx] = codepoint;
             }
         }
     }
