@@ -1,6 +1,6 @@
-# FastTerminal 0.1.6 [ALPHA-2026-07] — High-Performance True-Color Terminal Engine for Java
+# FastTerminal 0.1.7 [ALPHA-2026-07] — High-Performance True-Color Terminal Engine for Java
 
-[![Status](https://img.shields.io/badge/status-0.1.6-brightgreen.svg)](https://github.com/andrestubbe/FastTerminal/releases/tag/0.1.6)
+[![Status](https://img.shields.io/badge/status-0.1.7-brightgreen.svg)](https://github.com/andrestubbe/FastTerminal/releases/tag/0.1.7)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java](https://img.shields.io/badge/Java-17+-blue.svg)](https://www.java.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010+-lightgrey.svg)]()
@@ -163,7 +163,7 @@ Add the JitPack repository and the dependencies to your `pom.xml`:
 <dependency>
     <groupId>com.github.andrestubbe</groupId>
     <artifactId>fastterminal</artifactId>
-    <version>0.1.6</version>
+    <version>0.1.7</version>
 </dependency>
 
 <!-- FastCore (Required Native Loader) -->

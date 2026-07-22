@@ -29,24 +29,23 @@ public final class FastTerminalRenderer {
     private static final String RGB_BG_PREFIX = FastANSI.CSI + "48;2;";
     private static final String RGB_SUFFIX = "m";
 
-    //  Scene registry 
-    private List<FastTerminalScene> scenes = new ArrayList<>();
-
-    //  Dimensions 
+    private final List<FastTerminalScene> scenes = new ArrayList<>();
     private int width;
     private int height;
 
-    //  Composite buffers (current frame) 
+    // Composite buffers
     private int[] compositeCodepoints;
     private int[] compositeFg;
     private int[] compositeBg;
+    private byte[] compositeStyles;
 
-    //  Prev buffers (last flushed frame, for diff) 
+    // Prev buffers
     private int[] prevCodepoints;
     private int[] prevFg;
     private int[] prevBg;
+    private byte[] prevStyles;
 
-    //  Rendering state 
+    // Rendering state
     private boolean forceFullRedraw = true;
     private boolean diffRenderingEnabled = true;
     private boolean dirtyRectanglesEnabled = false;
@@ -89,9 +88,11 @@ public final class FastTerminalRenderer {
         this.compositeCodepoints = new int[cells];
         this.compositeFg = new int[cells];
         this.compositeBg = new int[cells];
+        this.compositeStyles = new byte[cells];
         this.prevCodepoints = new int[cells];
         this.prevFg = new int[cells];
         this.prevBg = new int[cells];
+        this.prevStyles = new byte[cells];
         // 25 bytes per cell is plenty for extreme worst case: CSI 38;2;255;255;255m + CSI 48;2;255;255;255m + 4-byte UTF8
         this.outBuffer = new byte[cells * 40 + 1024];
         clear();
@@ -117,6 +118,15 @@ public final class FastTerminalRenderer {
         compositeScenes();
         outLen = 0;
 
+        if (dirtyRectanglesEnabled && diffRenderingEnabled && !forceFullRedraw) {
+            if (renderDirtyRectangles()) {
+                flushOutput();
+            } else {
+                lastFlushedBytes = 0;
+            }
+            return;
+        }
+
         if (nativeAvailable) {
             try {
                 outLen = renderAnsiNative(
@@ -131,15 +141,6 @@ public final class FastTerminalRenderer {
             } catch (UnsatisfiedLinkError e) {
                 nativeAvailable = false;
             }
-        }
-
-        if (dirtyRectanglesEnabled && diffRenderingEnabled && !forceFullRedraw) {
-            if (renderDirtyRectangles()) {
-                flushOutput();
-            } else {
-                lastFlushedBytes = 0;
-            }
-            return;
         }
 
         if (!diffRenderingEnabled || forceFullRedraw) {
@@ -163,7 +164,8 @@ public final class FastTerminalRenderer {
         for (int i = 0; i < cells; i++) {
             if (compositeCodepoints[i] != prevCodepoints[i]
                     | compositeFg[i] != prevFg[i]
-                    | compositeBg[i] != prevBg[i]) {
+                    | compositeBg[i] != prevBg[i]
+                    | compositeStyles[i] != prevStyles[i]) {
                 int y = i / width;
                 int x = i - y * width;
                 if (x < minX) minX = x;
@@ -175,11 +177,12 @@ public final class FastTerminalRenderer {
 
         if (maxX == -1) return false;
 
-        int curFg = -2, curBg = -2;
+        int curFg = -2, curBg = -2, curStyle = -1;
         for (int row = minY; row <= maxY; row++) {
             outLen += moveCursor(outBuffer, outLen, row, minX);
             curFg = -2;
             curBg = -2;
+            curStyle = -1;
             int base = row * width;
             for (int col = minX; col <= maxX; col++) {
                 int i = base + col;
@@ -187,6 +190,11 @@ public final class FastTerminalRenderer {
                 if (cp == -99) continue;
                 int fg = compositeFg[i];
                 int bg = compositeBg[i];
+                byte style = compositeStyles[i];
+                if (style != curStyle) {
+                    outLen += emitStyle(outBuffer, outLen, style);
+                    curStyle = style;
+                }
                 if (fg != curFg) {
                     outLen += emitFg(outBuffer, outLen, fg);
                     curFg = fg;
@@ -211,13 +219,14 @@ public final class FastTerminalRenderer {
             System.arraycopy(compositeCodepoints, offset, prevCodepoints, offset, len);
             System.arraycopy(compositeFg, offset, prevFg, offset, len);
             System.arraycopy(compositeBg, offset, prevBg, offset, len);
+            System.arraycopy(compositeStyles, offset, prevStyles, offset, len);
         }
         return true;
     }
 
     private void renderFullRedraw() {
         outLen += FastASCIIWriter.writeAscii(outBuffer, outLen, FastANSI.CURSOR_HOME);
-        int curFg = -2, curBg = -2;
+        int curFg = -2, curBg = -2, curStyle = -1;
         final int cells = compositeCodepoints.length;
 
         for (int i = 0; i < cells; i++) {
@@ -225,6 +234,11 @@ public final class FastTerminalRenderer {
             if (cp != -99) {
                 int fg = compositeFg[i];
                 int bg = compositeBg[i];
+                byte style = compositeStyles[i];
+                if (style != curStyle) {
+                    outLen += emitStyle(outBuffer, outLen, style);
+                    curStyle = style;
+                }
                 if (fg != curFg) {
                     outLen += emitFg(outBuffer, outLen, fg);
                     curFg = fg;
@@ -334,6 +348,7 @@ public final class FastTerminalRenderer {
         System.arraycopy(compositeCodepoints, 0, prevCodepoints, 0, compositeCodepoints.length);
         System.arraycopy(compositeFg, 0, prevFg, 0, compositeFg.length);
         System.arraycopy(compositeBg, 0, prevBg, 0, compositeBg.length);
+        System.arraycopy(compositeStyles, 0, prevStyles, 0, compositeStyles.length);
     }
 
     private void flushOutput() {
@@ -349,6 +364,32 @@ public final class FastTerminalRenderer {
     // ════════════════════════════════════════════════════════════════════════
     // ANSI emission helpers
     // ════════════════════════════════════════════════════════════════════════
+
+    private static int emitStyle(final byte[] buf, int offset, final byte style) {
+        int start = offset;
+        offset += FastASCIIWriter.writeAscii(buf, offset, FastANSI.RESET);
+        if (style == 0) return offset - start;
+
+        if ((style & FastStyle.BOLD) != 0) {
+            offset += FastASCIIWriter.writeAscii(buf, offset, FastANSI.BOLD);
+        }
+        if ((style & FastStyle.ITALIC) != 0) {
+            offset += FastASCIIWriter.writeAscii(buf, offset, FastANSI.ITALIC);
+        }
+        if ((style & FastStyle.UNDERLINE) != 0) {
+            offset += FastASCIIWriter.writeAscii(buf, offset, FastANSI.UNDERLINE);
+        }
+        if ((style & FastStyle.STRIKETHROUGH) != 0) {
+            offset += FastASCIIWriter.writeAscii(buf, offset, FastANSI.STRIKETHROUGH);
+        }
+        if ((style & FastStyle.BLINK) != 0) {
+            offset += FastASCIIWriter.writeAscii(buf, offset, FastANSI.BLINK);
+        }
+        if ((style & FastStyle.INVERT) != 0) {
+            offset += FastASCIIWriter.writeAscii(buf, offset, FastANSI.INVERT);
+        }
+        return offset - start;
+    }
 
     private static int emitFg(final byte[] buf, int offset, final int fg) {
         if (fg == -1) {
@@ -398,6 +439,7 @@ public final class FastTerminalRenderer {
         final int[] srcCp = scene.getCodepointBuffer();
         final int[] srcFg = scene.getFgBuffer();
         final int[] srcBg = scene.getBgBuffer();
+        final byte[] srcStyle = scene.getStyleBuffer();
         final int srcWidth = scene.getWidth();
         final int srcHeight = scene.getHeight();
         final int dstX = scene.getX();
@@ -426,15 +468,20 @@ public final class FastTerminalRenderer {
                 System.arraycopy(srcCp, srcPos, compositeCodepoints, dstPos, length);
                 System.arraycopy(srcFg, srcPos, compositeFg, dstPos, length);
                 System.arraycopy(srcBg, srcPos, compositeBg, dstPos, length);
+                if (srcStyle != null) {
+                    System.arraycopy(srcStyle, srcPos, compositeStyles, dstPos, length);
+                }
             } else {
                 for (int i = 0; i < length; i++) {
                     int scp = srcCp[srcPos + i];
                     int sfg = srcFg[srcPos + i];
                     int sbg = srcBg[srcPos + i];
+                    byte st = srcStyle != null ? srcStyle[srcPos + i] : 0;
                     if (scp == ' ' && sfg == -1 && sbg == -1) continue;
                     compositeCodepoints[dstPos + i] = scp;
                     compositeFg[dstPos + i] = sfg;
                     compositeBg[dstPos + i] = sbg;
+                    compositeStyles[dstPos + i] = st;
                 }
             }
         }
@@ -448,6 +495,7 @@ public final class FastTerminalRenderer {
         Arrays.fill(compositeCodepoints, ' ');
         Arrays.fill(compositeFg, -1);
         Arrays.fill(compositeBg, -1);
+        Arrays.fill(compositeStyles, (byte) 0);
     }
 
     public void clearPrev() {
@@ -455,6 +503,7 @@ public final class FastTerminalRenderer {
             Arrays.fill(prevCodepoints, ' ');
             Arrays.fill(prevFg, -1);
             Arrays.fill(prevBg, -1);
+            Arrays.fill(prevStyles, (byte) -1);
         }
         forceFullRedraw = true;
     }
@@ -474,9 +523,11 @@ public final class FastTerminalRenderer {
         compositeCodepoints = new int[cells];
         compositeFg = new int[cells];
         compositeBg = new int[cells];
+        compositeStyles = new byte[cells];
         prevCodepoints = new int[cells];
         prevFg = new int[cells];
         prevBg = new int[cells];
+        prevStyles = new byte[cells];
 
         outBuffer = new byte[cells * 40 + 1024];
 
@@ -488,14 +539,15 @@ public final class FastTerminalRenderer {
     public void dispose() {
         if (scenes != null) {
             scenes.clear();
-            scenes = null;
         }
         compositeCodepoints = null;
         compositeFg = null;
         compositeBg = null;
+        compositeStyles = null;
         prevCodepoints = null;
         prevFg = null;
         prevBg = null;
+        prevStyles = null;
         outBuffer = null;
     }
 

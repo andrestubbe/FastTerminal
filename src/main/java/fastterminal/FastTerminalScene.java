@@ -38,6 +38,7 @@ public class FastTerminalScene implements fastansi.CellConsumer {
     private int[] codepointBuffer;
     private int[] fgBuffer;
     private int[] bgBuffer;
+    private byte[] styleBuffer;
 
     private int x;
     private int y;
@@ -47,14 +48,6 @@ public class FastTerminalScene implements fastansi.CellConsumer {
     private boolean dirty;
     private boolean transparentBackground = false;
 
-    /**
-     * @brief Allocates all cell buffer layers.
-     *
-     * @param x Initial absolute offset X coordinate.
-     * @param y Initial absolute offset Y coordinate.
-     * @param width Scene viewport width columns.
-     * @param height Scene viewport height rows.
-     */
     public FastTerminalScene(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
@@ -63,13 +56,11 @@ public class FastTerminalScene implements fastansi.CellConsumer {
         this.codepointBuffer = new int[width * height];
         this.fgBuffer = new int[width * height];
         this.bgBuffer = new int[width * height];
+        this.styleBuffer = new byte[width * height];
         this.dirty = true;
         this.clear();
     }
 
-    /**
-     * @brief Triggers the lazy frame update hook if registered.
-     */
     public void update() {
         if (this.updater != null) {
             this.clear();
@@ -77,22 +68,13 @@ public class FastTerminalScene implements fastansi.CellConsumer {
         }
     }
 
-    /**
-     * @brief Resets all cells back to blank defaults: Space character, -1 foreground, -1 background.
-     */
     public void clear() {
         Arrays.fill(this.codepointBuffer, ' ');
         Arrays.fill(this.fgBuffer, -1);
         Arrays.fill(this.bgBuffer, -1);
+        Arrays.fill(this.styleBuffer, (byte) 0);
     }
 
-    /**
-     * @brief Dynamically resizes scene arrays in-place.
-     *
-     * @param newWidth New column width.
-     * @param newHeight New row height.
-     * @return True if a resizing transition actually happened, false otherwise.
-     */
     public boolean resize(final int newWidth, final int newHeight) {
         if (newWidth <= 0 || newHeight <= 0) return false;
         if (newWidth == this.width && newHeight == this.height) return false;
@@ -102,31 +84,29 @@ public class FastTerminalScene implements fastansi.CellConsumer {
         this.codepointBuffer = new int[newWidth * newHeight];
         this.fgBuffer = new int[newWidth * newHeight];
         this.bgBuffer = new int[newWidth * newHeight];
+        this.styleBuffer = new byte[newWidth * newHeight];
         this.clear();
         this.dirty = true;
         return true;
     }
 
-    /**
-     * @brief Disposes and dereferences buffers inside the scene layer.
-     */
     public void dispose() {
         this.codepointBuffer = null;
         this.fgBuffer = null;
         this.bgBuffer = null;
+        this.styleBuffer = null;
         this.updater = null;
     }
 
-    /**
-     * @brief Writes a specific cell's formatting parameters, performing safe boundary clips.
-     *
-     * @param col Target cell column index.
-     * @param row Target cell row index.
-     * @param codepoint UTF-32 character value.
-     * @param fg 24-bit True Color foreground value.
-     * @param bg 24-bit True Color background value.
-     */
+    public byte[] getStyleBuffer() {
+        return this.styleBuffer;
+    }
+
     public void writeCell(int col, int row, int codepoint, int fg, int bg) {
+        writeCell(col, row, codepoint, fg, bg, FastStyle.NONE);
+    }
+
+    public void writeCell(int col, int row, int codepoint, int fg, int bg, int style) {
         if (col >= 0 && col < this.width && row >= 0 && row < this.height) {
             int idx = row * this.width + col;
             if (fg != -2) {
@@ -134,19 +114,15 @@ public class FastTerminalScene implements fastansi.CellConsumer {
                 this.fgBuffer[idx] = fg;
             }
             if (bg != -2) this.bgBuffer[idx] = bg;
+            this.styleBuffer[idx] = (byte) style;
         }
     }
 
-    /**
-     * @brief Writes a standard string sequentially to cells, tracking double-wide continuation boundaries.
-     *
-     * @param startCol Starting cell column.
-     * @param row Target row.
-     * @param text Raw source string.
-     * @param fg 24-bit True Color foreground.
-     * @param bg 24-bit True Color background.
-     */
     public void writeString(int startCol, int row, String text, int fg, int bg) {
+        writeString(startCol, row, text, fg, bg, FastStyle.NONE);
+    }
+
+    public void writeString(int startCol, int row, String text, int fg, int bg, int style) {
         if (row < 0 || row >= this.height) return;
         int len = text.length();
         int col = startCol;
@@ -155,9 +131,9 @@ public class FastTerminalScene implements fastansi.CellConsumer {
             int cp = text.codePointAt(i);
             int width = fastemojis.FastEmojis.getWidth(cp);
 
-            this.writeCell(col, row, cp, fg, bg);
+            this.writeCell(col, row, cp, fg, bg, style);
             if (width == 2 && col + 1 < this.width) {
-                this.writeCell(col + 1, row, -99, fg, bg); // Native continuation cell marker
+                this.writeCell(col + 1, row, -99, fg, bg, style);
             }
 
             col += width;

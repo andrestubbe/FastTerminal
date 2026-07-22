@@ -14,10 +14,14 @@ Represents a layer/viewport grid within the console. It encapsulates dynamic cod
 ### Methods
 *   `public void writeCell(int col, int row, int codepoint, int fg, int bg)`
     *   **Description**: Modifies a single cell's Unicode codepoint and 24-bit True Colors.
-    *   **fg / bg**: Int-packed RGB colors (e.g. `0xFFCC00`) or `-1` for terminal default color.
+*   `public void writeCell(int col, int row, int codepoint, int fg, int bg, int style)`
+    *   **Description**: Modifies a single cell's codepoint, 24-bit True Colors, and `FastStyle` bitmask (e.g. `FastStyle.UNDERLINE | FastStyle.BOLD`).
 *   `public void writeString(int startCol, int row, String text, int fg, int bg)`
     *   **Description**: Safely writes a Java `String` at a row index.
-    *   **Unicode Safety**: Internally checks surrogate character boundaries, converting UTF-16 characters to 32-bit codepoints. Supports emojis cleanly without warping line layouts.
+*   `public void writeString(int startCol, int row, String text, int fg, int bg, int style)`
+    *   **Description**: Safely writes a Java `String` at a row index with a `FastStyle` bitmask.
+*   `public byte[] getStyleBuffer()`
+    *   **Description**: Returns the raw backing array of cell style bitmasks.
 *   `public void clear()`
     *   **Description**: Resets the scene buffer to space (' ') and standard styles.
 *   `public int[] getCodepointBuffer()`
