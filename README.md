@@ -84,7 +84,7 @@ via **[FastTerminal](https://github.com/andrestubbe/FastTerminal)** and **[FastM
 * **⚡ State-Minimized Renderer** — Optimizes stdout rendering via **[FastANSI](https://github.com/andrestubbe/FastANSI)** by only emitting escape codes when color or style states change, reducing console stream bandwidth by up to **80%**.
 * **📺 Alternate Screen Buffer** — Seamlessly enters full-screen TUI buffer mode (`\033[?1049h`) and hides the cursor (`\033[?25l`) using **[FastANSI](https://github.com/andrestubbe/FastANSI)** utilities for clean dashboard applications.
 * **🎹 Native Input Substrates** — Built-in telemetry anchors designed for instant integration with `FastKeyboard` and `FastMouse` to process mouse tracking, window resizing, and raw key captures natively.
-* **📥 Progress Indicators** — Built-in dynamic bottom-anchored multi-line progress overlays using cursor save/restore positions.
+* **🖼️ Double-Buffered Layer Compositor** — Retained-mode viewport grids (`FastTerminalScene`) with O(1) primitive buffer diffing (`FastTerminalRenderer`) for zero-garbage rendering pipelines.
 
 ---
 
