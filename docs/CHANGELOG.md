@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.7] - 2026-07-22
+
+### Added
+- **FastStyle Text Formatting Substrate**: Added zero-allocation bitmask cell style support (`FastStyle.NONE`, `BOLD`, `ITALIC`, `UNDERLINE`, `STRIKETHROUGH`, `BLINK`, `INVERT`) across scenes, compositors, and stream renderers.
+- **Style-Aware Cell Buffers**: Added `byte[] styleBuffer` in `FastTerminalScene` and `FastTerminalRenderer` with O(1) cache-friendly bitmask diffing.
+- **Scene Overloads**: Added `writeCell(col, row, cp, fg, bg, style)` and `writeString(col, row, text, fg, bg, style)` for direct styled text rendering.
+- **Documentation & Platform Specs**: Integrated comprehensive Platform Support matrix and Documentation links in `README.md`.
+
 ## [0.1.6] - 2026-07-19
 
 ### Added
