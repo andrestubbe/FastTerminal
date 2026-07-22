@@ -185,7 +185,7 @@ dependencies {
 
 Download the latest JARs directly to add them to your classpath:
 
-1. 📦 **[fastterminal-0.1.6.jar](https://github.com/andrestubbe/FastTerminal/releases/download/0.1.6/fastterminal-0.1.6.jar)** (The Core Library)
+1. 📦 **[fastterminal-0.1.7.jar](https://github.com/andrestubbe/FastTerminal/releases/download/0.1.7/fastterminal-0.1.7.jar)** (The Core Library)
 2. ⚙️ **[fastcore-0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/0.1.1/fastcore-0.1.0.jar)** (The Mandatory Native Loader)
 
 > [!IMPORTANT]
