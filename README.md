@@ -79,19 +79,12 @@ via **[FastTerminal](https://github.com/andrestubbe/FastTerminal)** and **[FastM
 ## Key Features
 
 * **🚫 Zero Dependencies** — Bypasses all high-latency third-party blocking input loops.
-* **🎨 24-bit True Color** — Complete support for direct RGB escape codes powered by *
-  *[FastANSI](https://github.com/andrestubbe/FastANSI)** (`\033[38;2;R;G;Bm` for foreground and `\033[48;2;R;G;Bm` for
-  background).
-* **🌍 Emoji & Unicode-Safe** — Eliminates UTF-16 surrogate split bugs by using `int` (UTF-32) codepoint cell buffers
-  rather than `char[]` arrays, guaranteeing that Emojis (e.g. `🚀`, `🌈`) fit exactly in 1 cell without warping rows.
-* **⚡ State-Minimized Renderer** — Optimizes stdout rendering via **[FastANSI](https://github.com/andrestubbe/FastANSI)
-  ** by only emitting escape codes when color states change, reducing console stream bandwidth by up to **80%**.
-* **📺 Alternate Screen Buffer** — Seamlessly enters full-screen TUI buffer mode (`\033[?1049h`) and hides the cursor (
-  `\033[?25l`) using **[FastANSI](https://github.com/andrestubbe/FastANSI)** utilities for clean dashboard applications.
-* **🎹 Native Input Substrates** — Built-in telemetry anchors designed for instant integration with `FastTerminal` and
-  `FastMouse` to process mouse tracking, window resizing, and raw key captures natively.
-* **📥 apt/npm Style Indicators** — Built-in dynamic bottom-anchored multi-line progress overlays using cursor
-  save/restore positions.
+* **🎨 24-bit True Color & Styles** — Complete support for direct RGB escape codes and text styles (`FastStyle`) powered by **[FastANSI](https://github.com/andrestubbe/FastANSI)** (`\033[38;2;R;G;Bm` foreground, `\033[48;2;R;G;Bm` background, underline, bold, italic).
+* **🌍 Emoji & Unicode-Safe** — Eliminates UTF-16 surrogate split bugs by using `int` (UTF-32) codepoint cell buffers rather than `char[]` arrays, guaranteeing that Emojis (e.g. `🚀`, `🌈`) fit cleanly in cell grids.
+* **⚡ State-Minimized Renderer** — Optimizes stdout rendering via **[FastANSI](https://github.com/andrestubbe/FastANSI)** by only emitting escape codes when color or style states change, reducing console stream bandwidth by up to **80%**.
+* **📺 Alternate Screen Buffer** — Seamlessly enters full-screen TUI buffer mode (`\033[?1049h`) and hides the cursor (`\033[?25l`) using **[FastANSI](https://github.com/andrestubbe/FastANSI)** utilities for clean dashboard applications.
+* **🎹 Native Input Substrates** — Built-in telemetry anchors designed for instant integration with `FastKeyboard` and `FastMouse` to process mouse tracking, window resizing, and raw key captures natively.
+* **📥 Progress Indicators** — Built-in dynamic bottom-anchored multi-line progress overlays using cursor save/restore positions.
 
 ---
 
