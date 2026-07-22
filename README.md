@@ -229,8 +229,8 @@ blitting:
 | Platform | Status |
 |---|---|
 | **Windows 10/11** | ✅ Fully Supported |
-| **Linux** | ✅ Fully Supported |
-| **macOS** | ✅ Fully Supported |
+| **Linux** | 🟡 Planned |
+| **macOS** | 🟡 Planned |
 
 ---
 
