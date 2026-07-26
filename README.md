@@ -156,7 +156,7 @@ Add the JitPack repository and the dependencies to your `pom.xml`:
 <dependency>
     <groupId>com.github.andrestubbe</groupId>
     <artifactId>fastterminal</artifactId>
-    <version>0.1.7</version>
+    <version>0.1.8</version>
 </dependency>
 
 <!-- FastCore (Required Native Loader) -->
@@ -176,7 +176,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.andrestubbe:fastterminal:0.1.6'
+    implementation 'com.github.andrestubbe:fastterminal:0.1.8'
     implementation 'com.github.andrestubbe:fastcore:0.1.0'
 }
 ```
@@ -185,7 +185,7 @@ dependencies {
 
 Download the latest JARs directly to add them to your classpath:
 
-1. 📦 **[fastterminal-0.1.7.jar](https://github.com/andrestubbe/FastTerminal/releases/download/0.1.7/fastterminal-0.1.7.jar)** (The Core Library)
+1. 📦 **[fastterminal-0.1.8.jar](https://github.com/andrestubbe/FastTerminal/releases/download/0.1.8/FastTerminal-0.1.8.jar)** (The Core Library)
 2. ⚙️ **[fastcore-0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/0.1.1/fastcore-0.1.0.jar)** (The Mandatory Native Loader)
 
 > [!IMPORTANT]
