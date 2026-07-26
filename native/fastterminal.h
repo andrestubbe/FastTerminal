@@ -118,8 +118,8 @@ JNIEXPORT jintArray JNICALL Java_fastterminal_FastTerminal_getCursorPosition(JNI
  */
 JNIEXPORT jint JNICALL Java_fastterminal_FastTerminalRenderer_renderAnsiNative(
     JNIEnv* env, jclass clazz,
-    jintArray compositeCPArray, jintArray compositeFgArray, jintArray compositeBgArray,
-    jintArray prevCPArray, jintArray prevFgArray, jintArray prevBgArray,
+    jintArray compositeCPArray, jintArray compositeFgArray, jintArray compositeBgArray, jbyteArray compositeStyleArray,
+    jintArray prevCPArray, jintArray prevFgArray, jintArray prevBgArray, jbyteArray prevStyleArray,
     jbyteArray outBufferArray, jint width, jint height,
     jboolean forceFullRedraw, jboolean diffRenderingEnabled, jboolean dirtyRectanglesEnabled
 );

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.8] - 2026-07-26
+
+### Added
+- **Native JNI FastStyle Engine Integration**: Fully integrated `FastStyle` bitmask cell formatting (`UNDERLINE`, `BOLD`, `ITALIC`, `STRIKETHROUGH`, `BLINK`, `INVERT`) into the native C++ double-buffering renderer (`fastterminal.cpp` / `fastterminal.dll`).
+- **JNI Signature Expansion**: Expanded `renderAnsiNative` JNI contract to pass `compositeStyles` and `prevStyles` primitive byte arrays via zero-allocation `GetPrimitiveArrayCritical` pointers.
+- **Native ANSI SGR Style Emitter**: Implemented high-performance inline C++ `emitStyle` sequence generator supporting state-minimized ANSI SGR escape codes (`\033[4m` for native terminal underlines, `\033[1m` for bold, `\033[3m` for italic, etc.).
+
 ## [0.1.7] - 2026-07-22
 
 ### Added

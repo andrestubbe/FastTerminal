@@ -66,8 +66,8 @@ public final class FastTerminalRenderer {
     }
 
     private static native int renderAnsiNative(
-            int[] compositeCodepoints, int[] compositeFg, int[] compositeBg,
-            int[] prevCodepoints, int[] prevFg, int[] prevBg,
+            int[] compositeCodepoints, int[] compositeFg, int[] compositeBg, byte[] compositeStyles,
+            int[] prevCodepoints, int[] prevFg, int[] prevBg, byte[] prevStyles,
             byte[] outBuffer, int width, int height,
             boolean forceFullRedraw, boolean diffRenderingEnabled, boolean dirtyRectanglesEnabled
     );
@@ -130,8 +130,8 @@ public final class FastTerminalRenderer {
         if (nativeAvailable) {
             try {
                 outLen = renderAnsiNative(
-                        compositeCodepoints, compositeFg, compositeBg,
-                        prevCodepoints, prevFg, prevBg,
+                        compositeCodepoints, compositeFg, compositeBg, compositeStyles,
+                        prevCodepoints, prevFg, prevBg, prevStyles,
                         outBuffer, width, height,
                         forceFullRedraw, diffRenderingEnabled, dirtyRectanglesEnabled
                 );

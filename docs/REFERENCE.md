@@ -60,6 +60,9 @@ Provides direct operating system bindings to handle low-level terminal control.
     *   **Description**: Directly queries console dimensions natively. On Windows, uses `GetConsoleScreenBufferInfo` from the Win32 API.
 *   `public static native void setRawMode(boolean enable)`
     *   **Description**: Configures raw console input mode, bypassing stdout buffering, input line parsing, and local key echo.
+*   `renderAnsiNative` (JNI Double-Buffering Engine)
+    *   **Signature (C++)**: `JNIEXPORT jint JNICALL Java_fastterminal_FastTerminalRenderer_renderAnsiNative(JNIEnv* env, jclass clazz, jintArray compositeCPArray, jintArray compositeFgArray, jintArray compositeBgArray, jbyteArray compositeStyleArray, jintArray prevCPArray, jintArray prevFgArray, jintArray prevBgArray, jbyteArray prevStyleArray, jbyteArray outBufferArray, jint width, jint height, jboolean forceFullRedraw, jboolean diffRenderingEnabled, jboolean dirtyRectanglesEnabled)`
+    *   **Description**: High-performance C++ double-buffering renderer blitting codepoints, 24-bit RGB, and `FastStyle` bitmasks directly to standard output.
 *   `public static void addResizeListener(ResizeListener l)`
     *   **Description**: Registers a callback to receive immediate, event-driven terminal resize notifications.
 *   `public static void removeResizeListener(ResizeListener l)`

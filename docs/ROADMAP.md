@@ -2,10 +2,10 @@
 
 **Vision:** To provide the fastest possible native primitives for terminal rendering by aggressively bypassing bottlenecks in standard Java.
 
-## 🟢 v0.1.7: Current Version
-- [x] **Core Native Engine**: Basic JNI implementation.
+## 🟢 v0.1.8: Current Version
+- [x] **Core Native Engine**: High-performance C++ JNI double-buffering & Win32 console integration.
 - [x] **Blueprint Standards**: README, Reference, Philosophy, Platform Support integration.
-- [x] **Rendering**: Double-Buffering, Diff-Rendering, Dirty-Rectangles, Partial Flush, FastStyle Bitmask Buffers (Bold, Italic, Underline, Strikethrough).
+- [x] **Rendering**: Native C++ JNI `FastStyle` bitmask double-buffering (Bold, Italic, Underline, Strikethrough, Blink, Invert).
 - [x] **Color**: 24-bit Gradients (linear, vertical, diagonal), Paletten, Themes, Alpha-Compositing.
 - [x] **System**: Native Win32 JNI Event-driven Resize-Watcher (0% CPU, no stdin loss) & swapchain `resize()`.
 
