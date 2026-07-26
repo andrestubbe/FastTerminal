@@ -218,6 +218,7 @@ blitting:
 ## Documentation
 
 - **[REFERENCE.md](docs/REFERENCE.md)**: Exhaustive catalog of `FastTerminalScene`, `FastTerminalRenderer`, `FastStyle` bitmasks, and JNI contracts.
+- **[COMPILE.md](docs/COMPILE.md)**: Native C++ DLL build instructions, JDK prerequisites, and compilation workflow.
 - **[PHILOSOPHY.md](docs/PHILOSOPHY.md)**: Zero-allocation primitive buffer architecture and state-minimizing diffing engine.
 - **[ROADMAP.md](docs/ROADMAP.md)**: Planned milestone features and performance extensions.
 - **[CHANGELOG.md](docs/CHANGELOG.md)**: Version history and release notes.
