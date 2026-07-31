@@ -112,6 +112,7 @@ public class Console extends JFrame {
         if (hwnd != 0) {
             FastTheme.setTitleBarDarkMode(hwnd, true);
             FastTheme.setTitleBarColor(hwnd, darkBg.getRed(), darkBg.getGreen(), darkBg.getBlue());
+            FastTheme.setWindowBackgroundColor(hwnd, darkBg.getRed(), darkBg.getGreen(), darkBg.getBlue());
         }
 
         setVisible(true);

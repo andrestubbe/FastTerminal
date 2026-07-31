@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.1.10] - 2026-07-31
+## [0.1.11] - 2026-07-31
 
 ### Added
 - **Swing Debug Console (`fastterminal.swing.Console`)**: Added built-in dark-themed Swing debugging console with thread-safe `println()` methods and customizable window bounds (`x`, `y`, `width`, `height`).
