@@ -72,14 +72,17 @@ public class FastTerminal {
         return scene;
     }
 
+    private static Thread watcherThread;
+    private static volatile boolean watcherActive = false;
+
     /**
      * @brief Registers a ResizeListener to handle terminal resizing.
      * <p>
-     * Starts the native event-driven resize watcher thread when the first listener is added.
+     * Starts the native event-driven resize watcher thread and the background resize watcher thread when the first listener is added.
      * 
      * @param listener The listener to add.
      */
-    public static void addResizeListener(ResizeListener listener) {
+    public static synchronized void addResizeListener(ResizeListener listener) {
         resizeListeners.add(listener);
         if (resizeListeners.size() == 1) {
             try {
@@ -87,23 +90,69 @@ public class FastTerminal {
             } catch (UnsatisfiedLinkError e) {
                 System.err.println("[FastTerminal] Native resize watcher not available: " + e.getMessage());
             }
+            startResizeWatcher();
         }
     }
 
     /**
      * @brief Unregisters a ResizeListener.
      * <p>
-     * Stops the native event-driven resize watcher thread when the last listener is removed.
+     * Stops the native event-driven resize watcher thread and background watcher thread when the last listener is removed.
      * 
      * @param listener The listener to remove.
      */
-    public static void removeResizeListener(ResizeListener listener) {
+    public static synchronized void removeResizeListener(ResizeListener listener) {
         resizeListeners.remove(listener);
         if (resizeListeners.isEmpty()) {
+            stopResizeWatcher();
             try {
                 stopNativeResizeWatcher();
             } catch (UnsatisfiedLinkError ignored) {
             }
+        }
+    }
+
+    private static void startResizeWatcher() {
+        if (watcherActive) return;
+        watcherActive = true;
+        watcherThread = new Thread(() -> {
+            int lastCols = -1;
+            int lastRows = -1;
+            int[] init = getTerminalSize();
+            if (init != null && init.length >= 2) {
+                lastCols = init[0];
+                lastRows = init[1];
+            }
+
+            while (watcherActive) {
+                try {
+                    Thread.sleep(150);
+                    int[] size = getTerminalSize();
+                    if (size != null && size.length >= 2 && size[0] > 0 && size[1] > 0) {
+                        int cols = size[0];
+                        int rows = size[1];
+                        if (cols != lastCols || rows != lastRows) {
+                            lastCols = cols;
+                            lastRows = rows;
+                            nativeResizeCallback(cols, rows);
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Throwable ignored) {
+                }
+            }
+        }, "FastTerminal-ResizeWatcher");
+        watcherThread.setDaemon(true);
+        watcherThread.start();
+    }
+
+    private static void stopResizeWatcher() {
+        watcherActive = false;
+        if (watcherThread != null) {
+            watcherThread.interrupt();
+            watcherThread = null;
         }
     }
 

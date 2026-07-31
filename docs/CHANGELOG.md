@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.10] - 2026-07-31
+
+### Added
+- **Swing Debug Console (`fastterminal.swing.Console`)**: Added built-in dark-themed Swing debugging console with thread-safe `println()` methods and customizable window bounds (`x`, `y`, `width`, `height`).
+
+## [0.1.9] - 2026-07-29
+
+### Fixed
+- **Double-Width Emoji Continuation Rendering**: Fixed continuation marker (`-99`) cell processing in `FastTerminalRenderer.renderAbsolute()`, preventing redundant space character output for surrogate-pair emojis and eliminating row wrapping / lower line shift glitches.
+
 ## [0.1.8] - 2026-07-26
 
 ### Added

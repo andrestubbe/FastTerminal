@@ -70,7 +70,17 @@ Provides direct operating system bindings to handle low-level terminal control.
 
 ---
 
-## 4. Class: `Log` / `LogListener`
+## 4. Class: `fastterminal.swing.Console`
+Dark-themed Swing debugging console window.
+
+*   `public static void println(String message)`
+    *   **Description**: Thread-safe static helper to output log messages directly into the GUI console window.
+*   `public Console(int x, int y, int width, int height)`
+    *   **Description**: Creates and displays a Swing debugging console at specified screen bounds `(x, y)` and size `(width, height)`.
+
+---
+
+## 5. Class: `Log` / `LogListener`
 High-speed thread-safe event logger supporting reactive rendering.
 
 *   `Log.addListener(LogListener l)` / `Log.removeListener(LogListener l)`

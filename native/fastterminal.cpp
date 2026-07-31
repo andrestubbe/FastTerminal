@@ -797,6 +797,61 @@ static std::atomic<bool> g_runningResizeWatcher{false};
 static std::thread g_resizeThread;
 static JavaVM* g_resizeJvm = nullptr;
 static jobject g_resizeClassGlobalRef = nullptr;
+static HWINEVENTHOOK g_hWinEventHook = NULL;
+
+static void CALLBACK ConsoleWinEventProc(
+    HWINEVENTHOOK hWinEventHook,
+    DWORD event,
+    HWND hwnd,
+    LONG idObject,
+    LONG idChild,
+    DWORD dwEventThread,
+    DWORD dwmsEventTime)
+{
+    if (idObject != OBJID_WINDOW) return;
+
+    HWND hwndConsole = GetConsoleWindow();
+    if (hwndConsole == NULL) return;
+    if (hwnd != hwndConsole && GetAncestor(hwnd, GA_ROOT) != hwndConsole) return;
+
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE || hOut == NULL) return;
+
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (GetConsoleScreenBufferInfo(hOut, &csbi)) {
+        int cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+        int rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+
+        static int s_lastCols = -1;
+        static int s_lastRows = -1;
+
+        if (cols > 0 && rows > 0 && (cols != s_lastCols || rows != s_lastRows)) {
+            s_lastCols = cols;
+            s_lastRows = rows;
+
+            if (g_resizeJvm && g_resizeClassGlobalRef) {
+                JNIEnv* env = nullptr;
+                jint res = g_resizeJvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+                bool needsDetach = false;
+                if (res == JNI_EDETACHED) {
+                    if (g_resizeJvm->AttachCurrentThreadAsDaemon((void**)&env, NULL) == JNI_OK) {
+                        needsDetach = true;
+                    }
+                }
+                if (env) {
+                    jclass targetCls = (jclass)g_resizeClassGlobalRef;
+                    jmethodID mid = env->GetStaticMethodID(targetCls, "nativeResizeCallback", "(II)V");
+                    if (mid) {
+                        env->CallStaticVoidMethod(targetCls, mid, cols, rows);
+                    }
+                }
+                if (needsDetach) {
+                    g_resizeJvm->DetachCurrentThread();
+                }
+            }
+        }
+    }
+}
 
 extern "C" {
 
@@ -808,58 +863,28 @@ Java_fastterminal_FastTerminal_startNativeResizeWatcher(JNIEnv* env, jclass cls)
     g_resizeClassGlobalRef = env->NewGlobalRef(cls);
 
     g_resizeThread = std::thread([]() {
-        HANDLE hIn = CreateFileA("CONIN$", GENERIC_READ | GENERIC_WRITE,
-                                 FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                 NULL, OPEN_EXISTING, 0, NULL);
+        DWORD processId = GetCurrentProcessId();
 
-        if (hIn == INVALID_HANDLE_VALUE) {
-            g_runningResizeWatcher = false;
-            return;
+        g_hWinEventHook = SetWinEventHook(
+            EVENT_OBJECT_LOCATIONCHANGE,
+            EVENT_OBJECT_LOCATIONCHANGE,
+            NULL,
+            ConsoleWinEventProc,
+            0,
+            0,
+            WINEVENT_OUTOFCONTEXT
+        );
+
+        MSG msg;
+        while (g_runningResizeWatcher && GetMessage(&msg, NULL, 0, 0)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
         }
 
-        DWORD mode = 0;
-        GetConsoleMode(hIn, &mode);
-        SetConsoleMode(hIn, mode | ENABLE_WINDOW_INPUT);
-
-        INPUT_RECORD record;
-        DWORD read = 0;
-
-        int lastCols = -1;
-        int lastRows = -1;
-
-        JNIEnv* myEnv = nullptr;
-        // Use AttachCurrentThreadAsDaemon to allow normal JVM shutdown
-        JavaVMAttachArgs args;
-        args.version = JNI_VERSION_1_6;
-        args.name = (char*)"FastTerminal-NativeResizeWatcher";
-        args.group = NULL;
-        if (g_resizeJvm->AttachCurrentThreadAsDaemon((void**)&myEnv, &args) == JNI_OK) {
-            jclass targetCls = (jclass)g_resizeClassGlobalRef;
-            jmethodID mid = myEnv->GetStaticMethodID(targetCls, "nativeResizeCallback", "(II)V");
-
-            while (g_runningResizeWatcher) {
-                if (!ReadConsoleInput(hIn, &record, 1, &read)) {
-                    Sleep(10);
-                    continue;
-                }
-
-                if (record.EventType == WINDOW_BUFFER_SIZE_EVENT) {
-                    int cols = record.Event.WindowBufferSizeEvent.dwSize.X;
-                    int rows = record.Event.WindowBufferSizeEvent.dwSize.Y;
-
-                    if (cols != lastCols || rows != lastRows) {
-                        lastCols = cols;
-                        lastRows = rows;
-                        if (mid && targetCls) {
-                            myEnv->CallStaticVoidMethod(targetCls, mid, cols, rows);
-                        }
-                    }
-                }
-            }
-            g_resizeJvm->DetachCurrentThread();
+        if (g_hWinEventHook) {
+            UnhookWinEvent(g_hWinEventHook);
+            g_hWinEventHook = NULL;
         }
-
-        CloseHandle(hIn);
     });
 
     g_resizeThread.detach();

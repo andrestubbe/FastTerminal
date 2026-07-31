@@ -588,7 +588,6 @@ public final class FastTerminalRenderer {
                 int fg = compositeFg[i];
                 int bg = compositeBg[i];
                 if (cp == -99) {
-                    outBuffer[outLen++] = ' ';
                     continue;
                 }
                 if (fg != curFg) {
