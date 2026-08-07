@@ -122,6 +122,12 @@ public class Console extends JFrame {
         getInstance().append(string + "\n");
     }
 
+    public static void println(final String[] strings) {
+        for (final String string:strings){
+            getInstance().append(string + "\n");
+        }
+    }
+
     public static void println(final boolean b) {
         getInstance().append(String.valueOf(b) + "\n");
     }
