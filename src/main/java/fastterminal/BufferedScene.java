@@ -1,30 +1,39 @@
 package fastterminal;
 
+import fastansi.CellConsumer;
+
 import java.util.Arrays;
 
-public class BufferedScene implements fastansi.CellConsumer {
+public class BufferedScene implements CellConsumer {
 
     private final int width;
     private final int height;
 
     private final int[] codepoints;
     private final long[] colors; // [32-bit fg | 32-bit bg], 0 = transparent
+    private final byte[] styles;
 
     public BufferedScene(int width, int height) {
         this.width = width;
         this.height = height;
         this.codepoints = new int[width * height];
         this.colors = new long[width * height];
+        this.styles = new byte[width * height];
         clear();
     }
 
     public void clear() {
         Arrays.fill(codepoints, ' ');
         Arrays.fill(colors, 0L); // 0 = komplett transparent
+        Arrays.fill(styles, (byte) 0);
     }
 
     @Override
     public void writeCell(int col, int row, int codepoint, int fgColor, int bgColor) {
+        writeCell(col, row, codepoint, fgColor, bgColor, 0);
+    }
+
+    public void writeCell(int col, int row, int codepoint, int fgColor, int bgColor, int style) {
         if ((col | row) >= 0 && col < width && row < height) {
             int idx = row * width + col;
 
@@ -50,6 +59,16 @@ public class BufferedScene implements fastansi.CellConsumer {
             if (codepoint != -2) {
                 codepoints[idx] = codepoint;
             }
+            if (style != 0) {
+                styles[idx] = (byte) style;
+            }
+        }
+    }
+
+    public void writeString(int col, int row, String str, int fgColor, int bgColor, int style) {
+        if (str == null) return;
+        for (int i = 0; i < str.length(); i++) {
+            writeCell(col + i, row, str.charAt(i), fgColor, bgColor, style);
         }
     }
 
@@ -69,9 +88,11 @@ public class BufferedScene implements fastansi.CellConsumer {
         int[] dCode = dest.getCodepointBuffer();
         int[] dFg   = dest.getFgBuffer();
         int[] dBg   = dest.getBgBuffer();
+        byte[] dStyle = dest.getStyleBuffer();
 
         int[] sCode = this.codepoints;
         long[] sColors = this.colors;
+        byte[] sStyles = this.styles;
 
         int clippedWidth = endCol - startCol;
 
@@ -92,6 +113,9 @@ public class BufferedScene implements fastansi.CellConsumer {
                     if (fgVal != -2) {
                         dCode[destIdx] = sCode[srcIdx];
                         dFg[destIdx] = fgVal;
+                        if (dStyle != null) {
+                            dStyle[destIdx] = sStyles[srcIdx];
+                        }
                     }
                     if (bgVal != -2) {
                         dBg[destIdx] = bgVal;
@@ -110,4 +134,5 @@ public class BufferedScene implements fastansi.CellConsumer {
     public int getHeight() { return height; }
     public int[] getCodepoints() { return codepoints; }
     public long[] getColors() { return colors; }
+    public byte[] getStyles() { return styles; }
 }

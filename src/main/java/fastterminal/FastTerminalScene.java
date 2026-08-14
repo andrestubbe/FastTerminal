@@ -531,4 +531,45 @@ public class FastTerminalScene implements fastansi.CellConsumer {
     public void setTransparentBackground(boolean transparent) {
         this.transparentBackground = transparent;
     }
+
+    /**
+     * @brief Fast composition of a sub-scene into this scene using row-based arraycopy.
+     * @param source Source sub-scene to render.
+     * @param targetX Destination X coordinate.
+     * @param targetY Destination Y coordinate.
+     */
+    public void drawScene(final FastTerminalScene source, final int targetX, final int targetY) {
+        if (source == null) return;
+        final int srcW = source.width;
+        final int srcH = source.height;
+
+        for (int r = 0; r < srcH; r++) {
+            final int destY = targetY + r;
+            if (destY < 0 || destY >= this.height) continue;
+
+            final int srcRowOffset = r * srcW;
+            final int destRowOffset = destY * this.width + targetX;
+
+            int copyWidth = srcW;
+            int srcStart = 0;
+            int destStart = destRowOffset;
+
+            if (targetX < 0) {
+                srcStart = -targetX;
+                copyWidth += targetX;
+                destStart = destY * this.width;
+            }
+            if (targetX + copyWidth > this.width) {
+                copyWidth = this.width - Math.max(0, targetX);
+            }
+
+            if (copyWidth > 0) {
+                System.arraycopy(source.codepointBuffer, srcRowOffset + srcStart, this.codepointBuffer, destStart, copyWidth);
+                System.arraycopy(source.fgBuffer, srcRowOffset + srcStart, this.fgBuffer, destStart, copyWidth);
+                System.arraycopy(source.bgBuffer, srcRowOffset + srcStart, this.bgBuffer, destStart, copyWidth);
+                System.arraycopy(source.styleBuffer, srcRowOffset + srcStart, this.styleBuffer, destStart, copyWidth);
+            }
+        }
+        this.dirty = true;
+    }
 }
