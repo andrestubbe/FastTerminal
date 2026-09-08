@@ -23,7 +23,7 @@ with the input, styling, and helper modules of the **FastJava** ecosystem:
 * 🖱️ **[FastMouse](https://github.com/andrestubbe/FastMouse)** — Precise hardware-level and virtual console-mode mouse
   tracking.
 
-[**Watch the Demo**](https://www.youtube.com/watch?v=JoxdReMqjas) | [**Watch the JMH Benchmark**](https://www.youtube.com/watch?v=SAFlmP3dpQs)
+[**Watch Demo (Youtube)**](https://www.youtube.com/watch?v=JoxdReMqjas) | [**Watch JMH Benchmark (Youtube)**](https://www.youtube.com/watch?v=SAFlmP3dpQs)
 
 ---
 
