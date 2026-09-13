@@ -58,7 +58,7 @@ public class Demo {
 - [Why FastTerminal?](#why-fastterminal)
 - [Key Features](#key-features)
 - [Performance Benchmarks](#performance-benchmarks)
-- [Architecture & Grid Layout](#architecture--grid-layout)
+- [Architecture & Grid Layout](#architecture-&-grid-layout)
 - [API Quick Reference](#api-quick-reference)
 - [Installation](#installation)
 - [Technical Examples & Demos](#technical-examples--demos)
@@ -106,7 +106,7 @@ TerminalBenchmark.benchmarkFullRedraw  thrpt    5  34,134 ±  1,509  ops/ms
 
 ---
 
-## 📊 Architecture & Grid Layout
+## Architecture & Grid Layout
 
 FastTerminal operates on a double-buffered layer compositor. Each cell in a `TerminalScene` is backed by primitive
 integer arrays, eliminating object allocation overhead:
