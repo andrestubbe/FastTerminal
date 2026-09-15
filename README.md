@@ -58,6 +58,7 @@ public class Demo {
 - [Why FastTerminal?](#why-fastterminal)
 - [Quick Start](#quick-start)
 - [Key Features](#key-features)
+- [Real-World Use Cases](#real-world-use-cases)
 - [Performance Benchmarks](#performance-benchmarks)
 - [Architecture & Grid Layout](#architecture-&-grid-layout)
 - [API Quick Reference](#api-quick-reference)
@@ -88,6 +89,15 @@ via **[FastTerminal](https://github.com/andrestubbe/FastTerminal)** and **[FastM
 * **📺 Alternate Screen Buffer** — Seamlessly enters full-screen TUI buffer mode (`\033[?1049h`) and hides the cursor (`\033[?25l`) using **[FastANSI](https://github.com/andrestubbe/FastANSI)** utilities for clean dashboard applications.
 * **🎹 Native Input Substrates** — Built-in telemetry anchors designed for instant integration with `FastKeyboard` and `FastMouse` to process mouse tracking, window resizing, and raw key captures natively.
 * **🖼️ Double-Buffered Layer Compositor** — Retained-mode viewport grids (`FastTerminalScene`) with O(1) primitive buffer diffing (`FastTerminalRenderer`) for zero-garbage rendering pipelines.
+
+---
+
+## Real-World Use Cases
+
+- 📊 **High-Frequency Trading & TUI Dashboards**: Renders high-density real-time metrics, order books, and analytics at 120+ FPS with minimal CPU load and zero GC pauses.
+- 👾 **Demoscene & Terminal Graphics**: Powers fluid simulation, particle systems, retro raymarching, and ASCII art with full 24-bit TrueColor and UTF-32 Emoji fidelity.
+- 🪟 **Native Terminal Overlays & Floating Panels**: Projects non-destructive popups, floating command palettes, and modal HUDs over running terminal programs via Win32 console buffer snapshots (`ReadConsoleOutputW`).
+- 🎮 **Interactive Roguelikes & Console Games**: Immediate-mode cell blitting combined with native hardware mouse and keyboard input telemetry (`FastMouse`, `FastKeyboard`).
 
 ---
 
