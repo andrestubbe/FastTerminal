@@ -67,6 +67,7 @@ public class Demo {
 - [Documentation](#documentation)
 - [Platform Support](#platform-support)
 - [License](#license)
+- [Related Projects](#related-projects)
 
 ---
 
