@@ -18,26 +18,26 @@ with the input, styling, and helper modules of the **FastJava** ecosystem:
 
 * ⚡ **[FastANSI](https://github.com/andrestubbe/FastANSI)** — Micro-optimized, garbage-free ANSI escape sequence builder
   and parser for terminal graphics.
-* 🚀 **[FastTerminal](https://github.com/andrestubbe/FastTerminal)** — Direct, low-latency, asynchronous raw global and
+* 🚀 **[FastKeyboard](https://github.com/andrestubbe/FastKeyboard)** — Direct, low-latency, asynchronous raw global and
   local keyboard event handling.
 * 🖱️ **[FastMouse](https://github.com/andrestubbe/FastMouse)** — Precise hardware-level and virtual console-mode mouse
   tracking.
 
 [**Watch Demo (Youtube)**](https://www.youtube.com/watch?v=JoxdReMqjas) | [**Watch JMH Benchmark (Youtube)**](https://www.youtube.com/watch?v=SAFlmP3dpQs)
 
----
-
 [![FastTerminal Showcase](docs/screenshot.png)](https://www.youtube.com/watch?v=JoxdReMqjas)
 
-```java
-// Quick Start — Example
+---
 
+## Quick Start
+
+```java
 import fastterminal.TerminalRenderer;
 import fastterminal.TerminalScene;
 
 public class Demo {
     public static void main(String[] args) {
-        // Init a 80x24 viewport
+        // Init an 80x24 viewport
         TerminalRenderer renderer = new TerminalRenderer(80, 24);
         TerminalScene scene = new TerminalScene(0, 0, 80, 24);
 
@@ -56,6 +56,7 @@ public class Demo {
 ## Table of Contents
 
 - [Why FastTerminal?](#why-fastterminal)
+- [Quick Start](#quick-start)
 - [Key Features](#key-features)
 - [Performance Benchmarks](#performance-benchmarks)
 - [Architecture & Grid Layout](#architecture-&-grid-layout)
