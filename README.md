@@ -61,10 +61,11 @@ public class Demo {
 - [Performance Benchmarks](#performance-benchmarks)
 - [Architecture & Grid Layout](#architecture-&-grid-layout)
 - [API Quick Reference](#api-quick-reference)
+- [Technical Demos & Benchmarks](#technical-demos--benchmarks)
 - [Installation](#installation)
-- [Technical Examples & Demos](#technical-examples--demos)
-- [Performance Optimization](#performance-optimization)
 - [Platform JNI Capabilities](#platform-jni-capabilities)
+- [Documentation](#documentation)
+- [Platform Support](#platform-support)
 - [License](#license)
 
 ---
@@ -137,6 +138,15 @@ Composites are blitted to standard output using the highly-optimized **[Terminal
 
 ---
 
+## Technical Demos & Benchmarks
+
+| Case | Java Example | Launcher | Description |
+|---|---|---|---|
+| **Demoscene Megademo** | [Demo.java](examples/Demo/src/main/java/fastterminal/Demo.java) | `run-demo.bat` | 120 FPS demoscene suite cycling through fluid, Doom fire, tunnels, 3D cubes, and matrix rain. |
+| **JMH Microbenchmark Suite** | [Benchmark.java](examples/Benchmark/src/main/java/fastterminal/benchmark/Benchmark.java) | `run-benchmark.bat` | OpenJDK JMH throughput test suite measuring full screen redraw and diff render pipelines. |
+
+---
+
 ## Installation
 
 ### Option 1: Maven (Recommended)
@@ -192,17 +202,6 @@ Download the latest JARs directly to add them to your classpath:
 > [!IMPORTANT]
 > All JARs must be in your classpath for the native JNI calls to function correctly.
 
-## Technical Examples & Demos
-
-See the active Java programs under the `examples/Demo` package:
-
-| Case                    | Java Example                                                          | Performance / Demo                         | Details                                                                                                                                                     |
-|-------------------------|-----------------------------------------------------------------------|--------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Demoscene Megademo      | [Demo.java](examples/Demo/src/main/java/fastterminal/Demo.java)       | High-fidelity visual FX catalog            | Auto-cycles through active fluid, fire, grids and 3D wireframes                                                                                             |
-| Native Mouse Visualizer | [UI.java](examples/Demo/src/main/java/fastterminal/UI.java)           | Real-time interactive coordinates & clicks | Draggable, resizable BeOS-style panel with file navigator and custom ANSI cursor over a background image                                                    |
-| Terminal Overlay        | [Overlay.java](examples/Demo/src/main/java/fastterminal/Overlay.java) | Floating panel over live terminal content  | Snapshots the console buffer at startup via `ReadConsoleOutputW`, projects a draggable panel on top, and fully restores the original terminal state on exit |
-
----
 
 ## Platform JNI Capabilities
 
