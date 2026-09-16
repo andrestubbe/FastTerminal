@@ -238,11 +238,11 @@ blitting:
 
 ## Platform Support
 
-| Platform | Status |
-|---|---|
-| **Windows 10/11** | ✅ Fully Supported |
-| **Linux** | 🟡 Planned |
-| **macOS** | 🟡 Planned |
+| Platform | Architecture | Status | Driver / Subsystem |
+|:---|:---:|:---:|:---|
+| **Windows 10 / 11** | x64 | ✅ Fully Supported | Native Win32 Console API (`WriteConsoleOutputW`) & ConPTY |
+| **Linux** | x64 / AArch64 | 🚧 Planned | Termios / Direct TTY ANSI Double-Buffer Pipeline |
+| **macOS** | Apple Silicon / x64 | 🚧 Planned | POSIX PTY & Terminal Framework |
 
 ---
 
