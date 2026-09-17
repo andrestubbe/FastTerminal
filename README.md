@@ -76,21 +76,21 @@ public class Demo {
 
 Traditional Java console libraries (such as JLine, Lanterna, or raw ANSI escape printers) struggle to deliver fluid, 60+ FPS terminal user interfaces due to heavy architecture flaws:
 
-- **Flicker & Console I/O Bottlenecks** — Printing full screens sequentially to `System.out` causes visible tearing, cursor jumping, and heavy Windows console buffering lag.
-- **Emoji & Unicode Surrogate Truncation** — Java's UTF-16 `char[]` splits modern multi-byte Emojis and CJK glyphs, corrupting visual grid alignments.
-- **Massive GC Pressure During Redraws** — Allocating thousands of temporary `Cell`, `Color`, and `String` objects per frame forces frequent JVM Garbage Collection pauses.
-- **Missing Native Hardware Input** — Standard Java terminal readers block worker threads and cannot capture real-time mouse coordinates, scroll wheels, or window resize events without high latency.
+1. **Flicker & Console I/O Bottlenecks**: Printing full screens sequentially to `System.out` causes visible tearing, cursor jumping, and heavy Windows console buffering lag.
+2. **Emoji & Unicode Surrogate Truncation**: Java's UTF-16 `char[]` splits modern multi-byte Emojis and CJK glyphs, corrupting visual grid alignments.
+3. **Massive GC Pressure During Redraws**: Allocating thousands of temporary `Cell`, `Color`, and `String` objects per frame forces frequent JVM Garbage Collection pauses.
+4. **Missing Native Hardware Input**: Standard Java terminal readers block worker threads and cannot capture real-time mouse coordinates, scroll wheels, or window resize events without high latency.
 
 FastTerminal solves this by decoupling console math from I/O through a zero-allocation, primitive-backed double-buffering compositor:
 
-| Feature | Standard `System.out` | JLine / Lanterna | C++ Native (Notcurses) | FastTerminal |
-|:---|:---|:---|:---|:---|
-| **Render Architecture** | Unbuffered sequential text | Intermediate heap abstractions | Direct terminal blitter | Double-buffered primitive cell diffing |
-| **Throughput (120x30 Grid)** | < 1,000 FPS (OS I/O bottleneck) | 5,000–15,000 FPS | > 50,000,000 FPS | **> 66,000,000 FPS (Pure Math)** |
-| **GC Allocations** | High string concatenation churn | High object wrapper pressure | N/A (Native C++) | **0 bytes / frame (Zero GC)** |
-| **Emoji & Glyph Safety** | ⚠️ UTF-16 split corruption | ⚠️ Complex width patching | ✅ UTF-32 codepoints | ✅ Native UTF-32 (`int`) cell buffer |
-| **Bandwidth Optimization**| ❌ Raw full stream dump | ⚠️ Partial line diffing | ✅ Escape code delta state | ✅ State-minimized FastANSI emission (-80% bytes) |
-| **External Dependencies** | None | Heavy Java dependencies | Complex C++ JNI builds | **Pure Java 17+ core (Backed by FastCore)** |
+| Feature | Standard `System.out` | JLine / Lanterna | FastTerminal |
+|:---|:---|:---|:---|
+| **Render Architecture** | Unbuffered sequential text | Intermediate heap abstractions | Double-buffered primitive cell diffing |
+| **Throughput (120x30 Grid)** | < 1,000 FPS (OS I/O bottleneck) | 5,000–15,000 FPS | **> 66,000,000 FPS (Pure Math)** |
+| **GC Allocations** | High string concatenation churn | High object wrapper pressure | **0 bytes / frame (Zero GC)** |
+| **Emoji & Glyph Safety** | ⚠️ UTF-16 split corruption | ⚠️ Complex width patching | ✅ Native UTF-32 (`int`) cell buffer |
+| **Bandwidth Optimization** | ❌ Raw full stream dump | ⚠️ Partial line diffing | ✅ State-minimized FastANSI (-80% bytes) |
+| **External Dependencies** | None | Heavy Java dependencies | Pure Java 17+ core via `FastCore` |
 
 ---
 
